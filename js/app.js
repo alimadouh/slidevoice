@@ -19,36 +19,72 @@ const state = {
 };
 
 // ---------- file pickers / drag & drop ----------
-function wireDrop(zoneSel, inputSel, onFiles) {
+function wireDrop(zoneSel, inputSel, onFiles, canAdd) {
   const zone = $(zoneSel), input = $(inputSel);
-  zone.addEventListener('click', () => input.click());
-  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag'); });
+  const blocked = () => (canAdd && !canAdd());   // true when a file is already present
+  zone.addEventListener('click', (e) => {
+    if (e.target.closest('.chip-x')) return;      // the remove button handles its own click
+    if (blocked()) return;                         // already filled — must remove first
+    input.click();
+  });
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); if (!blocked()) zone.classList.add('drag'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
   zone.addEventListener('drop', (e) => {
     e.preventDefault(); zone.classList.remove('drag');
+    if (blocked()) return;
     onFiles([...e.dataTransfer.files]);
   });
-  input.addEventListener('change', () => onFiles([...input.files]));
+  input.addEventListener('change', () => { onFiles([...input.files]); input.value = ''; });
+}
+
+function makeChip(name, onRemove) {
+  const span = document.createElement('span');
+  span.className = 'chip';
+  const label = document.createElement('span');
+  label.className = 'chip-name';
+  label.textContent = name;
+  span.appendChild(label);
+  if (onRemove) {
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'chip-x';
+    x.setAttribute('aria-label', 'Remove ' + name);
+    x.textContent = '×';
+    x.addEventListener('click', (e) => { e.stopPropagation(); onRemove(); });
+    span.appendChild(x);
+  }
+  return span;
 }
 
 function renderLists() {
-  $('#list-pptx').innerHTML = state.pptxFile ? chip(state.pptxFile.name) : '';
-  $('#list-script').innerHTML = state.scriptFile ? chip(state.scriptFile.name) : '';
-  $('#list-audio').innerHTML = state.audioFiles.map(a => chip(a.name)).join('');
+  const lp = $('#list-pptx'); lp.innerHTML = '';
+  if (state.pptxFile) lp.appendChild(makeChip(state.pptxFile.name, () => {
+    state.pptxFile = null; $('#file-pptx').value = ''; renderLists();
+  }));
+  const ls = $('#list-script'); ls.innerHTML = '';
+  if (state.scriptFile) ls.appendChild(makeChip(state.scriptFile.name, () => {
+    state.scriptFile = null; $('#file-script').value = ''; renderLists();
+  }));
+  const la = $('#list-audio'); la.innerHTML = '';
+  state.audioFiles.forEach(a => la.appendChild(makeChip(a.name)));
+  // lock the single-file cards once filled
+  $('#drop-pptx').classList.toggle('filled', !!state.pptxFile);
+  $('#drop-script').classList.toggle('filled', !!state.scriptFile);
   $('#btn-process').disabled = !(state.pptxFile && state.audioFiles.length);
 }
-const chip = (name) => `<span class="chip">${escapeHtml(name)}</span>`;
 
 wireDrop('#drop-pptx', '#file-pptx', (files) => {
+  if (state.pptxFile) return;                 // only one — remove it first to change
   const f = files.find(f => /\.pptx$/i.test(f.name));
   if (f) state.pptxFile = f;
   renderLists();
-});
+}, () => !state.pptxFile);
 wireDrop('#drop-script', '#file-script', (files) => {
+  if (state.scriptFile) return;
   const f = files.find(f => /\.(docx|txt|md)$/i.test(f.name));
   if (f) state.scriptFile = f;
   renderLists();
-});
+}, () => !state.scriptFile);
 const MAX_AUDIO = 50;
 wireDrop('#drop-audio', '#file-audio', (files) => {
   const valid = files.filter(f => /\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b)$/i.test(f.name));

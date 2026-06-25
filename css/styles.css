@@ -57,7 +57,13 @@ h1 .hl{color:var(--accent)}
 .card code{font-family:var(--mono);font-size:12px;background:var(--accent-soft);color:var(--accent-ink);padding:1px 6px;border-radius:6px}
 .files{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .note{font-size:12px;color:var(--accent-ink);margin:8px 0 0;font-weight:600}
-.chip{font-size:12px;background:#f4f4f6;border:1px solid var(--line);color:var(--ink);padding:4px 9px;border-radius:999px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;background:#f4f4f6;border:1px solid var(--line);color:var(--ink);padding:5px 8px 5px 11px;border-radius:999px;max-width:100%}
+.chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.chip-x{flex:none;width:18px;height:18px;border:none;border-radius:50%;background:rgba(0,0,0,.08);color:var(--ink);font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;transition:.15s}
+.chip-x:hover{background:var(--accent);color:#fff}
+.card.filled{cursor:default;border-style:solid;border-color:var(--ok);background:linear-gradient(180deg,#fff,#f2fbf6)}
+.card.filled:hover{transform:none;box-shadow:var(--shadow)}
+.card.filled .drop-cue{display:none}
 
 .controls{margin-top:30px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 .toggle{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3a3a44;cursor:pointer;max-width:760px}
