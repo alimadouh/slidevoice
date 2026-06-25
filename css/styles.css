@@ -26,7 +26,7 @@ h1{font-size:clamp(34px,6vw,60px);line-height:1.01;letter-spacing:-.038em;margin
 h1 .hl{color:var(--accent)}
 .lede{font-size:18px;color:#3a3a44;margin:0}
 
-.uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
+.uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
 .card{position:relative;background:var(--card);border:1.5px dashed #d9d7de;border-radius:var(--radius);padding:26px 22px 22px;cursor:pointer;transition:.18s;min-height:172px}
 .card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
 .card.drag{border-color:var(--accent);background:var(--accent-soft)}
