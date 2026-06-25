@@ -8,7 +8,7 @@ back a narrated `.pptx` with the audio embedded and set to play on each slide.
 
 Everything runs **100% in your browser**. Your files are never uploaded to a server.
 
-🔗 **Live:** _set after first deploy_
+🔗 **Live:** https://slidevoice.netlify.app
 
 ---
 
