@@ -107,7 +107,7 @@ function hasVideoTrack(file) {
   });
 }
 
-async function addAudioFiles(files) {
+wireDrop('#drop-audio', '#file-audio', async (files) => {
   const valid = files.filter(f => AUDIO_EXT.test(f.name));
   let skippedCap = 0; const skippedVideo = [];
   for (const f of valid) {
@@ -123,8 +123,7 @@ async function addAudioFiles(files) {
   if (msgs.length) note.textContent = msgs.join(' ');
   else if (state.audioFiles.length) note.textContent = `${state.audioFiles.length} / ${MAX_AUDIO} added`;
   else note.textContent = '';
-}
-wireDrop('#drop-audio', '#file-audio', (files) => addAudioFiles(files));
+});
 
 // ---------- progress helpers ----------
 function setStage(text) { $('#stage').textContent = text; }
@@ -301,57 +300,3 @@ function escapeHtml(s) {
 }
 
 renderLists();
-
-// ---------- PWA: service worker + WhatsApp share-target ingest ----------
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-}
-
-async function ingestSharedFiles() {
-  if (!new URLSearchParams(location.search).has('shared')) return;
-  history.replaceState({}, '', './');           // clean the URL
-  try {
-    const cache = await caches.open('b7-shared');
-    const idx = await cache.match('shared/index');
-    if (!idx) return;
-    const ids = await idx.json();
-    const files = [];
-    for (const id of ids) {
-      const r = await cache.match('shared/' + id);
-      if (r) {
-        const blob = await r.blob();
-        const name = decodeURIComponent(r.headers.get('x-name') || 'clip');
-        files.push(new File([blob], name, { type: blob.type || '' }));
-        await cache.delete('shared/' + id);
-      }
-    }
-    await cache.delete('shared/index');
-    if (files.length) {
-      await addAudioFiles(files);
-      $('#drop-audio').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  } catch (e) { console.warn('share ingest failed', e); }
-}
-ingestSharedFiles();
-
-// ---------- WhatsApp help modal ----------
-const waModal = $('#wa-modal');
-const openModal = () => { waModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; };
-const closeModal = () => { waModal.classList.add('hidden'); document.body.style.overflow = ''; };
-$('#wa-help-btn').addEventListener('click', openModal);
-$('#wa-modal-close').addEventListener('click', closeModal);
-waModal.addEventListener('click', (e) => { if (e.target === waModal) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !waModal.classList.contains('hidden')) closeModal(); });
-
-// ---------- Install prompt (Android/Chrome) ----------
-let deferredPrompt = null;
-const installBtn = $('#install-btn');
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.classList.remove('hidden'); });
-installBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installBtn.classList.add('hidden');
-});
-window.addEventListener('appinstalled', () => installBtn.classList.add('hidden'));

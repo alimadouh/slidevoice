@@ -6,12 +6,6 @@
 <title>B7oothKw — add your narration to every slide</title>
 <meta name="description" content="Upload a PowerPoint, your script, and your voice recordings. B7oothKw listens to each clip, figures out which slide it belongs to, and hands back a narrated .pptx — all in your browser." />
 <link rel="icon" href="assets/icon.png" />
-<link rel="manifest" href="manifest.webmanifest" />
-<meta name="theme-color" content="#ff3131" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="B7oothKw" />
-<link rel="apple-touch-icon" href="assets/icon-192.png" />
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -66,48 +60,9 @@
     </div>
   </section>
 
-  <div class="helper-row">
-    <button type="button" class="wa-help" id="wa-help-btn" aria-haspopup="dialog">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#25d366" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.2 4.79 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm5.52 13.62c-.21.58-1.2 1.11-1.68 1.18-.43.06-.97.09-1.56-.1-.36-.11-.82-.26-1.41-.52-2.5-1.07-4.13-3.57-4.25-3.74-.12-.16-1.01-1.34-1.01-2.56 0-1.22.63-1.82.86-2.07.23-.25.49-.31.66-.31.17 0 .34 0 .48.01.15 0 .36-.06.56.42.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.09.16-.13.27-.25.41-.12.14-.26.32-.37.43-.13.13-.25.26-.11.51.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.13.4.11.54-.06.15-.16.63-.72.79-.97.17-.24.33-.2.56-.12.22.09 1.44.69 1.69.81.25.12.41.18.47.29.07.11.07.6-.14 1.18z"/></svg>
-      Recordings on WhatsApp?
-    </button>
-    <button type="button" class="install-btn hidden" id="install-btn">⬇&nbsp; Install app</button>
-  </div>
-
   <section class="controls">
     <button id="btn-process" class="primary" disabled>Match recordings to slides</button>
   </section>
-
-  <div class="modal hidden" id="wa-modal" role="dialog" aria-modal="true" aria-labelledby="wa-modal-title">
-    <div class="modal-card">
-      <button class="modal-close" id="wa-modal-close" aria-label="Close">×</button>
-      <h2 id="wa-modal-title">Add recordings from WhatsApp</h2>
-      <div class="wa-grid">
-        <div class="wa-os">
-          <h3>📱 Android</h3>
-          <ol>
-            <li><b>Easiest:</b> tap <b>Install app</b> (or your browser menu → <em>Add to Home screen</em>). Then in WhatsApp open a voice note → <em>Share</em> → pick <b>B7oothKw</b> — the clips drop straight into Recordings.</li>
-            <li><b>Or:</b> in WhatsApp open the audio → <em>Share</em> → <em>Save to Files / Drive</em>, then tap <b>Recordings</b> here and pick them.</li>
-          </ol>
-        </div>
-        <div class="wa-os">
-          <h3>🍏 iPhone</h3>
-          <ol>
-            <li>In WhatsApp, open the voice note → <em>Share</em> → <em>Save to Files</em>.</li>
-            <li>Tap <b>Recordings</b> here → <em>Browse</em> → choose the saved clips.</li>
-          </ol>
-        </div>
-        <div class="wa-os">
-          <h3>💻 Computer</h3>
-          <ol>
-            <li>Open WhatsApp Web / Desktop and <em>download</em> each audio (it lands in Downloads).</li>
-            <li><em>Drag</em> the files onto <b>Recordings</b>, or click and pick them.</li>
-          </ol>
-        </div>
-      </div>
-      <p class="wa-tip">WhatsApp voice notes share as <code>.opus</code> / <code>.ogg</code> — B7oothKw handles them automatically. You can add up to 50 at once.</p>
-    </div>
-  </div>
 
   <section id="progress" class="panel hidden">
     <div class="stage" id="stage">Working…</div>
