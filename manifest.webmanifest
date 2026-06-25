@@ -1,0 +1,28 @@
+{
+  "name": "B7oothKw — Slide Narration",
+  "short_name": "B7oothKw",
+  "description": "Add your voice narration to every PowerPoint slide.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff3131",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "files",
+          "accept": ["audio/*", "video/mp4", "audio/ogg", "audio/mpeg", "audio/mp4", "audio/aac", "audio/wav",
+                     ".m4a", ".ogg", ".oga", ".opus", ".mp3", ".aac", ".wav", ".mp4", ".webm", ".m4b", ".3gp"]
+        }
+      ]
+    }
+  }
+}
