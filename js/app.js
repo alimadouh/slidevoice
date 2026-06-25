@@ -86,16 +86,41 @@ wireDrop('#drop-script', '#file-script', (files) => {
   renderLists();
 }, () => !state.scriptFile);
 const MAX_AUDIO = 50;
-wireDrop('#drop-audio', '#file-audio', (files) => {
-  const valid = files.filter(f => /\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b)$/i.test(f.name));
-  let skipped = 0;
+const AUDIO_EXT = /\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b|mov|m4v)$/i;
+// extensions that could carry a real video track and need checking
+const CONTAINER_EXT = /\.(mp4|webm|mov|m4v|3gp|ogv|mkv)$/i;
+
+// Returns true if the file actually contains a video track (so we can reject
+// videos). Audio-only files report videoWidth/Height === 0.
+function hasVideoTrack(file) {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    const url = URL.createObjectURL(file);
+    let settled = false;
+    const finish = (res) => { if (settled) return; settled = true; URL.revokeObjectURL(url); v.removeAttribute('src'); resolve(res); };
+    v.preload = 'metadata';
+    v.muted = true;
+    v.onloadedmetadata = () => finish(v.videoWidth > 0 && v.videoHeight > 0);
+    v.onerror = () => finish(false);           // browser couldn't read it as video → treat as audio
+    setTimeout(() => finish(false), 5000);      // safety timeout
+    v.src = url;
+  });
+}
+
+wireDrop('#drop-audio', '#file-audio', async (files) => {
+  const valid = files.filter(f => AUDIO_EXT.test(f.name));
+  let skippedCap = 0; const skippedVideo = [];
   for (const f of valid) {
-    if (state.audioFiles.length >= MAX_AUDIO) { skipped++; continue; }
+    if (state.audioFiles.length >= MAX_AUDIO) { skippedCap++; continue; }
+    if (CONTAINER_EXT.test(f.name) && await hasVideoTrack(f)) { skippedVideo.push(f.name); continue; }
     state.audioFiles.push({ id: ++uid, file: f, name: f.name });
   }
   renderLists();
   const note = $('#audio-note');
-  if (skipped) note.textContent = `Limit is ${MAX_AUDIO} recordings — ${skipped} not added.`;
+  const msgs = [];
+  if (skippedVideo.length) msgs.push(`Skipped ${skippedVideo.length} video file${skippedVideo.length > 1 ? 's' : ''} — audio only.`);
+  if (skippedCap) msgs.push(`Limit is ${MAX_AUDIO} — ${skippedCap} not added.`);
+  if (msgs.length) note.textContent = msgs.join(' ');
   else if (state.audioFiles.length) note.textContent = `${state.audioFiles.length} / ${MAX_AUDIO} added`;
   else note.textContent = '';
 });
