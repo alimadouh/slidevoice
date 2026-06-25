@@ -22,12 +22,12 @@ Everything runs **100% in your browser**. Your files are never uploaded to a ser
 3. **Normalize the audio** — [ffmpeg.wasm](https://ffmpegwasm.netlify.app/) converts any
    recording (mp3, m4a, wav, ogg/opus, webm…) to PowerPoint-friendly MP3, and extracts
    16 kHz mono PCM for transcription.
-4. **Figure out the placement** — three signals, in order:
-   - a **slide number in the file name** (`Slide 7.m4a` → slide 7),
-   - **content similarity** between the recording's transcript and each slide's
-     script/text, using [Whisper](https://huggingface.co/onnx-community/whisper-base.en)
-     via [Transformers.js](https://github.com/huggingface/transformers.js),
-   - **upload order** as a fallback.
+4. **Figure out the placement** — **every** recording is transcribed with
+   [Whisper](https://huggingface.co/onnx-community/whisper-base.en) (via
+   [Transformers.js](https://github.com/huggingface/transformers.js), in your browser)
+   and matched to the best slide by **comparing what it says to each slide's script**
+   (cosine similarity). File names are ignored; upload order is only a fallback when
+   listening isn't available.
 5. **Review & fix** — you see every proposed match, can listen to each clip, and can
    reassign any slide before generating.
 6. **Embed** — the audio is written into each slide as an OOXML `<p:pic>` media shape

@@ -54,7 +54,8 @@ export function slideReference(slide, scriptMap) {
 // Build the initial assignment proposal.
 // audios: [{ id, name, transcript? }]  slides: [{number,text,notes}]
 // Returns [{ id, name, slideNumber|null, method, confidence }]
-export function proposeAssignments(audios, slides, scriptMap) {
+export function proposeAssignments(audios, slides, scriptMap, opts = {}) {
+  const useFilenames = opts.useFilenames !== false; // set false to match purely by script content
   const taken = new Set();
   const result = new Map(); // id -> assignment
   const candidates = (scriptMap && scriptMap.size)
@@ -62,12 +63,14 @@ export function proposeAssignments(audios, slides, scriptMap) {
     : slides.slice();
   const validNumbers = new Set(slides.map(s => s.number));
 
-  // Pass 1 — filename slide numbers (strongest signal)
-  for (const a of audios) {
-    const n = slideNumberFromName(a.name);
-    if (n != null && validNumbers.has(n) && !taken.has(n)) {
-      taken.add(n);
-      result.set(a.id, { id: a.id, name: a.name, slideNumber: n, method: 'filename', confidence: 0.99 });
+  // Pass 1 — filename slide numbers (strongest signal) — skipped when matching purely by content
+  if (useFilenames) {
+    for (const a of audios) {
+      const n = slideNumberFromName(a.name);
+      if (n != null && validNumbers.has(n) && !taken.has(n)) {
+        taken.add(n);
+        result.set(a.id, { id: a.id, name: a.name, slideNumber: n, method: 'filename', confidence: 0.99 });
+      }
     }
   }
 

@@ -3,7 +3,7 @@ import { parsePptx, embedNarration } from './pptx.js';
 import { parseScript } from './scriptdoc.js';
 import { processAudio, loadFfmpeg } from './audio.js';
 import { loadModel, transcribe, device } from './transcribe.js';
-import { proposeAssignments, slideNumberFromName } from './match.js';
+import { proposeAssignments } from './match.js';
 
 const $ = (s) => document.querySelector(s);
 let uid = 0;
@@ -115,7 +115,6 @@ $('#btn-process').addEventListener('click', async () => {
     $('#btn-process').disabled = true;
     show('#progress'); hide('#review'); hide('#result');
     $('#log').textContent = '';
-    const smart = true; // auto-match by listening is always on
 
     setStage('Reading PowerPoint…'); setBar(4);
     const buf = await state.pptxFile.arrayBuffer();
@@ -133,11 +132,6 @@ $('#btn-process').addEventListener('click', async () => {
     setStage('Loading audio engine…'); setBar(10);
     await loadFfmpeg();
 
-    // Which files need transcription? (those whose name has no slide number)
-    const needsTranscript = new Map();
-    for (const a of state.audioFiles)
-      needsTranscript.set(a.id, smart && slideNumberFromName(a.name) == null);
-
     state.processed.clear();
     const n = state.audioFiles.length;
     let modelLoaded = false, smartFailed = false;
@@ -146,12 +140,11 @@ $('#btn-process').addEventListener('click', async () => {
       setStage(`Converting audio ${i + 1}/${n}: ${a.name}`);
       setBar(12 + (i / n) * 55);
       const { mp3, durationSec, pcm } = await processAudio(a.file);
+      // Always listen to every recording and match it against the script.
+      // If the speech model can't load (e.g. a browser without WebGPU/WASM ML
+      // support) we degrade gracefully to order matching + manual review.
       let transcript = '';
-      if (needsTranscript.get(a.id) && !smartFailed) {
-        // Transcription is a best-effort enhancement. If the speech model
-        // can't load (e.g. a browser without WebGPU/WASM ML support), we
-        // degrade gracefully to file-name / order matching + manual review
-        // instead of failing the whole job.
+      if (!smartFailed) {
         if (!modelLoaded) {
           setStage('Loading speech model (first time downloads ~50 MB)…');
           try {
@@ -160,29 +153,28 @@ $('#btn-process').addEventListener('click', async () => {
             logLine(`Speech model ready (${device()}).`);
           } catch (e) {
             smartFailed = true;
-            logLine('Auto-listen is not available in this browser — falling back to file-name/order matching. You can fix any clip manually in the table below. (Tip: name files like "Slide 3.mp3", or use Chrome/Edge for auto-matching.)');
+            logLine('Auto-listen is not available in this browser — falling back to order. Assign clips manually in the table below, or use Chrome/Edge for auto-matching.');
           }
         }
         if (modelLoaded) {
           try {
-            setStage(`Listening to ${a.name}…`);
+            setStage(`Listening to ${a.name} (${i + 1}/${n})…`);
             transcript = await transcribe(pcm);
             logLine(`"${a.name}" → ${transcript.slice(0, 70)}${transcript.length > 70 ? '…' : ''}`);
           } catch (e) {
             logLine(`Could not transcribe "${a.name}" — assign it manually below.`);
           }
         }
-      } else if (!needsTranscript.get(a.id)) {
-        logLine(`"${a.name}" → matched by file name`);
       }
       state.processed.set(a.id, { mp3, durationSec, pcm, transcript });
     }
 
-    setStage('Matching recordings to slides…'); setBar(72);
+    setStage('Matching recordings to slides by script…'); setBar(72);
     const audios = state.audioFiles.map(a => ({
       id: a.id, name: a.name, transcript: state.processed.get(a.id).transcript,
     }));
-    state.assignments = proposeAssignments(audios, state.slides, state.scriptMap);
+    // useFilenames:false → match purely by what each recording says vs the script
+    state.assignments = proposeAssignments(audios, state.slides, state.scriptMap, { useFilenames: false });
 
     setBar(100); setStage('Review the matches below.');
     renderReview();
