@@ -1,8 +1,13 @@
 // audio.js — normalize any uploaded recording to PowerPoint-friendly MP3,
 // and extract 16 kHz mono PCM for the speech recognizer. Uses ffmpeg.wasm
 // (single-threaded core, so no cross-origin-isolation headers are required).
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.10';
-import { toBlobURL, fetchFile } from 'https://esm.sh/@ffmpeg/util@0.12.1';
+//
+// The @ffmpeg/ffmpeg runtime is self-hosted in /vendor/ffmpeg so its internal
+// Worker is same-origin (browsers forbid constructing a Worker from a
+// cross-origin script). The big wasm core is still pulled from the CDN and
+// turned into a same-origin blob URL via toBlobURL — that's allowed.
+const { FFmpeg } = window.FFmpegWASM;
+const { toBlobURL, fetchFile } = window.FFmpegUtil;
 
 const CORE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
 let ffmpeg = null;

@@ -5,6 +5,9 @@
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0';
 
 env.allowLocalModels = false;
+// Force single-threaded WASM so it runs without cross-origin isolation
+// (SharedArrayBuffer). WebGPU is still tried first when available.
+env.backends.onnx.wasm.numThreads = 1;
 
 const MODEL = 'onnx-community/whisper-base.en';
 let asr = null;

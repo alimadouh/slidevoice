@@ -94,6 +94,9 @@
   <p>Built with JSZip · ffmpeg.wasm · Whisper (transformers.js). 100% client-side — no uploads, no servers.</p>
 </footer>
 
+<!-- ffmpeg.wasm runtime, self-hosted so its Worker is same-origin -->
+<script src="vendor/ffmpeg/ffmpeg.js"></script>
+<script src="vendor/ffmpeg/ffmpeg-util.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
