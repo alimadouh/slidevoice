@@ -49,12 +49,19 @@ wireDrop('#drop-script', '#file-script', (files) => {
   if (f) state.scriptFile = f;
   renderLists();
 });
+const MAX_AUDIO = 50;
 wireDrop('#drop-audio', '#file-audio', (files) => {
-  for (const f of files) {
-    if (/\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b)$/i.test(f.name))
-      state.audioFiles.push({ id: ++uid, file: f, name: f.name });
+  const valid = files.filter(f => /\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b)$/i.test(f.name));
+  let skipped = 0;
+  for (const f of valid) {
+    if (state.audioFiles.length >= MAX_AUDIO) { skipped++; continue; }
+    state.audioFiles.push({ id: ++uid, file: f, name: f.name });
   }
   renderLists();
+  const note = $('#audio-note');
+  if (skipped) note.textContent = `Limit is ${MAX_AUDIO} recordings — ${skipped} not added.`;
+  else if (state.audioFiles.length) note.textContent = `${state.audioFiles.length} / ${MAX_AUDIO} added`;
+  else note.textContent = '';
 });
 
 // ---------- progress helpers ----------
