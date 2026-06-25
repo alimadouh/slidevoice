@@ -2,7 +2,7 @@
 
 Add your **voice narration to every PowerPoint slide** — automatically.
 
-Upload a `.pptx`, (optionally) your script, and your voice recordings. B7oothKw
+Upload a `.pptx`, your script, and your voice recordings. B7oothKw
 **listens to each recording, figures out which slide it belongs to**, and gives you
 back a narrated `.pptx` with the audio embedded and set to play on each slide.
 
@@ -16,8 +16,9 @@ Everything runs **100% in your browser**. Your files are never uploaded to a ser
 
 1. **Read the deck** — [JSZip](https://stuk.github.io/jszip/) opens the `.pptx`
    (a zip of XML), reads the slides in true display order, and pulls each slide's text.
-2. **Read the script** *(optional)* — a `.docx`/`.txt` with `Slide N` headings is parsed
-   into per-slide scripts to make matching far more accurate.
+2. **Read the script** — a `.docx`/`.txt` with `Slide N` headings is parsed into
+   per-slide scripts. This tells B7oothKw which slides are narrated and gives each
+   recording a slide to match against.
 3. **Normalize the audio** — [ffmpeg.wasm](https://ffmpegwasm.netlify.app/) converts any
    recording (mp3, m4a, wav, ogg/opus, webm…) to PowerPoint-friendly MP3, and extracts
    16 kHz mono PCM for transcription.

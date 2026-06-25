@@ -70,7 +70,7 @@ function renderLists() {
   // lock the single-file cards once filled
   $('#drop-pptx').classList.toggle('filled', !!state.pptxFile);
   $('#drop-script').classList.toggle('filled', !!state.scriptFile);
-  $('#btn-process').disabled = !(state.pptxFile && state.audioFiles.length);
+  $('#btn-process').disabled = !(state.pptxFile && state.scriptFile && state.audioFiles.length);
 }
 
 wireDrop('#drop-pptx', '#file-pptx', (files) => {
