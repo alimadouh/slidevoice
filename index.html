@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SlideVoice — add your narration to every slide</title>
+<meta name="description" content="Upload a PowerPoint, your script, and your voice recordings. SlideVoice listens to each clip, figures out which slide it belongs to, and hands back a narrated .pptx — all in your browser." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%236d4aff'/><path d='M30 40h10l16-13v46L40 60H30z' fill='white'/><path d='M64 36a18 18 0 010 28' stroke='white' stroke-width='5' fill='none' stroke-linecap='round'/></svg>" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#6d4aff"/><path d="M30 40h10l16-13v46L40 60H30z" fill="white"/><path d="M64 36a18 18 0 010 28" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+    <span>SlideVoice</span>
+  </div>
+  <a class="ghost-link" href="https://github.com/" id="repo-link" target="_blank" rel="noopener">View on GitHub</a>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">narration, automatically placed</p>
+    <h1>Put your voice on every slide.</h1>
+    <p class="lede">Drop in your slides, your script, and your recordings. SlideVoice listens to each clip,
+      works out which slide it belongs to, and gives you back a narrated PowerPoint. Everything runs in your
+      browser — your files never leave your device.</p>
+  </section>
+
+  <section class="uploads">
+    <div class="card" id="drop-pptx">
+      <span class="step">1</span>
+      <h3>PowerPoint</h3>
+      <p>Your <code>.pptx</code> deck. Required.</p>
+      <div class="files" id="list-pptx"></div>
+      <input type="file" id="file-pptx" accept=".pptx" hidden />
+    </div>
+
+    <div class="card" id="drop-script">
+      <span class="step">2</span>
+      <h3>Script <em>(optional)</em></h3>
+      <p><code>.docx</code> / <code>.txt</code> with “Slide N” headings. Improves matching.</p>
+      <div class="files" id="list-script"></div>
+      <input type="file" id="file-script" accept=".docx,.txt,.md" hidden />
+    </div>
+
+    <div class="card" id="drop-audio">
+      <span class="step">3</span>
+      <h3>Recordings</h3>
+      <p>One clip per slide — mp3, m4a, wav, ogg… Drop them all at once.</p>
+      <div class="files" id="list-audio"></div>
+      <input type="file" id="file-audio" accept="audio/*,.m4a,.ogg,.opus,.mp4" multiple hidden />
+    </div>
+  </section>
+
+  <section class="controls">
+    <label class="toggle"><input type="checkbox" id="opt-smart" checked /> <span>Auto-match by listening (Whisper) when a recording's file name has no slide number</span></label>
+    <label class="toggle"><input type="checkbox" id="opt-autoplay" checked /> <span>Play each recording automatically when its slide appears</span></label>
+    <button id="btn-process" class="primary" disabled>Match recordings to slides</button>
+  </section>
+
+  <section id="progress" class="panel hidden">
+    <div class="stage" id="stage">Working…</div>
+    <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+    <pre class="log" id="log"></pre>
+  </section>
+
+  <section id="review" class="panel hidden">
+    <div class="review-head">
+      <h2>Review the matches</h2>
+      <span class="summary" id="review-summary"></span>
+    </div>
+    <p class="hint">Listen to any clip and change its slide if something looks off. One recording per slide.</p>
+    <div class="table-wrap">
+      <table class="review-table">
+        <thead><tr><th>Recording</th><th>What it says</th><th>Matched by</th><th>Goes on</th></tr></thead>
+        <tbody id="review-rows"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button id="btn-generate" class="primary">Generate narrated PowerPoint</button>
+      <button id="btn-restart" class="link">Start over</button>
+    </div>
+  </section>
+
+  <section id="result" class="panel result hidden">
+    <h2>🎉 Your narrated deck is ready</h2>
+    <p id="result-text"></p>
+    <a id="download" class="primary download">Download .pptx</a>
+    <p class="tip">Open it and press <kbd>F5</kbd> to play. A speaker icon sits in the corner of each narrated slide.</p>
+  </section>
+</main>
+
+<footer>
+  <p>Built with JSZip · ffmpeg.wasm · Whisper (transformers.js). 100% client-side — no uploads, no servers.</p>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

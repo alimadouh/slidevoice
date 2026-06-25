@@ -1,0 +1,12 @@
+{
+  "name": "slidevoice",
+  "version": "1.0.0",
+  "description": "Add voice narration to every PowerPoint slide, in the browser. Auto-matches recordings to slides with Whisper.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "npx --yes serve@14 -l 5000 ."
+  },
+  "keywords": ["powerpoint", "pptx", "narration", "whisper", "transformers.js", "ffmpeg.wasm"],
+  "license": "MIT"
+}

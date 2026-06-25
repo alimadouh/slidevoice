@@ -1,0 +1,21 @@
+# SlideVoice — static site, no build step. Netlify just serves the files.
+[build]
+  publish = "."
+
+# Long-cache the immutable-ish assets; always revalidate the HTML entry point.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
