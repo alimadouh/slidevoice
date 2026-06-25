@@ -43,9 +43,9 @@ h1 .hl{color:var(--accent)}
 .card:hover{border-color:var(--accent);border-style:solid;transform:translateY(-3px);box-shadow:var(--shadow-red);background:linear-gradient(180deg,#fff, #fff7f7)}
 .card:active{transform:translateY(-1px) scale(.995)}
 .card.drag{border-color:var(--accent);border-style:solid;background:var(--accent-soft)}
-.drop-cue{display:inline-flex;align-items:center;gap:8px;margin-top:12px;color:var(--accent);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;background:var(--accent-soft);transition:.18s}
-.drop-cue svg{width:17px;height:17px}
-.card:hover .drop-cue{background:var(--accent);color:#fff}
+.drop-cue{display:flex;justify-content:center;margin-top:18px;color:var(--accent);transition:transform .18s,color .18s}
+.drop-cue svg{width:46px;height:46px}
+.card:hover .drop-cue{color:var(--accent-ink);transform:scale(1.12)}
 .card:hover .drop-cue svg{animation:cue-bounce .6s ease}
 @keyframes cue-bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-3px)}70%{transform:translateY(1px)}}
 @media(prefers-reduced-motion:reduce){.card:hover .drop-cue svg{animation:none}}
