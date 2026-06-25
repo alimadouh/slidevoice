@@ -72,7 +72,7 @@ $('#btn-process').addEventListener('click', async () => {
     $('#btn-process').disabled = true;
     show('#progress'); hide('#review'); hide('#result');
     $('#log').textContent = '';
-    const smart = $('#opt-smart').checked;
+    const smart = true; // auto-match by listening is always on
 
     setStage('Reading PowerPoint…'); setBar(4);
     const buf = await state.pptxFile.arrayBuffer();
@@ -212,7 +212,7 @@ $('#btn-generate').addEventListener('click', async () => {
       .filter(a => a.slideNumber != null)
       .map(a => ({ slideNumber: a.slideNumber, mp3: state.processed.get(a.id).mp3, durationSec: state.processed.get(a.id).durationSec }));
     setBar(55);
-    const { out, log } = await embedNarration(parsed.zip, parsed.slides, assignments, { autoplay: $('#opt-autoplay').checked });
+    const { out, log } = await embedNarration(parsed.zip, parsed.slides, assignments, { autoplay: true });
     log.forEach(logLine);
     setBar(100); setStage('Done.');
     const base = state.pptxFile.name.replace(/\.pptx$/i, '');
