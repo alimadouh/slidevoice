@@ -28,9 +28,12 @@ export async function loadModel(onProgress) {
         return asr;
       } catch (e) {
         console.warn('WebGPU unavailable, falling back to WASM:', e);
+        asr = null;
       }
     }
-    asr = await pipeline('automatic-speech-recognition', MODEL, opts);
+    // Explicit device:'wasm' — without it, transformers.js re-selects WebGPU
+    // whenever navigator.gpu exists (even if it has no working adapter).
+    asr = await pipeline('automatic-speech-recognition', MODEL, { ...opts, device: 'wasm' });
     usingDevice = 'wasm';
     return asr;
   })();
