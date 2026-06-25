@@ -97,24 +97,39 @@ $('#btn-process').addEventListener('click', async () => {
 
     state.processed.clear();
     const n = state.audioFiles.length;
-    let modelLoaded = false;
+    let modelLoaded = false, smartFailed = false;
     for (let i = 0; i < n; i++) {
       const a = state.audioFiles[i];
       setStage(`Converting audio ${i + 1}/${n}: ${a.name}`);
       setBar(12 + (i / n) * 55);
       const { mp3, durationSec, pcm } = await processAudio(a.file);
       let transcript = '';
-      if (needsTranscript.get(a.id)) {
+      if (needsTranscript.get(a.id) && !smartFailed) {
+        // Transcription is a best-effort enhancement. If the speech model
+        // can't load (e.g. a browser without WebGPU/WASM ML support), we
+        // degrade gracefully to file-name / order matching + manual review
+        // instead of failing the whole job.
         if (!modelLoaded) {
           setStage('Loading speech model (first time downloads ~50 MB)…');
-          await loadModel((p) => { if (p && p.progress) setStage(`Loading speech model… ${Math.round(p.progress)}%`); });
-          modelLoaded = true;
-          logLine(`Speech model ready (${device()}).`);
+          try {
+            await loadModel((p) => { if (p && p.progress) setStage(`Loading speech model… ${Math.round(p.progress)}%`); });
+            modelLoaded = true;
+            logLine(`Speech model ready (${device()}).`);
+          } catch (e) {
+            smartFailed = true;
+            logLine('Auto-listen is not available in this browser — falling back to file-name/order matching. You can fix any clip manually in the table below. (Tip: name files like "Slide 3.mp3", or use Chrome/Edge for auto-matching.)');
+          }
         }
-        setStage(`Listening to ${a.name}…`);
-        transcript = await transcribe(pcm);
-        logLine(`"${a.name}" → ${transcript.slice(0, 70)}${transcript.length > 70 ? '…' : ''}`);
-      } else {
+        if (modelLoaded) {
+          try {
+            setStage(`Listening to ${a.name}…`);
+            transcript = await transcribe(pcm);
+            logLine(`"${a.name}" → ${transcript.slice(0, 70)}${transcript.length > 70 ? '…' : ''}`);
+          } catch (e) {
+            logLine(`Could not transcribe "${a.name}" — assign it manually below.`);
+          }
+        }
+      } else if (!needsTranscript.get(a.id)) {
         logLine(`"${a.name}" → matched by file name`);
       }
       state.processed.set(a.id, { mp3, durationSec, pcm, transcript });

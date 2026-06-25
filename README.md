@@ -1,6 +1,6 @@
-﻿# ðŸŽ™ï¸ B7oothKw
+# B7oothKw
 
-Add your **voice narration to every PowerPoint slide** â€” automatically.
+Add your **voice narration to every PowerPoint slide** — automatically.
 
 Upload a `.pptx`, (optionally) your script, and your voice recordings. B7oothKw
 **listens to each recording, figures out which slide it belongs to**, and gives you
@@ -8,30 +8,34 @@ back a narrated `.pptx` with the audio embedded and set to play on each slide.
 
 Everything runs **100% in your browser**. Your files are never uploaded to a server.
 
-ðŸ”— **Live:** https://B7oothKw.netlify.app
+🔗 **Live:** https://slidevoice.netlify.app
 
 ---
 
 ## How it works
 
-1. **Read the deck** â€” [JSZip](https://stuk.github.io/jszip/) opens the `.pptx`
+1. **Read the deck** — [JSZip](https://stuk.github.io/jszip/) opens the `.pptx`
    (a zip of XML), reads the slides in true display order, and pulls each slide's text.
-2. **Read the script** *(optional)* â€” a `.docx`/`.txt` with `Slide N` headings is parsed
+2. **Read the script** *(optional)* — a `.docx`/`.txt` with `Slide N` headings is parsed
    into per-slide scripts to make matching far more accurate.
-3. **Normalize the audio** â€” [ffmpeg.wasm](https://ffmpegwasm.netlify.app/) converts any
-   recording (mp3, m4a, wav, ogg/opus, webmâ€¦) to PowerPoint-friendly MP3, and extracts
+3. **Normalize the audio** — [ffmpeg.wasm](https://ffmpegwasm.netlify.app/) converts any
+   recording (mp3, m4a, wav, ogg/opus, webm…) to PowerPoint-friendly MP3, and extracts
    16 kHz mono PCM for transcription.
-4. **Figure out the placement** â€” three signals, in order:
-   - a **slide number in the file name** (`Slide 7.m4a` â†’ slide 7),
+4. **Figure out the placement** — three signals, in order:
+   - a **slide number in the file name** (`Slide 7.m4a` → slide 7),
    - **content similarity** between the recording's transcript and each slide's
      script/text, using [Whisper](https://huggingface.co/onnx-community/whisper-base.en)
      via [Transformers.js](https://github.com/huggingface/transformers.js),
    - **upload order** as a fallback.
-5. **Review & fix** â€” you see every proposed match, can listen to each clip, and can
+5. **Review & fix** — you see every proposed match, can listen to each clip, and can
    reassign any slide before generating.
-6. **Embed** â€” the audio is written into each slide as an OOXML `<p:pic>` media shape
+6. **Embed** — the audio is written into each slide as an OOXML `<p:pic>` media shape
    with auto-play timing, the relationships and content-types are wired up, and you
    download the finished deck.
+
+> **Auto-listen (Whisper)** runs best in a WebGPU browser (Chrome/Edge). If it isn't
+> available, B7oothKw still works — name recordings `Slide N.ext` for exact matching,
+> or assign any clip yourself in the review table.
 
 ## Privacy
 
@@ -44,7 +48,7 @@ to load the libraries and (once, cached) the Whisper model.
 ```bash
 npm run dev      # serves the folder at http://localhost:5000
 ```
-(or any static server â€” there is no build step).
+(or any static server — there is no build step).
 
 ## Deploy
 
@@ -57,7 +61,7 @@ netlify deploy --prod          # publishes the current folder
 ```
 
 For continuous deploys, connect the GitHub repo in the Netlify dashboard
-(**Add new site â†’ Import from GitHub**). `netlify.toml` already sets `publish = "."`
+(**Add new site → Import from GitHub**). `netlify.toml` already sets `publish = "."`
 with no build command.
 
 ## Tech
@@ -65,11 +69,10 @@ with no build command.
 | Concern | Library |
 |---|---|
 | Edit the `.pptx` (zip + OOXML) | JSZip |
-| Audio conversion | ffmpeg.wasm (single-threaded core â€” no COOP/COEP needed) |
-| Speech-to-text | Whisper `base.en` via Transformers.js (WebGPU â†’ WASM fallback) |
+| Audio conversion | ffmpeg.wasm (single-threaded core, self-hosted worker — no COOP/COEP needed) |
+| Speech-to-text | Whisper `base.en` via Transformers.js (WebGPU → WASM fallback) |
 | Matching | cosine similarity over tokenized script/transcript text |
 
 ## License
 
 MIT
-
