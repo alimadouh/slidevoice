@@ -2,9 +2,16 @@
 [build]
   publish = "."
 
-# Long-cache the immutable-ish assets; always revalidate the HTML entry point.
+# Long-cache the immutable-ish assets; always revalidate the HTML entry points.
 [[headers]]
   for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/humanizer.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
     X-Content-Type-Options = "nosniff"
