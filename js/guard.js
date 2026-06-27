@@ -6,9 +6,11 @@
   try {
     var token = localStorage.getItem("b7_token");
     var guest = localStorage.getItem("b7_guest");
+    var local = location.hostname === "localhost" || location.hostname === "127.0.0.1";
     var page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-    // Signed-in OR guest can browse; a logged-out, non-guest visitor goes to login.
-    if (!token && !guest && page !== "login.html") {
+    // Localhost is always treated as signed-in (preview). Otherwise signed-in OR
+    // guest can browse; a logged-out, non-guest visitor goes to login.
+    if (!token && !guest && !local && page !== "login.html") {
       location.replace("login.html");
     }
   } catch (e) {}

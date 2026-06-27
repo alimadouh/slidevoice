@@ -1,13 +1,13 @@
 // Shared light/dark theme toggle, persisted across all B7oothKw pages.
-// hz-pages (home, humanizer) default DARK; the narrator defaults LIGHT. Once the
-// user picks a theme it is honoured everywhere via localStorage("b7_theme").
+// Default is DARK everywhere (consistent — no flicker between pages); the user's
+// choice is honoured everywhere via localStorage("b7_theme").
 (function () {
   var KEY = "b7_theme";
   var body = document.body;
   var isHz = body.classList.contains("hz-page");
 
   function stored() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
-  function effective(t) { return (t === "light" || t === "dark") ? t : (isHz ? "dark" : "light"); }
+  function effective(t) { return t === "light" ? "light" : "dark"; }   // default dark everywhere
 
   function apply(t) {
     var eff = effective(t);

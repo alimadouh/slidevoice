@@ -1,6 +1,6 @@
-// Humanizer backend (shared models, anonymous "branch" access).
-// The branch key is PUBLIC by design — it only tags requests as coming from this
-// front-end. Real protection is server-side CORS + per-IP daily limits.
+// Humanizer backend (shared models, "branch" access). The branch key is PUBLIC —
+// it only tags requests as coming from this front-end. Tools require login: the
+// server meters per-account and rejects requests without a valid token.
 window.HUMANIZER_API = "https://api.gahumanizer.com";
 window.BRANCH_KEY = "b7oothkw_pub_8e3f";
 

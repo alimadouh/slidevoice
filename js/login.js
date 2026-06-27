@@ -6,8 +6,9 @@
 //   POST /api/b7/auth/otp/verify { phone, code }           -> { token } | { error }
 const API = (window.HUMANIZER_API || "").replace(/\/$/, "");
 const GID = window.GOOGLE_CLIENT_ID || "";
+const BKEY = window.BRANCH_KEY || "";     // tags sign-ups as B7oothKw (separate from Grade A)
 const TOKEN_KEY = "b7_token";
-const AFTER_LOGIN = "humanizer.html";
+const AFTER_LOGIN = "index.html";        // back to the home chooser after signing in
 
 const $ = (id) => document.getElementById(id);
 const msgEl = $("loginMsg");
@@ -42,7 +43,7 @@ async function onGoogleToken(resp) {
   msg("Signing in…");
   try {
     const r = await fetch(API + "/api/auth/google", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json", "X-Branch-Key": BKEY },
       body: JSON.stringify({ access_token: resp.access_token }),
     });
     const j = await r.json();
@@ -86,8 +87,8 @@ async function sendCode() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone }),
     });
-    const j = await r.json();
-    if (j.error) { msg(j.error); return; }
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok || j.error) { msg(j.error || "Phone sign-in isn’t available yet — please use Google."); return; }
     showStep(2); $("otp").value = ""; $("otp").focus();
     msg("We sent a code to " + phone + ".", true);
   } catch (e) { msg("Couldn’t reach the server. Please try again."); }
@@ -103,8 +104,9 @@ async function verifyCode() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone: phoneVal, code }),
     });
-    const j = await r.json();
+    let j = {}; try { j = await r.json(); } catch (e) {}
     if (j.token) finishLogin(j.token);
+    else if (!r.ok) msg(j.error || "Phone sign-in isn’t available yet — please use Google.");
     else msg(j.error || "That code didn’t match. Please try again.");
   } catch (e) { msg("Couldn’t reach the server. Please try again."); }
   finally { $("btnVerify").disabled = false; }

@@ -4,9 +4,13 @@
 // A guest who triggers a tool action gets a "please log in" prompt.
 (function () {
   var TOKEN = "b7_token", GUEST = "b7_guest";
+  // Localhost is always treated as signed-in (admin) so the site can be previewed
+  // without logging in. (On a real server this is never true.)
+  var LOCAL = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  window.b7IsLocal = LOCAL;
 
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  window.b7HasToken = function () { var t = get(TOKEN); return !!t && t !== "guest"; };
+  window.b7HasToken = function () { if (LOCAL) return true; var t = get(TOKEN); return !!t && t !== "guest"; };
   window.b7IsGuest = function () { return !window.b7HasToken(); };
   window.b7Logout = function () {
     try { localStorage.removeItem(TOKEN); localStorage.removeItem(GUEST); } catch (e) {}

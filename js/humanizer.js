@@ -1,9 +1,14 @@
-// B7oothKw Humanizer — anonymous "branch" client (no accounts; metered per-IP
-// server-side). Always Model 2. Dark workspace modelled on the Grade A humanizer.
+// B7oothKw Humanizer — "branch" client. Requires login; sends the user's token so
+// the server meters per-account. Always Model 2. Dark workspace like Grade A.
 
 const API  = (window.HUMANIZER_API || "").replace(/\/$/, "");
 const BKEY = window.BRANCH_KEY || "";
-const JH   = { "Content-Type": "application/json", "X-Branch-Key": BKEY };
+const TOKEN = (function () { try { var t = localStorage.getItem("b7_token"); return (t && t !== "guest") ? t : ""; } catch (e) { return ""; } })();
+// Branch requests carry the public key (tags the origin) AND the logged-in token
+// (the server meters per-account and rejects guests).
+const JH = { "Content-Type": "application/json", "X-Branch-Key": BKEY };
+const BH = { "X-Branch-Key": BKEY };                  // for multipart / GET (no JSON content-type)
+if (TOKEN) { JH["Authorization"] = "Bearer " + TOKEN; BH["Authorization"] = "Bearer " + TOKEN; }
 const LEVEL = 8;                          // Model 2 ignores level; fixed request shape
 const RED = 0.5, AMBER = 0.305;           // sentence colour thresholds
 
@@ -258,7 +263,11 @@ btnHum.onclick = humanize;
 btnCheck.onclick = check;
 btnGreen.onclick = makeAllGreen;
 btnClear.onclick = clearAll;
-btnStopHum.onclick = () => humAbort && humAbort.abort();
+btnStopHum.onclick = () => {
+  if (humAbort) humAbort.abort();
+  // Tell the server to stop + refund the words (the job keeps running otherwise).
+  try { fetch(API + "/api/humanize/cancel", { method: "POST", headers: JH, keepalive: true, body: "{}" }); } catch (e) {}
+};
 btnStopGreen.onclick = () => greenAbort && greenAbort.abort();
 btnCopy.onclick = async () => {
   if (!lastText) return;
@@ -295,7 +304,7 @@ ppDrop.addEventListener("drop", (e) => {
 });
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const ppStatus = (id) => fetch(`${API}/api/pptx/status/${id}`, { headers: { "X-Branch-Key": BKEY } }).then((r) => r.json());
+const ppStatus = (id) => fetch(`${API}/api/pptx/status/${id}`, { headers: BH }).then((r) => r.json());
 
 async function ppRun() {
   if (needLogin("Log in to humanize PowerPoint files.")) return;
@@ -306,7 +315,7 @@ async function ppRun() {
   try {
     const fd = new FormData();
     fd.append("file", ppPicked, ppPicked.name);
-    const r = await fetch(`${API}/api/pptx`, { method: "POST", headers: { "X-Branch-Key": BKEY }, body: fd });
+    const r = await fetch(`${API}/api/pptx`, { method: "POST", headers: BH, body: fd });
     const j = await r.json();
     if (j.error) { ppMsg.textContent = j.error; return; }
     const jobId = j.job_id;
@@ -320,7 +329,7 @@ async function ppRun() {
       if (s.state === "processing") { ppBarFill.style.width = "70%"; continue; }
       if (s.state === "done") {
         ppBarFill.style.width = "90%";
-        const dl = await fetch(`${API}/api/pptx/result/${jobId}`, { headers: { "X-Branch-Key": BKEY } });
+        const dl = await fetch(`${API}/api/pptx/result/${jobId}`, { headers: BH });
         if (!dl.ok) { ppMsg.textContent = "Couldn’t download the result. Please try again."; return; }
         const changed = dl.headers.get("X-Changed") || "0";
         const blob = await dl.blob();
