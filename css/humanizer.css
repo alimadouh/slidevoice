@@ -139,20 +139,41 @@ body.dark .back-link:hover{color:#e8edf4;border-color:#ff3131}
 .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
 @media(max-width:720px){.home-cards{grid-template-columns:1fr}}
 .home-card{display:flex;flex-direction:column;gap:13px;text-decoration:none;padding:30px 26px;border-radius:18px;
-  background:#fff;border:1.5px solid #e8e6ea;box-shadow:0 16px 44px -24px rgba(20,20,23,.5);transition:.18s}
-.home-card:hover{transform:translateY(-4px);border-color:#ff3131;box-shadow:0 22px 50px -22px rgba(255,49,49,.45)}
-.home-ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
-  background:linear-gradient(135deg,#ff3131,#ff6a4d);color:#fff;box-shadow:0 10px 24px -10px rgba(255,49,49,.7)}
-.home-ic svg{width:30px;height:30px}
+  background:#fff;border:1.5px solid #e8e6ea;box-shadow:0 16px 44px -24px rgba(20,20,23,.5);position:relative;overflow:hidden;
+  transition:transform .24s cubic-bezier(.34,1.4,.5,1),border-color .2s,box-shadow .24s;animation:home-in .5s both}
+/* hover (desktop) AND active (mobile tap) trigger the same effects */
+.home-card:hover,.home-card:active{transform:translateY(-6px) scale(1.014);border-color:#ff3131;box-shadow:0 26px 56px -22px rgba(255,49,49,.5)}
+/* shine sweep on hover / tap */
+.home-card::before{content:"";position:absolute;top:0;left:-65%;width:45%;height:100%;pointer-events:none;z-index:1;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);opacity:0}
+.home-card:hover::before,.home-card:active::before{animation:home-shine .85s ease}
+@keyframes home-shine{0%{left:-65%;opacity:1}100%{left:135%;opacity:1}}
+@keyframes home-in{from{opacity:0}to{opacity:1}}        /* opacity-only so it never blocks the hover transform */
+.home-cards .home-card:nth-child(1){animation-delay:.04s}
+.home-cards .home-card:nth-child(2){animation-delay:.11s}
+.home-wide{animation-delay:.18s}
+
+.home-ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;position:relative;z-index:2;
+  background:linear-gradient(135deg,#ff3131,#ff6a4d);color:#fff;box-shadow:0 10px 24px -10px rgba(255,49,49,.7);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
+.home-ic svg{width:30px;height:30px;transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.home-card:hover .home-ic,.home-card:active .home-ic{transform:scale(1.09) rotate(-5deg);box-shadow:0 14px 30px -8px rgba(255,49,49,.8)}
+.home-card:hover .home-ic svg,.home-card:active .home-ic svg{transform:rotate(5deg)}
+.home-head-row{display:flex;align-items:center;gap:14px;position:relative;z-index:2}
 .home-card h2{margin:0;font-size:22px;letter-spacing:-.01em;color:#16161a}
+.home-desc{margin:0;font-size:14.5px;line-height:1.55;color:#6e6e78;position:relative;z-index:2}
 .home-card p{margin:0;font-size:14.5px;line-height:1.6;color:#6e6e78}
-.home-go{margin-top:6px;color:#d41f1f;font-weight:700;font-size:14px}
+.home-go{margin-top:2px;color:#d41f1f;font-weight:700;font-size:14px;display:inline-block;position:relative;z-index:2;transition:transform .2s}
+.home-card:hover .home-go,.home-card:active .home-go{transform:translateX(5px)}
 
 .home-wide{margin-top:22px}                 /* full-width card below the two tools */
 .home-ic.wa-ic{background:linear-gradient(135deg,#25d366,#1ebe59);box-shadow:0 10px 24px -10px rgba(37,211,102,.7)}
+.home-card:hover .home-ic.wa-ic,.home-card:active .home-ic.wa-ic{box-shadow:0 14px 30px -8px rgba(37,211,102,.85)}
 .home-go.wa-go{color:#1ba84e}
-.home-card:hover .home-ic.wa-ic{transform:none}
-.home-wide:hover{border-color:#25d366;box-shadow:0 22px 50px -22px rgba(37,211,102,.45)}
+.home-wide:hover,.home-wide:active{border-color:#25d366;box-shadow:0 26px 56px -22px rgba(37,211,102,.5)}
+@media(prefers-reduced-motion:reduce){.home-card,.home-card::before{animation:none}
+  .home-card:hover,.home-card:active{transform:translateY(-3px)}
+  .home-card:hover .home-ic,.home-card:active .home-ic,.home-card:hover .home-go,.home-card:active .home-go{transform:none}}
 
 /* dark-theme overrides for the above when on .hz-page */
 .hz-page .back-link{color:var(--mut);border-color:var(--line2);background:var(--panel2)}
@@ -162,7 +183,7 @@ body.dark .back-link:hover{color:#e8edf4;border-color:#ff3131}
 .hz-page .home-card{background:linear-gradient(180deg,var(--panel),var(--bg2));border-color:var(--line);box-shadow:0 12px 40px rgba(0,0,0,.35)}
 .hz-page .home-card:hover{border-color:var(--acc);box-shadow:0 18px 50px rgba(255,49,49,.18)}
 .hz-page .home-card h2{color:var(--ink)}
-.hz-page .home-card p{color:var(--mut)}
+.hz-page .home-card p,.hz-page .home-desc{color:var(--mut)}
 .hz-page .home-go{color:var(--acc2)}
 .hz-page .home-go.wa-go{color:#34e07a}
 
