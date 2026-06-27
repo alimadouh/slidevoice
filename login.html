@@ -8,12 +8,17 @@
 <link rel="icon" href="assets/icon.png" />
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/humanizer.css" />
+<link rel="stylesheet" href="css/login.css" />
 </head>
-<body class="hz-page">
+<body class="hz-page lz">
 <script src="js/theme.js"></script>
+<div class="lz-aurora" aria-hidden="true">
+  <div class="lz-blob lz-b1"></div><div class="lz-blob lz-b2"></div>
+  <div class="lz-blob lz-b3"></div><div class="lz-blob lz-b4"></div>
+</div>
 <header class="topbar">
   <div class="bar-top">
-    <a class="brand logo-link" href="./" aria-label="B7oothKw — home">
+    <a class="brand logo-link lz-toplogo" href="./" aria-label="B7oothKw — home">
       <svg class="logo-svg" viewBox="0 0 1243 360" role="img" aria-label="B7oothKw" xmlns="http://www.w3.org/2000/svg">
         <g class="lg-cap" fill="#16161a">
           <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>
@@ -29,15 +34,54 @@
         <text class="lg-word" x="352" y="191" font-family="'Segoe UI', system-ui, Arial, sans-serif" font-weight="900" font-size="170" dominant-baseline="middle" letter-spacing="-2">B7ooth<tspan fill="#FF3131">Kw</tspan></text>
       </svg>
     </a>
-    <a class="back-link" href="./"><span class="bk-arrow">←</span> Back</a>
   </div>
   <div class="topbar-right">
     <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">☀</button>
   </div>
 </header>
 
-<main class="login-wrap">
-  <div class="login-card">
+<main class="lz-main">
+  <div class="lz-hero">
+  <div class="lz-left">
+    <div class="lz-brandblock">
+      <span class="lz-badge lz-badge-top"><span class="pulse"></span> The #1 AI humanizer — undetectable by design</span>
+      <svg class="lz-cap" viewBox="30 86 305 205" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <g class="lg-cap" fill="#16161a">
+          <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>
+          <polygon points="126.0,173.04 152.0,185.52 178.0,188.64 204.0,185.52 230.0,173.04 230.0,198.0 209.2,212.56 178.0,217.76 146.8,212.56 126.0,198.0"/>
+          <ellipse cx="178.0" cy="103.36" rx="9.36" ry="9.36"/>
+        </g>
+        <g class="lg-tassel">
+          <path d="M178.0,94.0 Q276.8,98.16 318.4,146.0 L318.4,208.4" fill="none" stroke="#FF3131" stroke-width="7.28" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="318.4" cy="208.4" rx="11.44" ry="11.44" fill="#FF3131"/>
+          <polygon points="308.0,212.56 328.8,212.56 324.64,247.92 312.16,247.92" fill="#FF3131"/>
+        </g>
+        <path class="lg-must" d="M180.0,258.0 C188.0,239.0 204.0,237.0 220.0,243.0 C238.0,249.0 246.0,253.0 258.0,251.0 C272.0,249.0 281.0,235.0 285.0,220.0 C281.0,237.0 273.0,248.0 260.0,254.0 C240.0,270.0 220.0,280.0 202.0,282.0 C194.0,283.0 187.0,282.0 180.0,280.0 C173.0,282.0 166.0,283.0 158.0,282.0 C140.0,280.0 120.0,270.0 100.0,254.0 C87.0,248.0 79.0,237.0 75.0,220.0 C79.0,235.0 88.0,249.0 102.0,251.0 C114.0,253.0 122.0,249.0 140.0,243.0 C156.0,237.0 172.0,239.0 180.0,258.0 Z" fill="#16161a"/>
+      </svg>
+      <div class="lz-brand"><span class="b-static">B7ooth</span><span class="b-kw"><span class="kw-letter">Kw</span><span class="kw-plane"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></span></span></div>
+    </div>
+    <p class="lz-tag">Humanize AI text so it reads <b>naturally</b> — essays, reports, and slides.</p>
+    <div class="lz-badges">
+      <span class="lz-badge"><span class="pulse"></span> Real Turnitin scans — check your file before you submit</span>
+      <span class="lz-badge"><span class="pulse"></span> Any field, any project — engineering, business, English &amp; beyond</span>
+    </div>
+    <div class="lz-engine">
+      <div class="eng-stage in" id="engIn">
+        <div class="eng-sh"><span class="eng-lab red"><span class="d"></span>AI Input</span><span class="eng-pct red" id="engPctIn">98% AI</span></div>
+        <div class="eng-body" id="engBodyIn"></div>
+      </div>
+      <div class="eng-conn"><span class="eng-spark"></span><span class="eng-spark" style="animation-delay:.55s"></span><span class="eng-spark" style="animation-delay:1.1s"></span></div>
+      <div class="eng-cap"><div class="eng-orbw"><div class="eng-ring"></div><div class="eng-ring r2"></div><div class="eng-orb"></div><div class="eng-orblbl">B7oothKw Engine</div></div></div>
+      <div class="eng-conn g"><span class="eng-spark"></span><span class="eng-spark" style="animation-delay:.55s"></span><span class="eng-spark" style="animation-delay:1.1s"></span></div>
+      <div class="eng-stage out" id="engOut">
+        <div class="eng-sh"><span class="eng-lab green"><span class="d"></span>Human Output</span><span class="eng-pct green" id="engPctOut">—</span></div>
+        <div class="eng-body dim" id="engBodyOut">…</div>
+      </div>
+    </div>
+  </div>
+  <div class="lz-right">
+    <div class="login-wrap">
+    <div class="login-card">
     <h1>Sign in to B7oothKw</h1>
     <p class="sub">Log in or create a free account.</p>
 
@@ -108,6 +152,9 @@
       <button class="login-back" id="btnResend" type="button">Resend code</button>
       <button class="login-back" id="btnChangeNum" type="button">Change number</button>
     </div>
+  </div>
+    </div>
+  </div>
   </div>
 </main>
 

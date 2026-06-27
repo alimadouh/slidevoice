@@ -239,3 +239,50 @@ $("resetBack").onclick = (e) => { e.preventDefault(); showPanel("main"); msg("")
 $("resetSubmit").onclick = () => (resetStep === 1 ? doForgot() : doReset());
 $("authPass").addEventListener("keydown", (e) => { if (e.key === "Enter") doAuth(); });
 $("authCode").addEventListener("keydown", (e) => { if (e.key === "Enter") doVerify(); });
+
+// ---------------------------------------------------------------- AI engine demo
+// Cycles AI -> human sentence pairs: shows the AI input, then "types" the humanized
+// output word by word while the AI% gauge drops 98% -> 2%. (Mirrors the Grade A landing.)
+(function () {
+  var IN = document.getElementById("engBodyIn"), OUT = document.getElementById("engBodyOut");
+  if (!IN || !OUT) return;
+  var stIn = document.getElementById("engIn"), stOut = document.getElementById("engOut");
+  var pIn = document.getElementById("engPctIn"), pOut = document.getElementById("engPctOut");
+  var PAIRS = [
+    { ai: "This essay demonstrates the significance of the proposed framework for improving efficiency.",
+      human: "This essay shows why the new framework really matters when you want to get more done." },
+    { ai: "Maintaining a balanced diet contributes significantly to long-term health outcomes and overall performance.",
+      human: "Eating well really pays off — you feel better now and stay healthier down the road." },
+    { ai: "Artificial intelligence is increasingly integrated into modern workflows to automate repetitive processes.",
+      human: "AI is popping up in more workplaces because it takes the boring, repetitive tasks off your plate." },
+    { ai: "Effective communication is essential for building productive relationships in professional contexts.",
+      human: "Good communication just makes work easier, whether you're talking to teammates or your boss." },
+    { ai: "Financial literacy enables individuals to make informed decisions regarding budgeting and investment.",
+      human: "Knowing the basics of money helps you budget, save, and steer clear of bad money moves." }
+  ];
+  var idx = 0;
+  IN.textContent = PAIRS[0].ai;
+  function setG(p) { pOut.textContent = Math.round(p) + "% AI"; pOut.style.color = p > 50 ? "#e5524b" : p > 20 ? "#d8a234" : "#2bbf6a"; }
+  function cycle() {
+    var pair = PAIRS[idx], words = pair.human.split(" ");
+    IN.textContent = pair.ai;
+    pIn.textContent = "98% AI"; pIn.style.color = "#e5524b";
+    stOut.classList.remove("done"); OUT.classList.remove("typing"); OUT.classList.add("dim"); OUT.textContent = "…";
+    pOut.textContent = "—"; pOut.style.color = "";
+    stIn.classList.add("active");
+    setTimeout(function () {
+      stIn.classList.remove("active"); OUT.classList.remove("dim"); OUT.classList.add("typing"); OUT.textContent = "";
+      setG(98);
+      var i = 0, iv = setInterval(function () {
+        OUT.textContent += (i ? " " : "") + words[i]; i++;
+        setG(98 - (i / words.length) * 96);
+        if (i >= words.length) {
+          clearInterval(iv); setG(2); OUT.classList.remove("typing"); stOut.classList.add("done");
+          idx = (idx + 1) % PAIRS.length;
+          setTimeout(cycle, 4200);
+        }
+      }, 75);
+    }, 1300);
+  }
+  setTimeout(cycle, 800);
+})();
