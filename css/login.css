@@ -38,38 +38,31 @@ body.hz-page.light .lz-aurora{opacity:.32}
 .lz-cap{width:clamp(130px,17vw,224px);height:auto;display:block;position:relative;left:35%;
   transform:translateX(-50%);margin:0 0 -14px;animation:lz-rise .8s both}
 
-/* ---- big brand with the "Kw" paper-plane animation (ported from the Grade A "A") ---- */
+/* ---- big brand: a hand places the "Kw", shakes it, then it poofs away (loops) ---- */
 .lz-brand{font-weight:900;line-height:.95;letter-spacing:-3px;font-size:clamp(46px,8.5vw,118px);
   display:inline-flex;align-items:baseline;color:var(--ink)}
 .b-static{color:var(--ink)}
-.b-kw{display:inline-block;position:relative;transform-origin:50% 55%;animation:kwCycle 7s ease-in-out infinite}
-.kw-letter{display:inline-block;color:#ff3131;animation:kwLetter 7s ease-in-out infinite;
-  filter:drop-shadow(0 6px 22px rgba(255,49,49,.5))}
-.kw-plane{position:absolute;left:50%;top:50%;width:.95em;height:.95em;transform:translate(-50%,-50%);opacity:0;
-  animation:kwPlane 7s ease-in-out infinite;filter:drop-shadow(0 6px 20px rgba(255,49,49,.6))}
-.kw-plane svg{width:100%;height:100%;display:block;fill:#ff5142}
+.b-kw{display:inline-block;position:relative;transform-origin:50% 70%;animation:kwCycle 5.5s ease-in-out infinite}
+.kw-letter{display:inline-block;color:#ff3131;filter:drop-shadow(0 6px 22px rgba(255,49,49,.5));
+  animation:kwShake 5.5s ease-in-out infinite;transform-origin:50% 80%}
+/* the whole group: descends -> holds -> lifts & poofs (shrink + spin + fade) -> wait -> loop */
 @keyframes kwCycle{
-  0%   {transform:translateY(-120vh) rotate(-16deg) scale(1);opacity:0}
-  4%   {opacity:1}
-  15%  {transform:translateY(0) rotate(0deg) translateX(0) scale(1)}
-  18%  {transform:translateY(0) rotate(-9deg) translateX(-5px) scale(1.05)}
-  21%  {transform:translateY(0) rotate(8deg)  translateX(4px)  scale(1.04)}
-  24%  {transform:translateY(0) rotate(-8deg) translateX(-4px) scale(1.04)}
-  27%  {transform:translateY(0) rotate(7deg)  translateX(3px)  scale(1.03)}
-  29%  {transform:translateY(0) rotate(-3deg) translateX(-1px) scale(1.01)}
-  31%  {transform:translateY(0) rotate(0deg)  translateX(0)    scale(1);opacity:1}
-  60%  {transform:perspective(900px) translateX(0) translateY(0) rotateY(0deg) rotateZ(0deg) scale(1);opacity:1;animation-timing-function:ease-in-out}
-  65%  {transform:perspective(900px) translateX(0) translateY(-3px) rotateY(90deg) rotateZ(0deg) scale(.92)}
-  71%  {transform:perspective(900px) translateX(0) translateY(-8px) rotateY(0deg) rotateZ(-38deg) scale(.74);animation-timing-function:cubic-bezier(.45,0,.85,.5)}
-  77%  {transform:perspective(900px) translateX(9vw)  translateY(-22vh) rotateY(0deg) rotateZ(-46deg) scale(.5)}
-  84%  {transform:perspective(900px) translateX(31vw) translateY(-56vh) rotateY(0deg) rotateZ(-52deg) scale(.26)}
-  91%  {transform:perspective(900px) translateX(74vw) translateY(-110vh) rotateY(0deg) rotateZ(-56deg) scale(.05);opacity:1}
-  94%  {opacity:0}
-  100% {transform:translateY(-120vh) rotate(-16deg) scale(1);opacity:0}
+  0%   {opacity:0; transform:translateY(-60px) rotate(-8deg) scale(.9)}
+  10%  {opacity:1; transform:translateY(0) rotate(0) scale(1)}
+  68%  {opacity:1; transform:translateY(0) rotate(0) scale(1)}
+  76%  {opacity:1; transform:translateY(-6px) rotate(6deg) scale(1.16)}
+  86%  {opacity:0; transform:translateY(-28px) rotate(48deg) scale(.12)}
+  100% {opacity:0; transform:translateY(-60px) scale(.9)}
 }
-@keyframes kwLetter{0%,60%{opacity:1}66%{opacity:0}100%{opacity:0}}
-@keyframes kwPlane{0%,64%{opacity:0}70%{opacity:1}91%{opacity:1}94%{opacity:0}100%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.b-kw,.kw-letter,.kw-plane{animation:none}.kw-plane{opacity:0}.kw-letter{opacity:1}}
+/* the Kw jitters while the hand holds it */
+@keyframes kwShake{
+  0%,11%  {transform:rotate(0) translateX(0)}
+  15%{transform:rotate(-5deg) translateX(-1px)} 19%{transform:rotate(5deg) translateX(1px)}
+  23%{transform:rotate(-4deg)} 28%{transform:rotate(4deg)} 33%{transform:rotate(-3deg)} 38%{transform:rotate(3deg)}
+  43%{transform:rotate(-3deg)} 48%{transform:rotate(3deg)} 53%{transform:rotate(-2deg)} 58%{transform:rotate(2deg)}
+  63%,68% {transform:rotate(0)} 100%{transform:rotate(0)}
+}
+@media(prefers-reduced-motion:reduce){.b-kw,.kw-letter{animation:none}.b-kw{opacity:1;transform:none}}
 
 .lz-tag{font-size:clamp(15px,2.2vw,20px);color:var(--mut);max-width:460px;margin:18px 0 0;animation:lz-rise 1s both}
 @media(max-width:900px){.lz-tag{margin:18px auto 0}}
