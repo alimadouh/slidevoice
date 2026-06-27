@@ -16,10 +16,28 @@
 .b7-row .btn{padding:11px 22px}
 
 /* ---- guest link on the login page ---- */
-.guest-link{display:block;margin:18px auto 0;background:none;border:none;font-family:inherit;font-weight:700;
-  font-size:14px;color:var(--mut);cursor:pointer;transition:.15s}
-.guest-link:hover{color:var(--acc)}
-.guest-note{text-align:center;color:var(--faint);font-size:12.5px;margin:6px 0 0}
+.guest-link{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 0;padding:12px;
+  background:var(--panel2);border:1px solid var(--line2);border-radius:11px;color:var(--ink);
+  font-family:inherit;font-weight:650;font-size:14.5px;cursor:pointer;transition:.15s}
+.guest-link:hover{border-color:var(--acc);background:var(--panel)}
+.guest-link svg{width:18px;height:18px;flex:none}
+.guest-note{text-align:center;color:var(--faint);font-size:12.5px;margin:10px 0 0}
+
+/* email / password auth */
+.auth-tabs{display:flex;gap:6px;background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:5px;margin-bottom:14px}
+.auth-tab{flex:1;background:none;border:0;font-family:inherit;font-weight:700;font-size:14px;color:var(--mut);padding:9px;border-radius:8px;cursor:pointer;transition:.15s}
+.auth-tab:hover{color:var(--ink)}
+.auth-tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+.auth-input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid var(--line2);background:var(--panel2);
+  color:var(--ink);font-family:inherit;font-size:15px;outline:none;transition:border-color .15s;margin-bottom:10px}
+.auth-input:focus{border-color:var(--acc)}
+.auth-input::placeholder{color:var(--faint)}
+.code-input{letter-spacing:.35em;text-align:center;font-weight:700}
+.auth-btn{width:100%;justify-content:center;margin-top:2px}
+.auth-row{text-align:center;font-size:13px;color:var(--mut);margin-top:12px}
+.auth-row a{color:var(--acc2);font-weight:600;text-decoration:none;cursor:pointer}
+.auth-row a:hover{text-decoration:underline}
+.auth-note{font-size:13px;color:var(--mut);margin-bottom:12px;text-align:center;line-height:1.5}
 
 /* ---- theme toggle (in every topbar) ---- */
 .topbar-right{display:flex;align-items:center;gap:12px}
@@ -71,7 +89,7 @@ body.hz-page.light .pane{box-shadow:0 16px 44px -28px rgba(20,30,60,.4)}
 body.hz-page.light .chip,body.hz-page.light .chip-x{background:#eef2f8}
 
 /* ---- login page ---- */
-.login-wrap{max-width:430px;margin:0 auto;padding:6vh clamp(18px,5vw,24px) 60px}
+.login-wrap{max-width:430px;margin:0 auto;padding:16px clamp(18px,5vw,24px) 60px}
 .login-card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
   border-radius:18px;padding:34px 30px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
 .hz-page.light .login-card{box-shadow:0 18px 50px -20px rgba(20,30,60,.45)}
@@ -88,6 +106,7 @@ body.hz-page.light .chip,body.hz-page.light .chip-x{background:#eef2f8}
   border-radius:50%;border:2px solid var(--line2);border-top-color:var(--acc);animation:spin .7s linear infinite}
 .login-or{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:11px;margin:22px 0;
   text-transform:uppercase;letter-spacing:.12em}
+.login-or[hidden]{display:none}      /* respect the hidden attribute (overrides display:flex) */
 .login-or::before,.login-or::after{content:"";flex:1;height:1px;background:var(--line)}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:6px}
@@ -98,6 +117,7 @@ body.hz-page.light .chip,body.hz-page.light .chip-x{background:#eef2f8}
 .login-card .btn-primary{width:100%;justify-content:center;margin-top:2px}
 .otp-input{letter-spacing:.5em;text-align:center;font-size:20px!important;font-weight:700}
 .login-msg{min-height:1.2em;font-size:13.5px;font-weight:600;color:var(--acc2);margin-top:14px;text-align:center}
+.login-msg:empty{display:none;min-height:0;margin:0}   /* no reserved space when there's no message */
 .login-msg.ok{color:var(--ok)}
 .login-back{display:inline-block;margin:10px 8px 0;color:var(--mut);font-size:13px;cursor:pointer;
   background:none;border:none;font-family:inherit}
@@ -214,6 +234,7 @@ body.hz-page{
 }
 .editor::placeholder{color:var(--faint)}
 .result{line-height:2}
+.hz-page .result{text-align:left}      /* override .result{text-align:center} from styles.css */
 .result .placeholder{color:var(--faint);font-style:italic}
 .result p{margin:0 0 6px}
 .result .hz-h{font-weight:700;color:var(--ink);display:block;margin:14px 0 4px;letter-spacing:.2px}
@@ -279,7 +300,6 @@ body.hz-page{
   background:var(--col);box-shadow:0 0 8px -1px var(--col);transition:width .85s cubic-bezier(.22,1,.36,1),background .5s}
 .ring.fx-pop{animation:fx-ring-pop .6s ease-out}
 @keyframes fx-ring-pop{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
-.ring.safe{position:relative}
 .ring.safe::after{content:"";position:absolute;inset:-3px;border-radius:14px;pointer-events:none;z-index:-1;
   box-shadow:0 0 20px 1px var(--col);animation:fx-ring-breathe 2.2s ease-in-out infinite}
 @keyframes fx-ring-breathe{0%,100%{opacity:.3}50%{opacity:.9}}

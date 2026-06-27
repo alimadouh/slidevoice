@@ -84,7 +84,7 @@ async function sendCode() {
   $("btnSendCode").disabled = true; msg("Sending code…");
   try {
     const r = await fetch(API + "/api/b7/auth/otp/start", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json", "X-Branch-Key": BKEY },
       body: JSON.stringify({ phone }),
     });
     let j = {}; try { j = await r.json(); } catch (e) {}
@@ -101,7 +101,7 @@ async function verifyCode() {
   $("btnVerify").disabled = true; msg("Verifying…");
   try {
     const r = await fetch(API + "/api/b7/auth/otp/verify", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json", "X-Branch-Key": BKEY },
       body: JSON.stringify({ phone: phoneVal, code }),
     });
     let j = {}; try { j = await r.json(); } catch (e) {}
@@ -118,3 +118,124 @@ $("btnResend").onclick = sendCode;
 $("btnChangeNum").onclick = () => { showStep(1); msg(""); };
 $("phone").addEventListener("keydown", (e) => { if (e.key === "Enter") sendCode(); });
 $("otp").addEventListener("keydown", (e) => { if (e.key === "Enter") verifyCode(); });
+
+// ---------------------------------------------------------------- email / password
+// Reuses the shared backend (/api/auth/*). The branch key tags new accounts as B7oothKw.
+const AJH = { "Content-Type": "application/json", "X-Branch-Key": BKEY };
+let authMode = "login", authBusy = false, pendingEmail = "", resetEmail = "", resetStep = 1;
+
+function showPanel(name) {
+  $("authMain").hidden = name !== "main";
+  $("authVerify").hidden = name !== "verify";
+  $("authReset").hidden = name !== "reset";
+}
+function setAuthMode(mode) {
+  authMode = mode;
+  $("tabLogin").classList.toggle("on", mode === "login");
+  $("tabRegister").classList.toggle("on", mode === "register");
+  $("authSubmit").textContent = mode === "login" ? "Log in" : "Create account";
+  $("authPass").setAttribute("autocomplete", mode === "login" ? "current-password" : "new-password");
+  $("forgotRow").style.display = mode === "login" ? "" : "none";
+  msg("");
+}
+
+async function doLogin(email, password) {
+  const r = await fetch(API + "/api/auth/login", { method: "POST", headers: AJH, body: JSON.stringify({ email, password }) });
+  const d = await r.json();
+  if (d.token) finishLogin(d.token);
+  else msg(d.error || "Couldn’t log in.");
+}
+async function doAuth() {
+  if (authBusy) return;
+  const email = $("authEmail").value.trim(), password = $("authPass").value;
+  if (!email || !password) { msg("Enter your email and password."); return; }
+  authBusy = true; $("authSubmit").classList.add("loading"); msg("");
+  try {
+    if (authMode === "register") {
+      const r = await fetch(API + "/api/auth/register", { method: "POST", headers: AJH, body: JSON.stringify({ email, password }) });
+      const d = await r.json();
+      if (d.error) { msg(d.error); return; }
+      if (d.pending) {                       // code emailed → verification step
+        pendingEmail = email;
+        $("verifyMsg").textContent = `We sent a 6-digit code to ${email}. It expires in ${d.ttl_min || 5} minutes.`;
+        $("authCode").value = ""; showPanel("verify"); $("authCode").focus();
+        return;
+      }
+    }                                         // d.verified or login mode → just log in
+    await doLogin(email, password);
+  } catch (e) { msg("Couldn’t reach the server. Please try again."); }
+  finally { authBusy = false; $("authSubmit").classList.remove("loading"); }
+}
+async function doVerify() {
+  if (authBusy) return;
+  const code = $("authCode").value.trim();
+  if (!/^\d{4,8}$/.test(code)) { msg("Enter the code from your email."); return; }
+  authBusy = true; $("verifySubmit").classList.add("loading"); msg("");
+  try {
+    const r = await fetch(API + "/api/auth/verify", { method: "POST", headers: AJH, body: JSON.stringify({ email: pendingEmail, code }) });
+    const d = await r.json();
+    if (d.token) finishLogin(d.token);
+    else msg(d.error || "That code didn’t match.");
+  } catch (e) { msg("Couldn’t reach the server. Please try again."); }
+  finally { authBusy = false; $("verifySubmit").classList.remove("loading"); }
+}
+async function doResend(e) {
+  if (e) e.preventDefault(); msg("");
+  try {
+    const r = await fetch(API + "/api/auth/resend", { method: "POST", headers: AJH, body: JSON.stringify({ email: pendingEmail }) });
+    const d = await r.json();
+    msg(d.error || `A new code was sent to ${pendingEmail}.`, !d.error);
+  } catch (e2) { msg("Couldn’t reach the server."); }
+}
+
+function setResetStep(step) {
+  resetStep = step;
+  const s2 = step === 2;
+  $("resetEmail").hidden = s2; $("resetCode").hidden = !s2; $("resetPass").hidden = !s2;
+  $("resetSubmit").textContent = s2 ? "Reset password" : "Send reset code";
+}
+function showReset() {
+  showPanel("reset"); $("resetEmail").value = $("authEmail").value.trim();
+  $("resetCode").value = ""; $("resetPass").value = ""; setResetStep(1); msg("");
+}
+async function doForgot() {
+  if (authBusy) return;
+  const email = $("resetEmail").value.trim();
+  if (!email) { msg("Enter your email."); return; }
+  authBusy = true; $("resetSubmit").classList.add("loading"); msg("");
+  try {
+    const r = await fetch(API + "/api/auth/forgot", { method: "POST", headers: AJH, body: JSON.stringify({ email }) });
+    const d = await r.json();
+    if (d.error) { msg(d.error); return; }
+    resetEmail = email;
+    $("resetMsg").textContent = `If ${email} has an account, we sent a 6-digit code (expires in ${d.ttl_min || 5} min).`;
+    setResetStep(2); $("resetCode").focus();
+  } catch (e) { msg("Couldn’t reach the server."); }
+  finally { authBusy = false; $("resetSubmit").classList.remove("loading"); }
+}
+async function doReset() {
+  if (authBusy) return;
+  const code = $("resetCode").value.trim(), password = $("resetPass").value;
+  if (!/^\d{4,8}$/.test(code)) { msg("Enter the code from your email."); return; }
+  if (!password || password.length < 6) { msg("Password must be at least 6 characters."); return; }
+  authBusy = true; $("resetSubmit").classList.add("loading"); msg("");
+  try {
+    const r = await fetch(API + "/api/auth/reset", { method: "POST", headers: AJH, body: JSON.stringify({ email: resetEmail, code, password }) });
+    const d = await r.json();
+    if (d.token) finishLogin(d.token);
+    else msg(d.error || "Couldn’t reset the password.");
+  } catch (e) { msg("Couldn’t reach the server."); }
+  finally { authBusy = false; $("resetSubmit").classList.remove("loading"); }
+}
+
+$("tabLogin").onclick = () => setAuthMode("login");
+$("tabRegister").onclick = () => setAuthMode("register");
+$("authSubmit").onclick = doAuth;
+$("verifySubmit").onclick = doVerify;
+$("resendCode").onclick = doResend;
+$("backToSignup").onclick = (e) => { e.preventDefault(); showPanel("main"); msg(""); };
+$("forgotLink").onclick = (e) => { e.preventDefault(); showReset(); };
+$("resetBack").onclick = (e) => { e.preventDefault(); showPanel("main"); msg(""); };
+$("resetSubmit").onclick = () => (resetStep === 1 ? doForgot() : doReset());
+$("authPass").addEventListener("keydown", (e) => { if (e.key === "Enter") doAuth(); });
+$("authCode").addEventListener("keydown", (e) => { if (e.key === "Enter") doVerify(); });
