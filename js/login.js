@@ -98,7 +98,7 @@ async function doAuth() {
       if (d.error) { msg(d.error); return; }
       if (d.pending) {                       // code emailed → verification step
         pendingEmail = email;
-        $("verifyMsg").textContent = `We sent a 6-digit code to ${email}. It expires in ${d.ttl_min || 5} minutes.`;
+        $("verifyMsg").textContent = `We've emailed ${email}. If you're creating a new account, enter the 6-digit code below (expires in ${d.ttl_min || 5} min). If you already have an account, just log in.`;
         $("authCode").value = ""; showPanel("verify"); $("authCode").focus();
         return;
       }
