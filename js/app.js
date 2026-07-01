@@ -86,43 +86,24 @@ wireDrop('#drop-script', '#file-script', (files) => {
   renderLists();
 }, () => !state.scriptFile);
 const MAX_AUDIO = 50;
-const AUDIO_EXT = /\.(mp3|m4a|wav|ogg|oga|opus|aac|webm|mp4|flac|wma|3gp|m4b|mov|m4v)$/i;
-// extensions that could carry a real video track and need checking
-const CONTAINER_EXT = /\.(mp4|webm|mov|m4v|3gp|ogv|mkv)$/i;
 
-// Returns true if the file actually contains a video track (so we can reject
-// videos). Audio-only files report videoWidth/Height === 0.
-function hasVideoTrack(file) {
-  return new Promise((resolve) => {
-    const v = document.createElement('video');
-    const url = URL.createObjectURL(file);
-    let settled = false;
-    const finish = (res) => { if (settled) return; settled = true; URL.revokeObjectURL(url); v.removeAttribute('src'); resolve(res); };
-    v.preload = 'metadata';
-    v.muted = true;
-    v.onloadedmetadata = () => finish(v.videoWidth > 0 && v.videoHeight > 0);
-    v.onerror = () => finish(false);           // browser couldn't read it as video → treat as audio
-    setTimeout(() => finish(false), 5000);      // safety timeout
-    v.src = url;
-  });
-}
-
-wireDrop('#drop-audio', '#file-audio', async (files) => {
-  const valid = files.filter(f => AUDIO_EXT.test(f.name));
-  let skippedCap = 0; const skippedVideo = [];
-  for (const f of valid) {
+// Accept ANY file the user drops or picks — no extension or MIME filtering here.
+// Whatever it is (audio, a video with narration, an odd codec, or a file with no
+// extension), ffmpeg tries to pull an audio track out of it and convert it to
+// MP3 at process time. Files that genuinely contain no readable audio are
+// skipped there with a note, so nothing is silently excluded up front.
+wireDrop('#drop-audio', '#file-audio', (files) => {
+  let skippedCap = 0;
+  for (const f of files) {
     if (state.audioFiles.length >= MAX_AUDIO) { skippedCap++; continue; }
-    if (CONTAINER_EXT.test(f.name) && await hasVideoTrack(f)) { skippedVideo.push(f.name); continue; }
     state.audioFiles.push({ id: ++uid, file: f, name: f.name });
   }
   renderLists();
   const note = $('#audio-note');
   const msgs = [];
-  if (skippedVideo.length) msgs.push(`Skipped ${skippedVideo.length} video file${skippedVideo.length > 1 ? 's' : ''} — audio only.`);
   if (skippedCap) msgs.push(`Limit is ${MAX_AUDIO} — ${skippedCap} not added.`);
-  if (msgs.length) note.textContent = msgs.join(' ');
-  else if (state.audioFiles.length) note.textContent = `${state.audioFiles.length} / ${MAX_AUDIO} added`;
-  else note.textContent = '';
+  if (state.audioFiles.length) msgs.push(`${state.audioFiles.length} / ${MAX_AUDIO} added`);
+  note.textContent = msgs.join(' ');
 });
 
 // ---------- progress helpers ----------
@@ -160,11 +141,22 @@ $('#btn-process').addEventListener('click', async () => {
     state.processed.clear();
     const n = state.audioFiles.length;
     let modelLoaded = false, smartFailed = false;
+    const failedFiles = [];
     for (let i = 0; i < n; i++) {
       const a = state.audioFiles[i];
       setStage(`Converting audio ${i + 1}/${n}: ${a.name}`);
       setBar(12 + (i / n) * 55);
-      const { mp3, durationSec, pcm } = await processAudio(a.file);
+      // Convert whatever this file is into MP3 first. ffmpeg reads almost any
+      // container/codec (and strips video via -vn in processAudio). If it can't
+      // find any audio track, we skip just this one file and keep going.
+      let mp3, durationSec, pcm;
+      try {
+        ({ mp3, durationSec, pcm } = await processAudio(a.file));
+      } catch (e) {
+        failedFiles.push(a.name);
+        logLine(`Skipped "${a.name}" — no audio could be read from it.`);
+        continue;
+      }
       // Always listen to every recording and match it against the script.
       // If the speech model can't load (e.g. a browser without WebGPU/WASM ML
       // support) we degrade gracefully to order matching + manual review.
@@ -193,6 +185,14 @@ $('#btn-process').addEventListener('click', async () => {
       }
       state.processed.set(a.id, { mp3, durationSec, pcm, transcript });
     }
+
+    // Drop any files that had no readable audio so they don't linger in the
+    // review table or the final merge.
+    if (failedFiles.length) {
+      state.audioFiles = state.audioFiles.filter(a => state.processed.has(a.id));
+      logLine(`${failedFiles.length} file(s) could not be converted and were skipped.`);
+    }
+    if (!state.audioFiles.length) throw new Error('None of the added files contained audio we could read.');
 
     setStage('Matching recordings to slides by script…'); setBar(72);
     const audios = state.audioFiles.map(a => ({
