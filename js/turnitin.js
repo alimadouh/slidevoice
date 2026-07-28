@@ -42,7 +42,7 @@
       const d = await (await fetch(API + "/api/turnitin/submit", { method: "POST", headers: H, body: fd })).json();
       if (d.error) { say(d.error, true); }
       else {
-        say("Submitted! Your Turnitin score appears below instantly or within 6 hours.");
+        say("Submitted! Your Turnitin score appears below within 6 hours.");
         $("tnFile").value = ""; showFile(); $("tnNote").value = "";
         refresh();
       }
@@ -72,11 +72,14 @@
         `${o.has_sim_report ? `<button class="tn-dl" data-id="${o.id}" data-kind="sim">⬇ Similarity report</button>` : ""}`
       : "";
     const unread = o.chat_unread ? `<span class="tn-unread">${o.chat_unread}</span>` : "";
+    const keep = (o.status === "done" && (o.has_ai_report || o.has_sim_report))
+      ? `<p class="tn-keep">Reports stay downloadable for 7 days — save them soon.</p>` : "";
     return `<div class="tn-pane tn-order">
       <div class="tn-row"><span class="tn-file">📄 ${esc(o.filename || "document")}</span>${badge(o.status)}</div>
       <div class="tn-meta">${o.words ? o.words.toLocaleString() + " words · " : ""}${fmt(o.created)}</div>
       ${scores}
       <div class="tn-actions">${dl}<button class="tn-chatbtn" data-id="${o.id}" data-name="${esc(o.filename || "document")}">💬 Chat${unread}</button></div>
+      ${keep}
     </div>`;
   }
   async function refresh() {
@@ -87,7 +90,7 @@
       if (d.error) { el.innerHTML = `<p class="tn-empty">${esc(d.error)}</p>`; return; }
       const orders = d.orders || [];
       el.innerHTML = orders.length ? orders.map(card).join("")
-        : `<p class="tn-empty">No scans yet. Upload a document above — it's free.</p>`;
+        : `<p class="tn-empty">No scans yet. Upload a document above to get started.</p>`;
       el.querySelectorAll(".tn-dl").forEach((b) => b.onclick = () => download(b.dataset.id, b.dataset.kind));
       el.querySelectorAll(".tn-chatbtn").forEach((b) => b.onclick = () => chatOpen(b.dataset.id, b.dataset.name));
     } catch (e) { el.innerHTML = `<p class="tn-empty">Service is temporarily unavailable.</p>`; }
@@ -96,6 +99,12 @@
     try {
       const r = await fetch(`${API}/api/turnitin/${id}/report/${kind}`, { headers: H });
       if (!r.ok) return;
+      // The API reports "expired / not attached" as a JSON body — don't save that as a .pdf.
+      if ((r.headers.get("content-type") || "").includes("json")) {
+        const d = await r.json();
+        say(d.error || "This report is no longer available.", true);
+        return;
+      }
       const blob = await r.blob(); const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = kind === "ai" ? "Turnitin AI report.pdf" : "Turnitin similarity report.pdf";
