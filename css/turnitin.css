@@ -1,0 +1,84 @@
+/* Turnitin scan page — built on the hz-page token set (--panel/--line/--ink/--mut/--acc…)
+   defined in humanizer.css for BOTH themes. Turnitin blue (#0096ff) appears only in the
+   logo and the drop-zone focus ring: it marks the co-brand, nothing else. */
+.tn-wrap { max-width: 760px; margin: 0 auto; padding: 34px 16px 72px; }
+
+/* hero: just the Turnitin logo as the page title */
+.tn-hero { text-align: center; margin-bottom: 28px; }
+.tn-tiilogo { height: clamp(44px, 7vw, 60px); width: auto; color: var(--ink); }
+
+/* submit pane */
+.tn-pane { background: linear-gradient(180deg, var(--panel), var(--bg2)); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+.tn-submitcard { display: flex; flex-direction: column; gap: 12px; margin-bottom: 34px; }
+.tn-drop { display: flex; align-items: center; gap: 14px; padding: 22px 18px; border: 1.5px dashed var(--line2); border-radius: 12px; cursor: pointer; transition: border-color .15s, background .15s; }
+.tn-drop:hover, .tn-drop.drag { border-color: #0096ff; background: rgba(0, 150, 255, .05); }
+.tn-drop.has-file { border-style: solid; border-color: var(--ok); }
+.tn-drop-ic { flex: none; width: 40px; height: 40px; color: var(--mut); }
+.tn-drop-ic svg { width: 100%; height: 100%; }
+.tn-drop.has-file .tn-drop-ic { color: var(--ok); }
+.tn-drop-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.tn-drop-txt b { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-drop-hint { font-size: 12.5px; color: var(--faint); }
+.tn-submitcard textarea { background: var(--panel2); border: 1px solid var(--line2); border-radius: 10px; padding: 10px 12px; color: var(--ink); resize: vertical; font: inherit; font-size: 14px; }
+.tn-submitcard textarea::placeholder { color: var(--faint); }
+.tn-submitrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.tn-free { font-size: 12.5px; font-weight: 700; color: var(--ok); background: rgba(63, 185, 80, .12); padding: 4px 10px; border-radius: 999px; }
+.tn-msg { font-size: 14px; color: var(--ok); margin: 0; }
+.tn-msg.bad { color: var(--bad); }
+.tn-msg.hidden { display: none; }
+
+/* my scans */
+.tn-listtitle { font-size: 17px; font-weight: 800; margin: 0 0 12px; }
+.tn-order { margin-bottom: 12px; }
+.tn-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tn-file { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-badge { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; letter-spacing: .3px; text-transform: uppercase; }
+.tn-badge.pend { background: rgba(216, 162, 52, .14); color: var(--warn); }
+.tn-badge.done { background: rgba(63, 185, 80, .14); color: var(--ok); }
+.tn-meta { font-size: 12.5px; color: var(--faint); margin-top: 4px; }
+.tn-note { font-size: 13px; color: var(--mut); margin: 10px 0 0; }
+.tn-waiting { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--mut); margin-top: 12px; }
+.tn-spin { width: 14px; height: 14px; border: 2px solid var(--line2); border-top-color: var(--acc); border-radius: 50%; animation: tnspin 1s linear infinite; }
+@keyframes tnspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tn-spin { animation: none; } }
+
+/* score gauges */
+.tn-gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+@media (max-width: 520px) { .tn-gauges { grid-template-columns: 1fr; } }
+.tn-gauge { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tn-gauge-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--mut); margin-bottom: 7px; }
+.tn-gauge-val { font-weight: 800; font-size: 13px; }
+.tn-gauge.good .tn-gauge-val { color: var(--ok); }
+.tn-gauge.warn .tn-gauge-val { color: var(--warn); }
+.tn-gauge.bad .tn-gauge-val { color: var(--bad); }
+.tn-gauge-bar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.tn-gauge-bar i { display: block; height: 100%; border-radius: 999px; }
+.tn-gauge.good .tn-gauge-bar i { background: var(--ok); }
+.tn-gauge.warn .tn-gauge-bar i { background: var(--warn); }
+.tn-gauge.bad .tn-gauge-bar i { background: var(--bad); }
+
+/* actions */
+.tn-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+.tn-dl, .tn-chatbtn { border: 1px solid var(--line2); background: var(--panel2); color: var(--ink); border-radius: 9px; padding: 7px 12px; font-size: 13px; cursor: pointer; font-family: inherit; transition: border-color .15s; }
+.tn-dl:hover, .tn-chatbtn:hover { border-color: var(--acc); }
+.tn-dl:focus-visible, .tn-chatbtn:focus-visible, .tn-drop:focus-within { outline: 2px solid #0096ff; outline-offset: 2px; }
+.tn-chatbtn { margin-left: auto; }
+.tn-unread { background: var(--acc); color: #fff; border-radius: 999px; font-size: 10.5px; font-weight: 800; padding: 1px 6px; margin-left: 6px; }
+.tn-empty { color: var(--mut); font-size: 14px; }
+
+/* chat modal */
+.tn-chat-ovl { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
+.tn-chat-ovl.hidden { display: none; }
+.tn-chat { width: min(480px, 94vw); max-height: 80vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.tn-chat-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+.tn-chat-head button { background: none; border: none; color: var(--mut); font-size: 16px; cursor: pointer; }
+.tn-chat-head button:hover { color: var(--ink); }
+.tn-chat-body { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 180px; }
+.tn-msgb { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 14px; }
+.tn-msgb p { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.tn-msgb span { display: block; font-size: 10.5px; opacity: .6; margin-top: 3px; }
+.tn-msgb.me { align-self: flex-end; background: linear-gradient(135deg, var(--acc), var(--acc2)); color: #fff; border-bottom-right-radius: 4px; }
+.tn-msgb.them { align-self: flex-start; background: var(--panel2); border: 1px solid var(--line); color: var(--ink); border-bottom-left-radius: 4px; }
+.tn-chat-foot { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.tn-chat-foot input { flex: 1; background: var(--panel2); border: 1px solid var(--line2); border-radius: 9px; padding: 9px 12px; color: var(--ink); font: inherit; font-size: 14px; }
+.tn-chat-foot input::placeholder { color: var(--faint); }

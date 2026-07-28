@@ -11,6 +11,16 @@
 
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   window.b7HasToken = function () { if (LOCAL) return true; var t = get(TOKEN); return !!t && t !== "guest"; };
+
+  // Localhost preview: fetch the ADMIN token from the local control panel
+  // (127.0.0.1:8760 — machine-local only) so every tool works as admin without
+  // logging in. Never runs on the real site (LOCAL is false there), and the
+  // panel only answers this route for the local preview origins.
+  if (LOCAL && !get(TOKEN)) {
+    fetch("http://127.0.0.1:8760/dev-token").then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.token) { localStorage.setItem(TOKEN, d.token); location.reload(); }
+    }).catch(function () {});
+  }
   window.b7IsGuest = function () { return !window.b7HasToken(); };
   window.b7Logout = function () {
     try { localStorage.removeItem(TOKEN); localStorage.removeItem(GUEST); } catch (e) {}
