@@ -65,7 +65,15 @@ function quotaMsg(text) {
 }
 const wordCount = (s) => (s.match(/\S+/g) || []).length;
 
-function setInWords() { $("inWords").innerHTML = `<b>${wordCount(input.value)}</b> words`; }
+// The input bar's right side now carries your remaining words, so the old static
+// "Up to 500 words per run" is gone. Say it here instead — but only once the text
+// is actually over the cap, where it's the thing you need to know.
+const PER_RUN = 500;                      // mirrors api.py's BRANCH_WORDS_PER
+function setInWords() {
+  const n = wordCount(input.value), over = n > PER_RUN;
+  $("inWords").innerHTML = `<b>${n}</b> words` + (over ? ` · max ${PER_RUN} per run` : "");
+  $("inWords").classList.toggle("over", over);
+}
 function setOutWords() { $("outWords").innerHTML = `<b>${wordCount(lastText)}</b> words`; }
 input.addEventListener("input", setInWords);
 
@@ -441,38 +449,42 @@ async function fetchMe() {
   catch (e) { return null; }
 }
 function renderMeter(me) {
+  // It sits in the INPUT bar, opposite the live word count — that's where you look
+  // before you paste, and it replaced the static per-run limit that used to be there.
   let el = $("b7-meter");
   if (!el) {
-    el = document.createElement("div");
+    el = document.createElement("span");
     el.id = "b7-meter";
-    const bar = document.querySelector("#outPane .usage-bar");
+    const bar = document.querySelector("#inPane .usage-bar");
     if (bar) bar.appendChild(el); else return;
   }
   const b7 = me && me.b7;
+  // Empty means no pill at all (the CSS hangs on :not(:empty)), so clear it first
+  // and only fill it once we actually know the balance.
   el.textContent = "";
-  el.classList.remove("low");
+  el.classList.remove("low", "out");
   if (!b7) return;                                    // signed out, or an older backend
+  const n = (v) => Number(v || 0).toLocaleString("en-US");
+  const pill = (html, cls) => { el.innerHTML = "✦ " + html; if (cls) el.classList.add(cls); };
+
   if (b7.active) {
     const t = Date.parse(b7.expiry);
     const end = Number.isFinite(t)
       ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-    el.textContent = `${b7.words.toLocaleString("en-US")} words left` + (end ? ` · ends ${end}` : "");
-    el.classList.toggle("low", b7.words <= 2000);
+    pill(`<b>${n(b7.words)}</b> words left` + (end ? ` · ends ${end}` : ""),
+         b7.words <= 2000 ? "low" : "");
     return;
   }
   // No membership: the one-time trial. It never refills, so once it's gone the only
   // honest thing to show is where to get more.
-  const left = b7.trial || 0;
+  const left = b7.trial;
+  if (left == null) return;     // a backend that predates the trial: say nothing rather
+                                // than "no words left", which would be a lie on a fresh account
   if (left > 0) {
-    el.textContent = `${left.toLocaleString("en-US")} free words left`;
-    el.classList.toggle("low", left <= 50);
+    pill(`<b>${n(left)}</b> free words left`, left <= 50 ? "low" : "");
     return;
   }
-  el.classList.add("low");
-  el.appendChild(document.createTextNode("No free words left · "));
-  const a = document.createElement("a");
-  a.href = "pricing.html"; a.textContent = "See plans";
-  el.appendChild(a);
+  pill('No free words left · <a href="pricing.html">See plans</a>', "out");
 }
 fetchMe().then(renderMeter);
 

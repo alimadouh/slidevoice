@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>B7oothKw — Redeem Code</title>
+<meta name="description" content="Redeem a B7oothKw code for words on your account." />
+<link rel="icon" href="assets/icon.png" />
+<script src="js/guard.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/humanizer.css" />
+<link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
+<link rel="stylesheet" href="css/redeem.css" />
+</head>
+<body class="hz-page" data-view="redeem">
+<script src="js/theme.js"></script>
+<div class="app-shell" id="appShell">
+  <main class="content">
+    <section class="view" id="view-redeem">
+      <h1 class="sr-only">B7oothKw Redeem Code</h1>
+      <h2 class="view-title"><span class="nav-ic" style="color:var(--acc)">🎟</span> Redeem Code</h2>
+      <div class="rd-wrap">
+        <!-- The ticket IS the form: the counterfoil carries the brand, the serial line
+             carries the code. The notches and perforation are drawn, not images. -->
+        <div class="rd-ticket">
+          <div class="rd-stub" aria-hidden="true">
+            <span class="rd-stub-word">B7oothKw</span>
+            <span class="rd-barcode"></span>
+          </div>
+          <div class="rd-main">
+            <div class="rd-rail" aria-hidden="true">
+              <span>Word pass</span>
+              <span>One per account</span>
+            </div>
+            <div class="rd-row">
+              <input id="redeemInput" type="text" maxlength="16" autocomplete="off"
+                     spellcheck="false" placeholder="B7-XXXX-XXXX" aria-label="Your code">
+              <button class="btn rd-btn" id="redeemBtn" type="button">Redeem</button>
+            </div>
+            <p class="rd-hint">A code adds words to your account. They don't expire, and
+              they're spent the same way as the rest of your balance.</p>
+            <div class="rd-msg hidden" id="redeemMsg" role="status"></div>
+          </div>
+        </div>
+        <div class="rd-status hidden" id="redeemStatus"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/config.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/redeem.js"></script>
+</body>
+</html>

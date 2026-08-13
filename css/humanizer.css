@@ -305,7 +305,21 @@ body.hz-page{
 
 /* ================= words meter (output pane) ================= */
 /* Prices live on pricing.html — this only reports the balance. */
-#b7-meter{margin-left:auto;opacity:.85}
+/* The balance rides as an accent pill, the same chip Grade A puts at the right end
+   of its usage bar (#usageHumanize in app-refresh.css) — accent text on a 12% wash
+   of itself. Red here instead of indigo. :not(:empty) keeps a signed-out account
+   from painting a bare pill with nothing in it. */
+#b7-meter:not(:empty){
+  margin-left:auto;padding:3px 10px;border-radius:999px;white-space:nowrap;
+  background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);
+  font-weight:600;font-size:11.5px;letter-spacing:.1px}
+#b7-meter b{color:inherit;font-weight:800}
+/* running low, and run out: the pill changes colour with the news it carries */
+#b7-meter.low:not(:empty){background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+#b7-meter.out:not(:empty){background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+#b7-meter a{color:inherit;font-weight:800;text-decoration:underline}
+/* over the per-run cap: the count itself carries the warning */
+#inWords.over,#inWords.over b{color:var(--warn)}
 #b7-meter.low{color:var(--warn);font-weight:600;opacity:1}
 #b7-meter a{color:var(--acc2);font-weight:700;text-decoration:none}
 #b7-meter a:hover{text-decoration:underline}

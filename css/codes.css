@@ -1,0 +1,64 @@
+/* Staff → Codes. Ported from Grade A's .code-* block (static/style.css), with the
+   plan and duration controls dropped: a B7oothKw code is one thing — 1,000 words —
+   so a selector with a single option would only be furniture. */
+
+.cd-note{font-size:13.5px;color:var(--mut);margin:0 0 16px;max-width:70ch;line-height:1.6}
+.cd-note b{color:var(--ink)}
+
+/* ---- mint ---- */
+.code-new{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px 18px;margin-bottom:18px;max-width:1100px}
+.code-new-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.code-f{display:flex;flex-direction:column;gap:5px;min-width:110px}
+.code-f-wide{flex:1 1 190px}
+.code-f > span{font-size:12px;color:var(--mut)}
+.code-f input{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+  color:var(--ink);padding:9px 11px;font-family:inherit;font-size:13.5px}
+.code-f input:focus{outline:none;border-color:var(--acc)}
+.code-gen{white-space:nowrap}
+.code-out{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);text-align:center}
+.code-out.hidden{display:none}
+.code-out-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;
+  font-weight:800;color:var(--acc);letter-spacing:2px}
+.code-out-sub{font-size:12.5px;color:var(--mut);margin:5px 0 11px}
+
+/* ---- list ---- */
+.code-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px;max-width:1100px}
+.code-counts{font-size:12.5px;color:var(--mut);margin-right:auto}
+.code-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.code-filters input,.code-filters select{background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;color:var(--ink);padding:8px 10px;font-family:inherit;font-size:13px}
+.code-filters input{min-width:210px}
+.code-filters input:focus,.code-filters select:focus{outline:none;border-color:var(--acc)}
+.code-filters input::placeholder{color:var(--faint)}
+.code-refresh{background:var(--panel2);border:1px solid var(--line2);color:var(--mut);
+  border-radius:9px;padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer}
+.code-refresh:hover{color:var(--ink)}
+
+.code-list{display:flex;flex-direction:column;gap:9px;max-width:1100px}
+.code-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.code-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  padding:12px 14px;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer}
+.code-val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;
+  font-weight:700;color:var(--ink);letter-spacing:1px}
+.code-tags{display:flex;gap:6px;flex-wrap:wrap}
+.code-tag{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.code-tag.words{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,var(--line))}
+.code-st-on{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.code-st-off{color:var(--faint)}
+.code-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:0 14px 12px;font-size:12px;color:var(--faint)}
+.code-acts{display:flex;gap:7px}
+.code-btn{background:var(--panel2);border:1px solid var(--line);color:var(--mut);
+  border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.code-btn:hover{color:var(--ink);border-color:var(--line2)}
+.code-rev:hover{color:var(--bad);border-color:var(--bad)}
+.code-reds{display:none;border-top:1px solid var(--line);padding:4px 14px 10px}
+.code-item.open .code-reds{display:block}
+.code-reds .prow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;
+  font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--line)}
+.code-reds .prow:last-child{border-bottom:none}
+.code-empty{color:var(--faint);font-size:13.5px;padding:18px 2px}
+.cd-msg{font-size:13.5px;font-weight:600;color:var(--bad);margin:12px 0 0;min-height:1.2em}
+.cd-msg.ok{color:var(--ok)}

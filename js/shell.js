@@ -57,6 +57,8 @@
   ];
   var ACCOUNT = [
     { v: "plans", href: "pricing.html", ic: "◆", label: "Plans" },
+    { v: "redeem", href: "redeem.html", ic: "🎟", label: "Redeem Code" },
+    { v: "support", href: "support.html", ic: "💬", label: "Support & FAQ", badge: "supportBadge" },
     // The real WhatsApp glyph rather than a phone dingbat — it's the one mark here
     // people recognise before they read the label. No <defs>, so inlining is safe.
     { v: "help",  href: "https://wa.me/96555495757", label: "Help on WhatsApp",
@@ -84,11 +86,19 @@
       : it.img ? '<img src="' + it.img + '" class="nav-tn-icon" alt="">'
       : '<span class="nav-ic"' + (it.icColor ? ' style="color:' + it.icColor + '"' : "") + '>' + it.ic + "</span>";
     var text = it.word ? '<span class="nav-tn-word">' + it.word + "</span>" : it.label;
+    var badge = it.badge ? '<span class="nav-badge hidden" id="' + it.badge + '"></span>' : "";
     return '<a href="' + it.href + '" class="nav-item' + (it.cls ? " " + it.cls : "") +
            (it.v === here ? " active" : "") + '" data-view="' + it.v + '"' +
            (it.external ? ' target="_blank" rel="noopener"' : "") +
-           (it.word ? ' aria-label="' + it.label + '"' : "") + ">" + icon + " " + text + "</a>";
+           (it.word ? ' aria-label="' + it.label + '"' : "") + ">" + icon + " " + text + badge + "</a>";
   }
+
+  // Staff-only. Rendered hidden and revealed once /api/auth/me says so — the real
+  // gate is the server's (every /api/admin/* route checks the token), this only
+  // decides whether the link is worth showing.
+  var STAFF = [
+    { v: "codes", href: "codes.html", ic: "🎟", label: "Codes", cls: "nav-staff hidden" },
+  ];
 
   var aside = document.createElement("aside");
   aside.className = "sidebar";
@@ -99,6 +109,7 @@
     '<nav class="nav">' +
       '<div class="nav-group-label">Tools</div>' + TOOLS.map(itemHTML).join("") +
       '<div class="nav-group-label">Account</div>' + ACCOUNT.map(itemHTML).join("") +
+      '<div class="nav-group-label nav-staff hidden">Staff</div>' + STAFF.map(itemHTML).join("") +
     "</nav>" +
     '<div class="side-foot"><button class="acct-chip" id="acctBtn" type="button"></button></div>';
 
@@ -183,4 +194,46 @@
   } else {
     paintAcct();
   }
+
+  // ---- things the sidebar can only know by asking the server ----
+  var API = (window.HUMANIZER_API || "").replace(/\/+$/, "");   // "" without config.js
+  var TOK = "";
+  try { var _t = localStorage.getItem("b7_token"); if (_t && _t !== "guest") TOK = _t; } catch (e) {}
+  var AUTH = { "Authorization": "Bearer " + TOK };
+
+  // Staff links start hidden and are revealed for an admin or moderator. This is
+  // presentation only — every /api/admin/* route checks the token itself, so hiding
+  // the link is a tidiness measure, not the gate.
+  if (API && TOK) {
+    fetch(API + "/api/auth/me", { headers: AUTH })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.is_admin) return;
+        aside.querySelectorAll(".nav-staff").forEach(function (el) { el.classList.remove("hidden"); });
+      })
+      .catch(function () {});
+  }
+
+  // ---- unread badge on Support & FAQ ----
+  // Lives here, not in support.js, so a reply from the team is visible from whichever
+  // page you're on. The support page itself doesn't badge what you're already reading.
+  (function supportBadge() {
+    if (here === "support") return;
+    var api = API, tok = TOK;
+    if (!api || !tok) return;
+    function tick() {
+      fetch(api + "/api/support/unread", { headers: AUTH })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var b = document.getElementById("supportBadge");
+          // A failed call leaves the badge alone: we don't know that it's 0.
+          if (!b || !d || d.error || d.unread == null) return;
+          if (d.unread > 0) { b.textContent = d.unread > 9 ? "9+" : d.unread; b.classList.remove("hidden"); }
+          else b.classList.add("hidden");
+        })
+        .catch(function () {});
+    }
+    tick();
+    setInterval(tick, 30000);
+  })();
 })();

@@ -59,6 +59,9 @@ body.hz-page.light .sidebar{background:rgba(255,255,255,.7)}
   padding:11px 13px;border-radius:10px;color:var(--mut);
   font-size:15px;font-weight:700;letter-spacing:-.3px;transition:.15s;cursor:pointer;
 }
+/* .hidden lives in styles.css, which loads FIRST — display:flex above would beat it
+   on equal specificity. Restate it so a hidden staff link is actually hidden. */
+.nav-item.hidden,.nav-group-label.hidden{display:none}
 .nav-item:hover{background:var(--panel2);color:var(--ink)}
 .nav-item.active{background:linear-gradient(135deg,rgba(255,49,49,.20),rgba(255,106,77,.14));
   color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
@@ -66,6 +69,11 @@ body.hz-page.light .sidebar{background:rgba(255,255,255,.7)}
 .nav-item[data-view="humanizer"] .nav-ic{color:var(--acc)}
 .nav-item[data-view="plans"] .nav-ic{color:#f4b03c}
 .nav-sep{height:1px;background:var(--line);margin:9px 10px}
+/* unread count, pushed to the far edge of its nav item */
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 6px;margin-left:auto;border-radius:999px;background:var(--bad);color:#fff;
+  font-size:11px;font-weight:800;line-height:1;box-shadow:0 0 0 3px rgba(248,81,73,.18)}
+.nav-badge.hidden{display:none}
 /* One box for every image/SVG nav mark, whatever its aspect ratio: contain it and
    pin it left, so the labels beside them all start on the same x as the text ones. */
 .nav-tn-icon{flex:0 0 18px;width:18px;height:18px;display:block;

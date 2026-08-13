@@ -131,4 +131,6 @@
 @media (max-width:760px){
   .plans{grid-template-columns:1fr;max-width:420px;margin-top:34px}
   .plan{padding:34px 26px}
+  /* one column: lead with the main product, whatever side it takes on desktop */
+  .plan.featured{order:-1}
 }

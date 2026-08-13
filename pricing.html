@@ -30,7 +30,23 @@
         </div>
       </div>
 
+      <!-- The month sits on the RIGHT here; stacked on mobile it comes back first,
+           via .plan.featured{order:-1} in the one-column breakpoint. -->
       <div class="plans">
+        <div class="plan">
+          <div class="plan-name">Turnitin scan</div>
+          <div class="plan-price">3.000 <span>KWD</span></div>
+          <ul>
+            <li>Run on <b>real Turnitin</b></li>
+            <li>AI + similarity reports, downloadable</li>
+            <li>No membership needed</li>
+            <li><b>Never expires</b></li>
+            <li class="muted">Doesn't include humanizing</li>
+          </ul>
+          <button id="buy-scan" class="btn btn-ghost plan-btn">Buy a scan</button>
+          <p class="plan-fine">Results within 6 hours.</p>
+        </div>
+
         <div class="plan featured">
           <span class="plan-badge">Best value</span>
           <div class="plan-name">1 month</div>
@@ -45,44 +61,10 @@
           <button id="buy-month" class="btn btn-primary plan-btn">Get 1 month</button>
           <p class="plan-fine">One payment. Nothing renews on its own.</p>
         </div>
-
-        <div class="plan">
-          <div class="plan-name">Turnitin scan</div>
-          <div class="plan-price">3.000 <span>KWD</span></div>
-          <ul>
-            <li>Run on <b>real Turnitin</b></li>
-            <li>AI + similarity reports, downloadable</li>
-            <li>No membership needed</li>
-            <li><b>Never expires</b></li>
-            <li class="muted">Doesn't include humanizing</li>
-          </ul>
-          <button id="buy-scan" class="btn btn-ghost plan-btn">Buy a scan</button>
-          <p class="plan-fine">Results within 6 hours.</p>
-        </div>
       </div>
 
       <p class="hz-msg" id="plans-msg"></p>
 
-      <div class="pr-notes">
-        <h3>Good to know</h3>
-        <dl>
-          <dt>Free to start</dt>
-          <dd>Every new account gets <b>150 words</b> to try the humanizer. They're yours once —
-              they don't reset each day. The PowerPoint humanizer stays free either way; the Word
-              humanizer needs a membership, since it rewrites a whole document at once.</dd>
-          <dt>How you pay</dt>
-          <dd>KNET, Visa, Mastercard or Apple Pay, through MyFatoorah. Prices are in Kuwaiti dinar.</dd>
-          <dt>Nothing auto-renews</dt>
-          <dd>Both are one-time payments. Your card is never saved and never charged again — when a
-              month runs out, you decide whether to buy another.</dd>
-          <dt>If you run out mid-month</dt>
-          <dd>Buying again stacks: your new 10,000 words are added to whatever is left, and the 30 days
-              are added to your current end date.</dd>
-          <dt>Need help</dt>
-          <dd><a href="https://wa.me/96555495757" target="_blank" rel="noopener">WhatsApp us on 55495757</a>
-              — we answer about payments, scans and refunds.</dd>
-        </dl>
-      </div>
     </section>
   </main>
 </div>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>B7oothKw — Codes</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="assets/icon.png" />
+<script src="js/guard.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/humanizer.css" />
+<link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
+<link rel="stylesheet" href="css/codes.css" />
+</head>
+<body class="hz-page" data-view="codes">
+<script src="js/theme.js"></script>
+<div class="app-shell" id="appShell">
+  <main class="content">
+    <section class="view" id="view-codes">
+      <h1 class="sr-only">B7oothKw Codes</h1>
+      <h2 class="view-title"><span class="nav-ic" style="color:var(--acc)">🎟</span> Codes</h2>
+      <p class="cd-note">Every code is worth <b id="cdWorth">1,000 words</b> on a B7oothKw
+        account, and each account may redeem a given code once. Codes stop working
+        90 days after they're made.</p>
+
+      <div class="code-new">
+        <div class="code-new-row">
+          <label class="code-f"><span>Uses</span>
+            <input id="codeUses" type="number" min="1" max="500" value="1" inputmode="numeric">
+          </label>
+          <label class="code-f code-f-wide"><span>Note (optional)</span>
+            <input id="codeNote" type="text" maxlength="200" placeholder="e.g. Instagram giveaway">
+          </label>
+          <button class="btn btn-primary code-gen" id="codeGenBtn" type="button">Generate</button>
+        </div>
+        <div class="code-out hidden" id="codeOut"></div>
+      </div>
+
+      <div class="code-bar">
+        <span class="code-counts" id="codeCounts"></span>
+        <div class="code-filters">
+          <input id="codeSearch" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Search code, note or email" aria-label="Search codes">
+          <select id="codeFState" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="used up">Used up</option>
+            <option value="expired">Expired</option>
+            <option value="revoked">Revoked</option>
+          </select>
+        </div>
+        <button class="code-refresh" id="codeRefreshBtn" type="button">Refresh</button>
+      </div>
+      <div id="codeBody"><p class="code-empty">Loading&hellip;</p></div>
+      <p class="cd-msg" id="cdMsg"></p>
+    </section>
+  </main>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/config.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/codes.js"></script>
+</body>
+</html>
