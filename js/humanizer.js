@@ -425,12 +425,24 @@ fetchMe().then(renderMeter);
   history.replaceState(null, "", location.pathname);      // don't re-toast on refresh
   if (paid === "0") { msg("Payment didn't complete — you weren't charged.", false); return; }
   msg("Payment received — activating…", true);
-  let tries = 0;
-  const t = setInterval(async () => {
-    const me = await fetchMe();
-    const done = me && ((paid === "B7oothMonth" && me.b7 && me.b7.active && me.b7.words > 0)
-                     || (paid === "B7oothScan" && (me.tn_credits || 0) > 0));
-    if (done) { clearInterval(t); renderMeter(me); msg("You're all set!", true); return; }
-    if (++tries >= 12) { clearInterval(t); msg("Payment is processing — it can take a minute. Refresh shortly.", true); }
-  }, 3000);
+  (async () => {
+    // Snapshot BEFORE polling starts. A stacking re-buy (member with words left) or a
+    // scan re-buy (credits left) already satisfies ">0", so the old check toasted
+    // "You're all set!" on the very first poll even if the webhook hadn't landed yet
+    // (or never would). Require a real INCREASE over this snapshot instead. If the
+    // snapshot fetch fails, fall back to 0s — same behaviour as before this fix.
+    const before0 = await fetchMe();
+    const before = {
+      words: (before0 && before0.b7 && before0.b7.words) || 0,
+      credits: (before0 && before0.tn_credits) || 0,
+    };
+    let tries = 0;
+    const t = setInterval(async () => {
+      const me = await fetchMe();
+      const done = me && ((paid === "B7oothMonth" && me.b7 && me.b7.active && me.b7.words > before.words)
+                       || (paid === "B7oothScan" && (me.tn_credits || 0) > before.credits));
+      if (done) { clearInterval(t); renderMeter(me); msg("You're all set!", true); return; }
+      if (++tries >= 12) { clearInterval(t); msg("Payment is processing — it can take a minute. Refresh shortly.", true); }
+    }, 3000);
+  })();
 })();
