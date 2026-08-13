@@ -25,7 +25,8 @@
     if (!m || m.error) { el.hidden = true; buy.hidden = !TOKEN ? true : false; return; }
     const n = m.tn_credits;                       // null = staff (unlimited)
     if (n == null) { el.hidden = true; buy.hidden = true; return; }
-    const exp = m.tn_expiry ? (() => { try { return new Date(m.tn_expiry).toLocaleDateString([], { month: "short", day: "numeric" }); } catch (e) { return ""; } })() : "";
+    const t = Date.parse(m.tn_expiry);
+    const exp = Number.isFinite(t) ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
     el.textContent = n > 0 ? `${n} scan${n === 1 ? "" : "s"} available${exp ? " · expire " + exp : ""}`
                            : "No scans yet — buy one to submit your document.";
     el.hidden = false; buy.hidden = false;
