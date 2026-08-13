@@ -1,24 +1,16 @@
-/* B7oothKw plans page. Rides body.hz-page's tokens (see humanizer.css) so light
-   and dark both come for free; only the page's own layout lives here.
+/* B7oothKw plans page. The cards are the shared Grade A .plan components
+   (see sections.css); only the page's own header, balance strip and notes
+   list live here. */
 
-   The membership card is GREEN on a red-brand site on purpose: green is what this
-   product means everywhere else in the app — clean sentences, the Go Green pass —
-   so the plan that buys Go Green wears it. Everything else stays in brand red. */
-
-/* Centred column, like Grade A's pricing view. The app shell's .view supplies the
-   outer padding, so this only sets the reading width. */
-.pr-wrap{max-width:980px;margin:0 auto;padding:4px 0 60px}
-
-.pr-head{text-align:center;max-width:620px;margin:0 auto 24px}
-.pr-head h1{font-size:clamp(30px,5.5vw,48px);font-weight:850;letter-spacing:-.03em;
-  margin:0 0 10px;color:var(--ink)}
-.pr-lede{font-size:17px;line-height:1.55;color:var(--mut);margin:0}
+.pr-title{justify-content:center;font-size:clamp(28px,4.5vw,40px);margin:6px 0 8px}
+.pr-lede{font-size:16px;line-height:1.55;color:var(--mut);margin:0 auto 22px;
+  max-width:620px;text-align:center}
 
 /* ---- live balance strip ---- */
 /* display on the class beats the UA's [hidden]{display:none}, so restate it. */
-.pr-balance[hidden]{display:none}
 .pr-bal-row{text-align:center}
-.pr-balance{display:inline-flex;align-items:center;gap:10px;margin-bottom:26px;
+.pr-balance[hidden]{display:none}
+.pr-balance{display:inline-flex;align-items:center;gap:10px;
   padding:9px 16px 9px 13px;border-radius:999px;font-size:14px;font-weight:600;
   color:var(--ink);background:var(--panel2);border:1px solid var(--line2)}
 .pr-bal-dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
@@ -28,54 +20,18 @@
 .pr-balance.is-empty .pr-bal-dot{background:var(--bad)}
 .pr-balance.is-trial .pr-bal-dot{background:var(--acc2)}
 
-/* ---- cards ---- */
-/* No align-items: the cards stretch to the tallest, and .pr-buy's margin-top:auto
-   then lines both buttons up on the same baseline however long the lists get. */
-.pr-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
-.pr-card{position:relative;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,var(--panel),var(--bg2));
-  border:1px solid var(--line);border-radius:var(--r);padding:26px 24px 22px;
-  box-shadow:0 12px 40px rgba(0,0,0,.35);transition:border-color .2s,transform .2s,box-shadow .2s}
-.pr-card:hover{transform:translateY(-3px);box-shadow:0 20px 52px rgba(0,0,0,.42)}
-.pr-card-main{border-color:rgba(63,185,80,.42)}
-.pr-card-main:hover{border-color:var(--ok);box-shadow:0 20px 52px rgba(63,185,80,.16)}
-
-.pr-tag{position:absolute;top:-11px;left:22px;padding:4px 11px;border-radius:999px;
-  font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  color:#0b0e14;background:var(--ok)}
-
-.pr-card h2{margin:2px 0 2px;font-size:19px;letter-spacing:-.01em;color:var(--ink)}
-.pr-price{margin:6px 0 18px;color:var(--ink);line-height:1}
-.pr-price b{font-size:42px;font-weight:850;letter-spacing:-.035em}
-.pr-price span{font-size:14px;font-weight:600;color:var(--mut);margin-left:6px}
-
-.pr-list{list-style:none;margin:0 0 22px;padding:0;font-size:14.5px;line-height:1.5;color:var(--mut)}
-.pr-list li{position:relative;padding:0 0 0 24px;margin:0 0 10px}
-.pr-list li::before{content:"";position:absolute;left:2px;top:.5em;width:9px;height:9px;
-  border-radius:2px;background:var(--line2)}
-.pr-card-main .pr-list li::before{background:var(--ok);opacity:.65}
-.pr-list b{color:var(--ink);font-weight:700}
-
-.pr-buy{margin-top:auto;width:100%;padding:13px 18px;font-size:15px}
-.pr-card-main .pr-buy{background:linear-gradient(135deg,#2ea043,var(--ok));box-shadow:0 12px 30px -14px rgba(63,185,80,.85)}
-.pr-fine{margin:10px 0 0;font-size:12.5px;color:var(--faint);text-align:center}
-
-/* ---- free tier + notes ---- */
-.pr-free{margin-top:30px;padding:20px 22px;border-radius:var(--r);
-  border:1px dashed var(--line2);background:var(--panel2)}
-.pr-free h3{margin:0 0 6px;font-size:15px;color:var(--ink)}
-.pr-free p{margin:0;font-size:14.5px;line-height:1.6;color:var(--mut);max-width:70ch}
-.pr-free b{color:var(--ink)}
-
-.pr-notes{margin-top:34px}
-.pr-notes h3{margin:0 0 14px;font-size:15px;color:var(--ink)}
+/* ---- notes ---- */
+.pr-notes{max-width:900px;margin:44px auto 60px}
+.pr-notes h3{margin:0 0 14px;font-size:12px;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--mut)}
 .pr-notes dl{margin:0;display:grid;grid-template-columns:190px 1fr;gap:12px 22px}
 .pr-notes dt{font-size:14px;font-weight:700;color:var(--ink)}
 .pr-notes dd{margin:0;font-size:14px;line-height:1.6;color:var(--mut)}
+.pr-notes dd b{color:var(--ink)}
 .pr-notes a{color:var(--acc2);font-weight:600}
 @media(max-width:620px){
   .pr-notes dl{grid-template-columns:1fr;gap:4px 0}
   .pr-notes dd{margin-bottom:12px}
 }
 
-.pr-wrap .hz-msg{margin:18px 0 0;min-height:1.2em}
+.view .hz-msg{margin:18px 0 0;min-height:1.2em;text-align:center}

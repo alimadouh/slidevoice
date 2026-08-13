@@ -66,10 +66,13 @@ body.hz-page.light .sidebar{background:rgba(255,255,255,.7)}
 .nav-item[data-view="humanizer"] .nav-ic{color:var(--acc)}
 .nav-item[data-view="plans"] .nav-ic{color:#f4b03c}
 .nav-sep{height:1px;background:var(--line);margin:9px 10px}
-.nav-tn-icon{flex:0 0 18px;height:17px;width:18px;display:block}
+/* One box for every image/SVG nav mark, whatever its aspect ratio: contain it and
+   pin it left, so the labels beside them all start on the same x as the text ones. */
+.nav-tn-icon{flex:0 0 18px;width:18px;height:18px;display:block;
+  object-fit:contain;object-position:left center}
 .nav-tn-word{font-size:15px;font-weight:700;color:inherit;letter-spacing:-.3px;line-height:1}
 .nav-tn-word sup{font-size:7px;vertical-align:super;opacity:.6}
-.nav-wa .nav-ic{color:#25d366}
+/* the glyph carries its own brand green (fill on the <svg>); only the label shifts */
 .nav-wa:hover{color:#25d366}
 
 /* ---------- account + legal ---------- */

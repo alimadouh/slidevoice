@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/humanizer.css" />
 <link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
 </head>
 <body class="hz-page" data-view="humanizer">
 <script src="js/theme.js"></script>
@@ -61,43 +62,83 @@
 
   <!-- ===================== POWERPOINT ===================== -->
   <section class="hz-pane hidden" id="pane-pptx">
-    <div class="pp-wrap">
-      <h2 class="view-title">PowerPoint Humanizer</h2>
-      <p class="lede">Upload a <b>.pptx</b> and get it back with the long sentences and bullets rewritten to sound human. Slide titles, short lines, references, and your exact formatting are left untouched.</p>
-      <div class="pp-drop" id="pp-drop">
-        <span class="step">1</span>
-        <h3>PowerPoint <em>— one .pptx file</em></h3>
-        <div class="drop-cue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
-        <div class="pp-files" id="pp-files"></div>
-        <input type="file" id="pp-file" accept=".pptx" hidden />
+    <h2 class="view-title"><img src="assets/pptx_icon.svg" class="title-tn-icon" alt=""> PowerPoint Humanizer</h2>
+    <div class="ft-grid">
+      <div class="tno-upcard">
+        <div class="tno-uparea">
+          <div class="upload-zone upz-big" id="pp-drop" role="button" tabindex="0" aria-label="Choose a PowerPoint file to humanize">
+            <input type="file" id="pp-file" accept=".pptx" hidden>
+            <div class="upz-aura"><img src="assets/pptx_icon.svg" width="44" height="44" alt=""></div>
+            <div class="upz-title">Drop your PowerPoint here or <span>browse</span></div>
+          </div>
+          <div class="tno-selected hidden" id="pp-files"></div>
+          <button class="btn btn-primary tno-submit" id="pp-go" disabled>Humanize PowerPoint</button>
+          <div class="hz-bar" id="pp-bar" hidden><div class="hz-bar-fill" id="pp-bar-fill"></div></div>
+          <p class="hz-msg" id="pp-msg"></p>
+        </div>
       </div>
-      <div class="hz-controls">
-        <button class="btn btn-primary" id="pp-go" disabled>✦ Humanize PowerPoint</button>
-      </div>
-      <div class="hz-bar" id="pp-bar" hidden><div class="hz-bar-fill" id="pp-bar-fill"></div></div>
-      <p class="hz-msg" id="pp-msg"></p>
-      <p class="pp-note">Free with any account — 8 decks a day. It doesn't use your words.</p>
+      <aside class="ft-rail">
+        <h3>How it works</h3>
+        <ol class="ft-tl">
+          <li><span class="ft-tl-n">1</span><b>Upload your PowerPoint</b><small>.pptx file, up to 25 MB</small></li>
+          <li><span class="ft-tl-n">2</span><b>We humanize the long lines</b><small>Titles &amp; formatting kept</small></li>
+          <li><span class="ft-tl-n">3</span><b>Download your file</b><small>Same slides, clearer wording</small></li>
+        </ol>
+        <h3>What you can expect</h3>
+        <ul class="ft-check">
+          <li>Sentences and bullets with <b>more than 5 words</b> are humanized.</li>
+          <li>Slide <b>titles</b>, short lines and references are never rewritten.</li>
+          <li>Layout, fonts, colours and bullets stay <b>exactly the same</b>.</li>
+          <li>You get a brand-new file &mdash; your original is never touched.</li>
+        </ul>
+        <div class="ft-chips">
+          <span class="ft-chip"><b>.pptx</b></span>
+          <span class="ft-chip">up to <b>25 MB</b></span>
+          <span class="ft-chip"><b>8</b> decks a day</span>
+          <span class="ft-chip"><b>Free</b> with any account</span>
+        </div>
+      </aside>
     </div>
   </section>
 
   <!-- ===================== WORD ===================== -->
   <section class="hz-pane hidden" id="pane-word">
-    <div class="pp-wrap">
-      <h2 class="view-title">Word Humanizer</h2>
-      <p class="lede">Upload a <b>.docx</b> and get the whole document back rewritten to sound human — body paragraphs only. Headings, tables, references and your exact formatting stay as they are.</p>
-      <div class="pp-drop" id="wd-drop">
-        <span class="step">1</span>
-        <h3>Word <em>— one .docx file</em></h3>
-        <div class="drop-cue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
-        <div class="pp-files" id="wd-files"></div>
-        <input type="file" id="wd-file" accept=".docx" hidden />
+    <h2 class="view-title"><img src="assets/word_icon.svg" class="title-tn-icon" alt=""> Word Humanizer</h2>
+    <div class="ft-grid">
+      <div class="tno-upcard">
+        <div class="tno-uparea">
+          <div class="upload-zone upz-big" id="wd-drop" role="button" tabindex="0" aria-label="Choose a Word file to humanize">
+            <input type="file" id="wd-file" accept=".docx" hidden>
+            <div class="upz-aura"><img src="assets/word_icon.svg" width="44" height="44" alt=""></div>
+            <div class="upz-title">Drop your Word document here or <span>browse</span></div>
+          </div>
+          <div class="tno-selected hidden" id="wd-files"></div>
+          <button class="btn btn-primary tno-submit" id="wd-go" disabled>Humanize Word</button>
+          <div class="hz-bar" id="wd-bar" hidden><div class="hz-bar-fill" id="wd-bar-fill"></div></div>
+          <p class="hz-msg" id="wd-msg"></p>
+        </div>
       </div>
-      <div class="hz-controls">
-        <button class="btn btn-primary" id="wd-go" disabled>✦ Humanize Word</button>
-      </div>
-      <div class="hz-bar" id="wd-bar" hidden><div class="hz-bar-fill" id="wd-bar-fill"></div></div>
-      <p class="hz-msg" id="wd-msg"></p>
-      <p class="pp-note">Part of the membership. The document's word count comes out of your 10,000 — up to 10,000 words a file, 5 files a day.</p>
+      <aside class="ft-rail">
+        <h3>How it works</h3>
+        <ol class="ft-tl">
+          <li><span class="ft-tl-n">1</span><b>Upload your document</b><small>.docx file, up to 25 MB</small></li>
+          <li><span class="ft-tl-n">2</span><b>We humanize every paragraph</b><small>Then a Go Green pass over the result</small></li>
+          <li><span class="ft-tl-n">3</span><b>Download your file</b><small>Same document, human wording</small></li>
+        </ol>
+        <h3>What you can expect</h3>
+        <ul class="ft-check">
+          <li>Body paragraphs with <b>more than 5 words</b> are humanized.</li>
+          <li><b>Headings</b>, tables and references are left alone.</li>
+          <li>Fonts, spacing and numbering stay <b>exactly the same</b>.</li>
+          <li>The word count comes out of your <b>membership's 10,000</b>.</li>
+        </ul>
+        <div class="ft-chips">
+          <span class="ft-chip"><b>.docx</b></span>
+          <span class="ft-chip">up to <b>10,000</b> words a file</span>
+          <span class="ft-chip"><b>5</b> files a day</span>
+          <span class="ft-chip"><b>Membership</b></span>
+        </div>
+      </aside>
     </div>
   </section>
 

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/humanizer.css" />
 <link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
 <link rel="stylesheet" href="css/narrator.css" />
 </head>
 <body class="hz-page" data-view="narrator">
@@ -19,36 +20,54 @@
     <section class="view" id="view-narrator">
       <h1 class="view-title">Slide Narrator</h1>
       <p class="view-sub">Drop a deck, its script and your recordings — get back a PowerPoint that narrates itself.</p>
-  <section class="uploads">
-    <div class="card" id="drop-pptx">
-      <span class="step">1</span>
-      <h3>PowerPoint</h3>
-      <div class="drop-cue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
-      <div class="files" id="list-pptx"></div>
-      <input type="file" id="file-pptx" accept=".pptx" hidden />
+  <div class="ft-grid">
+    <div class="tno-upcard">
+      <div class="tno-uparea">
+        <div class="upload-zone nz-zone" id="drop-pptx" role="button" tabindex="0" aria-label="Choose your PowerPoint deck">
+          <div class="upz-aura"><img src="assets/pptx_icon.svg" width="44" height="44" alt=""></div>
+          <div class="upz-title">Your PowerPoint &mdash; <span>browse</span></div>
+          <div class="files" id="list-pptx"></div>
+          <input type="file" id="file-pptx" accept=".pptx" hidden />
+        </div>
+        <div class="upload-zone nz-zone" id="drop-script" role="button" tabindex="0" aria-label="Choose the script">
+          <div class="upz-aura"><span class="upz-em">📝</span></div>
+          <div class="upz-title">The script &mdash; <span>browse</span></div>
+          <div class="files" id="list-script"></div>
+          <input type="file" id="file-script" accept=".docx,.txt,.md" hidden />
+        </div>
+        <div class="upload-zone nz-zone" id="drop-audio" role="button" tabindex="0" aria-label="Choose your recordings">
+          <div class="upz-aura"><span class="upz-em">🎙</span></div>
+          <div class="upz-title">Your recordings &mdash; <span>browse</span></div>
+          <div class="files" id="list-audio"></div>
+          <p class="note" id="audio-note"></p>
+          <input type="file" id="file-audio" multiple hidden />
+        </div>
+        <button id="btn-process" class="btn btn-primary tno-submit" disabled>Match recordings to slides</button>
+      </div>
     </div>
-
-    <div class="card" id="drop-script">
-      <span class="step">2</span>
-      <h3>Script</h3>
-      <div class="drop-cue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
-      <div class="files" id="list-script"></div>
-      <input type="file" id="file-script" accept=".docx,.txt,.md" hidden />
-    </div>
-
-    <div class="card" id="drop-audio">
-      <span class="step">3</span>
-      <h3>Recordings</h3>
-      <div class="drop-cue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
-      <div class="files" id="list-audio"></div>
-      <p class="note" id="audio-note"></p>
-      <input type="file" id="file-audio" multiple hidden />
-    </div>
-  </section>
-
-  <section class="controls">
-    <button id="btn-process" class="primary" disabled>Match recordings to slides</button>
-  </section>
+    <aside class="ft-rail">
+      <h3>How it works</h3>
+      <ol class="ft-tl">
+        <li><span class="ft-tl-n">1</span><b>Upload your deck</b><small>.pptx, the slides you presented</small></li>
+        <li><span class="ft-tl-n">2</span><b>Add the script</b><small>.docx, .txt or .md &mdash; what you said</small></li>
+        <li><span class="ft-tl-n">3</span><b>Drop in your recordings</b><small>One clip per slide, any order</small></li>
+        <li><span class="ft-tl-n">4</span><b>Check the matches</b><small>Then download the narrated deck</small></li>
+      </ol>
+      <h3>What you can expect</h3>
+      <ul class="ft-check">
+        <li>Each recording is matched to its slide by <b>what it says</b>, not its filename.</li>
+        <li>You can <b>listen and re-assign</b> any clip before generating.</li>
+        <li>The audio is embedded in the file &mdash; it plays <b>offline</b>, no internet needed.</li>
+        <li>Your slides, fonts and layout are <b>never changed</b>.</li>
+      </ul>
+      <div class="ft-chips">
+        <span class="ft-chip"><b>.pptx</b></span>
+        <span class="ft-chip"><b>.docx</b> / <b>.txt</b> / <b>.md</b></span>
+        <span class="ft-chip">audio: <b>any format</b></span>
+        <span class="ft-chip"><b>Free</b></span>
+      </div>
+    </aside>
+  </div>
 
   <section id="progress" class="panel hidden">
     <div class="stage" id="stage">Working…</div>

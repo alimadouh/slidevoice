@@ -322,18 +322,24 @@ function fileTool(cfg) {
     msgBox.classList.remove("ok");
   }
 
+  // The chosen file shows in its own .tno-selected row under the drop zone, the way
+  // Grade A does it — the zone itself keeps saying "drop here or browse".
   function setFile(f) {
     if (f && !cfg.ext.test(f.name)) { say(cfg.wrongType); return; }
     picked = f || null;
-    drop.classList.toggle("filled", !!picked);
+    files.classList.toggle("hidden", !picked);
     files.innerHTML = picked
-      ? `<span class="chip"><span class="chip-name">${esc(picked.name)}</span><button class="chip-x" type="button" aria-label="Remove">×</button></span>` : "";
-    if (picked) files.querySelector(".chip-x").onclick = (e) => { e.stopPropagation(); setFile(null); };
+      ? `<span aria-hidden="true">📎</span><span>${esc(picked.name)}</span>` +
+        `<button class="tno-clear" type="button" aria-label="Remove file">✕</button>` : "";
+    if (picked) files.querySelector(".tno-clear").onclick = (e) => { e.stopPropagation(); setFile(null); };
     go.disabled = !picked || busy;
     say("");
   }
 
   drop.onclick = () => !busy && input.click();
+  drop.onkeydown = (e) => {                     // it's role="button" — behave like one
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); drop.click(); }
+  };
   input.onchange = () => setFile(input.files[0]);
   ["dragover", "dragenter"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
   ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));

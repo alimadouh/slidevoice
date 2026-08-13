@@ -20,14 +20,24 @@
     try { return await (await fetch(API + "/api/auth/me", { headers: H })).json(); }
     catch (e) { return null; }
   }
+  // The credits strip: how many scans you hold, and the buy button beside it. Styled
+  // green when you have some and amber when you don't, like Grade A's.
   async function refreshCredits() {
-    const m = await me(); const el = $("tnCredits"); const buy = $("tnBuy");
-    if (!m || m.error) { el.hidden = true; buy.hidden = !TOKEN ? true : false; return; }
+    const box = $("tnCredits"), txt = $("tnCredTxt"), buy = $("tnBuy");
+    const show = (on) => box.classList.toggle("hidden", !on);
+    box.classList.remove("has", "empty", "staff");
+    const m = await me();
+    if (!m || m.error) { show(false); buy.classList.add("hidden"); return; }
     const n = m.tn_credits;                       // null = staff (unlimited)
-    if (n == null) { el.hidden = true; buy.hidden = true; return; }
-    el.textContent = n > 0 ? `${n} scan${n === 1 ? "" : "s"} available`
-                           : "No scans yet — buy one to submit your document.";
-    el.hidden = false; buy.hidden = false;
+    if (n == null) {
+      txt.innerHTML = "<b>Unlimited</b> scans on this account.";
+      box.classList.add("staff"); show(true); buy.classList.add("hidden"); return;
+    }
+    txt.innerHTML = n > 0
+      ? `<b>${n}</b> scan${n === 1 ? "" : "s"} available.`
+      : "No scans yet &mdash; buy one to submit your document.";
+    box.classList.add(n > 0 ? "has" : "empty");
+    show(true); buy.classList.remove("hidden");
   }
   $("tnBuy").onclick = async () => {
     if (!TOKEN) { if (window.b7PromptLogin) b7PromptLogin("Sign in to buy a scan."); return; }
@@ -43,11 +53,16 @@
   };
 
   // ---- submit ----
-  const DROP_IDLE = "Drop your document here";
+  // The chosen file shows in its own row under the zone; the zone keeps its prompt.
   function showFile() {
-    const f = $("tnFile").files[0];
-    $("tnFileLbl").textContent = f ? f.name : DROP_IDLE;
-    $("tnDrop").classList.toggle("has-file", !!f);
+    const f = $("tnFile").files[0], sel = $("tnSelected");
+    sel.classList.toggle("hidden", !f);
+    sel.innerHTML = f
+      ? `<span aria-hidden="true">📎</span><span>${esc(f.name)}</span>` +
+        `<button class="tno-clear" type="button" aria-label="Remove file">✕</button>` : "";
+    if (f) sel.querySelector(".tno-clear").onclick = (e) => {
+      e.stopPropagation(); $("tnFile").value = ""; showFile();
+    };
   }
   $("tnFile").onchange = showFile;
   // Drag & drop straight onto the zone.
@@ -68,7 +83,7 @@
     try {
       const fd = new FormData(); fd.append("file", f, f.name); fd.append("note", $("tnNote").value || "");
       const d = await (await fetch(API + "/api/turnitin/submit", { method: "POST", headers: H, body: fd })).json();
-      if (d.error) { say(d.error, true); if (d.reason === "no_credits") $("tnBuy").hidden = false; }
+      if (d.error) { say(d.error, true); if (d.reason === "no_credits") refreshCredits(); }
       else {
         say("Submitted! Your Turnitin score appears below within 6 hours.");
         $("tnFile").value = ""; showFile(); $("tnNote").value = "";

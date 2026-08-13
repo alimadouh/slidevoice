@@ -1,0 +1,134 @@
+/* B7oothKw section components — ported from the Grade A humanizer so every view
+   matches it, not just the shell. Sources: static/style.css (.upload-zone/.upz-*,
+   .tno-*, .ft-*, .plan*) and app-refresh.css (.plan elevation).
+
+   The ONLY change is the accent. Grade A hardcodes indigo in a few places that its
+   own tokens don't cover — #a06bff in the gradients and rgba(124,131,255,…) in the
+   glows. Those become the B7oothKw red/coral here; everything else reads the shared
+   tokens and needed no edit at all. */
+
+/* ---------- drop zone ---------- */
+.upload-zone{border:2px dashed var(--line2);border-radius:14px;padding:38px;text-align:center;
+  cursor:pointer;background:var(--panel);transition:.15s;max-width:840px;margin:24px 0 20px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--acc);background:var(--panel2)}
+.upload-zone.upz-big{padding:54px 24px 46px}
+.upload-zone.upz-big .upz-title{font-size:17px}
+.upz-title{font-size:16px;font-weight:650}
+.upz-title span{color:var(--acc)}
+
+.upz-aura{width:86px;height:86px;margin:0 auto 16px;border-radius:26px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--acc) 16%,var(--panel2)),var(--panel2));
+  border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));
+  box-shadow:0 10px 34px -12px color-mix(in srgb,var(--acc) 55%,transparent);
+  transition:transform .2s,box-shadow .25s}
+.upz-aura::after{content:"";position:absolute;inset:-14px;border-radius:32px;z-index:-1;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--acc) 22%,transparent),transparent 72%);
+  animation:upzPulse 3.2s ease-in-out infinite}
+.upload-zone:hover .upz-aura,.upload-zone.drag .upz-aura{transform:translateY(-3px);
+  box-shadow:0 16px 40px -12px color-mix(in srgb,var(--acc) 75%,transparent)}
+.upz-aura .upz-em{font-size:38px;line-height:1}
+.upz-aura img,.upz-aura svg{width:44px;height:44px;display:block}
+@keyframes upzPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){.upz-aura::after{animation:none}}
+
+/* ---------- upload card ---------- */
+.tno-upcard{max-width:840px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:18px}
+.tno-upcard .upload-zone{margin:0 0 14px}
+.tno-uparea{position:relative}
+.tno-selected{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;
+  padding:10px 14px;margin-bottom:12px;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px}
+.tno-selected.hidden{display:none}
+.tno-clear{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;
+  font-size:14px;font-family:inherit}
+.tno-clear:hover{color:var(--bad)}
+.tno-submit{width:100%;justify-content:center}
+.tno-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+.tno-note{margin:12px 0 0;font-size:12px;line-height:1.55;color:var(--faint)}
+
+/* credits / entitlement strip above the drop zone */
+.tno-credits{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:11px 14px;
+  margin-bottom:14px;font-size:13.5px;color:var(--ink)}
+.tno-credits.hidden{display:none}
+.tno-credits.empty{border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:rgba(216,162,52,.08)}
+.tno-credits.has{border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:rgba(63,185,80,.07)}
+.tno-credits.staff{border-color:color-mix(in srgb,var(--acc) 40%,transparent);background:rgba(255,49,49,.08)}
+.tno-cred-txt b{color:var(--ink);font-weight:800}
+.tno-buy-scan{flex-shrink:0;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:0;
+  font-family:inherit;font-size:13.5px;font-weight:700;border-radius:9px;padding:8px 16px;cursor:pointer;
+  box-shadow:0 4px 14px -4px rgba(255,49,49,.5)}
+.tno-buy-scan:hover{filter:brightness(1.08)}
+.tno-buy-scan.hidden{display:none}
+
+/* orders / results list under the card */
+.tno-section{max-width:840px;margin-top:30px}
+.tno-h3{font-size:16px;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.tno-counts{font-size:12px;font-weight:400;color:var(--mut)}
+.tno-list{display:flex;flex-direction:column;gap:12px}
+
+/* ---------- the "how it works" rail ---------- */
+.ft-grid{display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:20px;align-items:start;max-width:1400px}
+.ft-grid .tno-upcard{max-width:none;margin:0}
+.ft-rail{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:20px 20px 18px;position:sticky;top:18px}
+.ft-rail h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);margin:0 0 14px}
+.ft-rail h3 + h3{margin-top:0}
+/* vertical step timeline — numbered nodes joined by a fading accent line */
+.ft-tl{list-style:none;margin:0 0 22px;padding:0}
+.ft-tl li{position:relative;padding:0 0 20px 44px;min-height:34px}
+.ft-tl li:last-child{padding-bottom:0}
+.ft-tl li::before{content:"";position:absolute;left:14px;top:32px;bottom:0;width:2px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 55%,transparent),color-mix(in srgb,var(--acc) 10%,transparent))}
+.ft-tl li:last-child::before{display:none}
+.ft-tl-n{position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:13.5px;font-weight:800;
+  box-shadow:0 4px 13px -2px rgba(255,49,49,.55)}
+.ft-tl b{display:block;font-size:13.5px;color:var(--ink);letter-spacing:-.2px;line-height:1.3;padding-top:2px}
+.ft-tl small{display:block;font-size:12px;color:var(--mut);margin-top:2px;line-height:1.45}
+/* checkmark bullet list */
+.ft-check{list-style:none;margin:0 0 20px;padding:0}
+.ft-check li{position:relative;padding:0 0 10px 24px;font-size:13px;line-height:1.55;color:var(--ink)}
+.ft-check li::before{content:"✓";position:absolute;left:2px;top:0;color:var(--ok);font-weight:800}
+/* limit chips */
+.ft-chips{display:flex;flex-wrap:wrap;gap:8px;border-top:1px dashed var(--line);padding-top:14px}
+.ft-chip{font-size:12px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--mut);white-space:nowrap}
+.ft-chip b{color:var(--ink);font-weight:700}
+.ft-tm{font-size:11.5px;line-height:1.55;opacity:.62;margin-top:12px;color:var(--mut)}
+
+@media (max-width:1020px){
+  .ft-grid{grid-template-columns:1fr}
+  .ft-rail{position:static}
+}
+
+/* ---------- plan cards ---------- */
+.plans{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;max-width:720px;margin:44px auto 0}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:42px 36px;
+  position:relative;box-shadow:0 12px 40px rgba(0,0,0,.35);
+  transition:transform .18s,border-color .18s;display:flex;flex-direction:column}
+.plan:hover{transform:translateY(-3px);border-color:var(--line2)}
+.plan.featured{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 14px 34px rgba(255,49,49,.20)}
+.plan.featured:hover{border-color:var(--acc)}
+.plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:11px;font-weight:700;
+  padding:3px 13px;border-radius:20px;white-space:nowrap}
+.plan-name{font-size:15px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:1.5px}
+.plan-price{font-size:52px;font-weight:800;margin:10px 0 24px;color:var(--ink);line-height:1}
+.plan-price span{font-size:16px;color:var(--mut);font-weight:600}
+.plan ul{list-style:none;margin:0 0 28px;padding:0}
+.plan li{font-size:16px;color:var(--ink);padding:12px 0 12px 32px;position:relative;
+  border-bottom:1px solid var(--line)}
+.plan li::before{content:"✓";position:absolute;left:0;top:12px;width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  color:#3fb950;background:color-mix(in srgb,#3fb950 16%,transparent)}
+.plan li.muted{color:var(--faint)}
+.plan li.muted::before{content:"✕";color:var(--faint);background:color-mix(in srgb,var(--faint) 16%,transparent)}
+.plan-btn{width:100%;justify-content:center;margin-top:auto}
+.plan-fine{margin:10px 0 0;font-size:12.5px;color:var(--faint);text-align:center}
+@media (max-width:760px){
+  .plans{grid-template-columns:1fr;max-width:420px;margin-top:34px}
+  .plan{padding:34px 26px}
+}
