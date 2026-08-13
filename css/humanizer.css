@@ -387,3 +387,17 @@ body.hz-page{
 .chip-x{flex:none;width:18px;height:18px;border:none;border-radius:50%;background:rgba(255,255,255,.1);color:var(--ink);
   font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;transition:.15s}
 .chip-x:hover{background:var(--bad);color:#fff}
+
+/* ================= plans ================= */
+.plans-title{margin:2.2rem 0 1rem;font-size:20px;letter-spacing:-.01em;color:var(--ink)}
+.plan-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;max-width:760px}
+.plan-card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+  border-radius:var(--r);padding:1.2rem 1.2rem 1.4rem;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.plan-card h3{margin:0 0 .3rem;color:var(--ink);font-size:16px}
+.plan-price{font-size:1.6rem;font-weight:700;margin:.4rem 0 .8rem;color:var(--ink)}
+.plan-price span{font-size:.8rem;font-weight:400;opacity:.7}
+.plan-card ul{margin:0 0 1rem 1.1rem;padding:0;color:var(--mut);font-size:14px}
+.plan-card li{margin:.3rem 0}
+#b7-meter{margin-left:auto;opacity:.85}
+#b7-meter.low{color:var(--warn);font-weight:600}
+.hz-msg.bad{color:var(--bad)}

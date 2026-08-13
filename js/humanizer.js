@@ -166,10 +166,19 @@ async function humanize() {
       body: JSON.stringify({ text, level: LEVEL, model: 2 }),
     });
     const p = await r.json();
-    if (p.error) { msg(p.error); return; }
+    if (p.error) {
+      if (p.reason === "b7_words") {
+        msgEl.innerHTML = esc("You've used your membership's 10,000 words — ") + '<a href="#plans">Add another month</a>';
+        msgEl.classList.remove("ok");
+      } else {
+        msg(p.error);
+      }
+      return;
+    }
     if (p.cancelled) { msg("Stopped."); return; }
     applyData(p, true);
-    msg(hasFlagged(lastBlocks) ? "Done. Run “Make all green” to clean up the highlights." : "Done — all clear.", true);
+    msg(hasFlagged(lastBlocks) ? "Done. Run “Go Green” to clean up the highlights." : "Done — all clear.", true);
+    if (p.b7_words_remaining != null) fetchMe().then(renderMeter);
   } catch (e) {
     if (e.name === "AbortError") msg("Stopped.");
     else msg("Couldn’t reach the humanizer. Please try again.");
@@ -205,7 +214,7 @@ async function check() {
 }
 
 async function makeAllGreen() {
-  if (needLogin("Log in to use Make-all-green.")) return;
+  if (needLogin("Log in to use Go Green.")) return;
   if (!lastBlocks || !hasFlagged(lastBlocks)) return;
   busy = true; refreshButtons();
   btnGreen.style.display = "none"; btnStopGreen.style.display = "";
@@ -218,7 +227,7 @@ async function makeAllGreen() {
       method: "POST", headers: JH, signal: greenAbort.signal,
       body: JSON.stringify({ blocks: lastBlocks, level: LEVEL, threshold: AMBER, model: 2 }),
     });
-    if (!r.ok || !r.body) { msg("Make-all-green is unavailable right now."); return; }
+    if (!r.ok || !r.body) { msg("Go Green is unavailable right now."); return; }
     const reader = r.body.getReader(), dec = new TextDecoder();
     let buf = "", finished = false;
     while (true) {
@@ -239,10 +248,10 @@ async function makeAllGreen() {
       if (finished) break;
     }
     barFill.style.width = "100%";
-    if (finished && !hasFlagged(lastBlocks)) msg("All green ✓", true);
+    if (finished && !hasFlagged(lastBlocks)) msg("Go Green ✓", true);
     else if (finished) msg("Cleaned up as far as it goes — a few stubborn lines remain.", true);
   } catch (e) {
-    msg(e.name === "AbortError" ? "Stopped." : "Make-all-green failed. Please try again.");
+    msg(e.name === "AbortError" ? "Stopped." : "Go Green failed. Please try again.");
   } finally {
     busy = false; greenAbort = null;
     btnStopGreen.style.display = "none"; btnGreen.style.display = "";
@@ -355,3 +364,65 @@ async function ppRun() {
   }
 }
 ppGo.onclick = ppRun;
+
+// ---------------------------------------------------------------- plans / membership
+const plansMsg = $("plans-msg");
+function planSay(t, bad) { if (plansMsg) { plansMsg.textContent = t; plansMsg.classList.toggle("bad", !!bad); } }
+
+let buyBusy = false;
+async function buyPlan(plan) {
+  if (needLogin("Sign in to buy.")) return;
+  if (buyBusy) return;                       // one invoice per click; a redirect is coming
+  buyBusy = true;
+  try {
+    const r = await fetch(API + "/api/myfatoorah/checkout", {
+      method: "POST", headers: JH, body: JSON.stringify({ plan, quantity: 1 }),
+    });
+    const d = await r.json();
+    if (d && d.url) { location.href = d.url; return }   // webhook grants; redirect just pays
+    planSay((d && d.error) || "Couldn't start checkout. Please try again.", true);
+  } catch (e) {
+    planSay("Couldn't reach the payment gateway. Please try again.", true);
+  } finally { buyBusy = false; }
+}
+$("buy-month").onclick = () => buyPlan("B7oothMonth");
+$("buy-scan").onclick = () => buyPlan("B7oothScan");
+
+// Membership meter: words left + expiry, warning under 2k.
+async function fetchMe() {
+  if (!TOKEN) return null;
+  try { return await (await fetch(API + "/api/auth/me", { headers: BH })).json(); }
+  catch (e) { return null; }
+}
+function renderMeter(me) {
+  let el = $("b7-meter");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "b7-meter";
+    const bar = document.querySelector("#pane-text .usage-bar");
+    if (bar) bar.appendChild(el); else return;
+  }
+  const b7 = me && me.b7;
+  if (!b7 || !b7.active) { el.textContent = ""; return; }
+  const end = (function () { try { return new Date(b7.expiry).toLocaleDateString([], { month: "short", day: "numeric" }); } catch (e) { return ""; } })();
+  el.textContent = `Membership: ${b7.words.toLocaleString()} words left · ends ${end}`;
+  el.classList.toggle("low", b7.words <= 2000);
+}
+fetchMe().then(renderMeter);
+
+// Coming back from MyFatoorah: ?paid=<plan> — the WEBHOOK grants, so poll until it lands.
+(function () {
+  const paid = new URLSearchParams(location.search).get("paid");
+  if (paid == null) return;
+  history.replaceState(null, "", location.pathname);      // don't re-toast on refresh
+  if (paid === "0") { msg("Payment didn't complete — you weren't charged.", false); return; }
+  msg("Payment received — activating…", true);
+  let tries = 0;
+  const t = setInterval(async () => {
+    const me = await fetchMe();
+    const done = me && ((paid === "B7oothMonth" && me.b7 && me.b7.active && me.b7.words > 0)
+                     || (paid === "B7oothScan" && (me.tn_credits || 0) > 0));
+    if (done) { clearInterval(t); renderMeter(me); msg("You're all set!", true); return; }
+    if (++tries >= 12) { clearInterval(t); msg("Payment is processing — it can take a minute. Refresh shortly.", true); }
+  }, 3000);
+})();
