@@ -1,4 +1,4 @@
-// B7oothKw Turnitin page: submit a document for a REAL Turnitin check (free),
+// B7oothKw Turnitin page: submit a document for a REAL Turnitin check,
 // track your orders, download the reports, chat with the team.
 // Same backend + login as the humanizer; the branch key marks us as the B7ooth site.
 (function () {
@@ -13,6 +13,35 @@
   const fmt = (iso) => { try { return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
 
   function say(text, bad) { const m = $("tnMsg"); m.textContent = text; m.classList.toggle("bad", !!bad); m.classList.remove("hidden"); }
+
+  // ---- credits ----
+  async function me() {
+    if (!TOKEN) return null;
+    try { return await (await fetch(API + "/api/auth/me", { headers: H })).json(); }
+    catch (e) { return null; }
+  }
+  async function refreshCredits() {
+    const m = await me(); const el = $("tnCredits"); const buy = $("tnBuy");
+    if (!m || m.error) { el.hidden = true; buy.hidden = !TOKEN ? true : false; return; }
+    const n = m.tn_credits;                       // null = staff (unlimited)
+    if (n == null) { el.hidden = true; buy.hidden = true; return; }
+    const exp = m.tn_expiry ? (() => { try { return new Date(m.tn_expiry).toLocaleDateString([], { month: "short", day: "numeric" }); } catch (e) { return ""; } })() : "";
+    el.textContent = n > 0 ? `${n} scan${n === 1 ? "" : "s"} available${exp ? " · expire " + exp : ""}`
+                           : "No scans yet — buy one to submit your document.";
+    el.hidden = false; buy.hidden = false;
+  }
+  $("tnBuy").onclick = async () => {
+    if (!TOKEN) { if (window.b7PromptLogin) b7PromptLogin("Sign in to buy a scan."); return; }
+    try {
+      const d = await (await fetch(API + "/api/myfatoorah/checkout", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" }, H),
+        body: JSON.stringify({ plan: "B7oothScan", quantity: 1 }),
+      })).json();
+      if (d && d.url) { location.href = d.url; return }
+      say((d && d.error) || "Couldn't start checkout. Please try again.", true);
+    } catch (e) { say("Couldn't reach the payment gateway. Please try again.", true); }
+  };
 
   // ---- submit ----
   const DROP_IDLE = "Drop your document here";
@@ -40,10 +69,11 @@
     try {
       const fd = new FormData(); fd.append("file", f, f.name); fd.append("note", $("tnNote").value || "");
       const d = await (await fetch(API + "/api/turnitin/submit", { method: "POST", headers: H, body: fd })).json();
-      if (d.error) { say(d.error, true); }
+      if (d.error) { say(d.error, true); if (d.reason === "no_credits") $("tnBuy").hidden = false; }
       else {
         say("Submitted! Your Turnitin score appears below within 6 hours.");
         $("tnFile").value = ""; showFile(); $("tnNote").value = "";
+        refreshCredits();
         refresh();
       }
     } catch (e) { say("Service is temporarily unavailable. Please try again shortly.", true); }
@@ -151,5 +181,6 @@
   $("tnChatInp").addEventListener("keydown", (e) => { if (e.key === "Enter") $("tnChatSend").click(); });
 
   setInterval(() => { if (!document.hidden) refresh(); }, 30000);
+  refreshCredits();
   refresh();
 })();
