@@ -1,0 +1,53 @@
+/* Slide Narrator on the dark app shell.
+   The narrator's components (.card, .panel, .review-table…) were written against
+   styles.css's LIGHT palette — --card, --accent, --black, --muted, --radius — which
+   body.hz-page never redefined, so they stayed white inside a dark shell.
+
+   Rather than rewrite every rule, remap the legacy token names onto the shell's
+   tokens once. Everything that reads them follows automatically, and the handful
+   of hardcoded hex values below are all that's left to fix. */
+
+body.hz-page{
+  --card:var(--panel);
+  --radius:var(--r);
+  --accent:var(--acc);
+  --accent-ink:var(--acc2);
+  --accent-soft:rgba(255,49,49,.14);
+  --black:var(--ink);
+  --muted:var(--mut);
+  --shadow:0 12px 40px rgba(0,0,0,.35);
+  --shadow-red:0 14px 34px -18px rgba(255,49,49,.5);
+}
+
+/* ---- the three upload cards ---- */
+.hz-page .uploads{margin-top:26px}
+.hz-page .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border-color:var(--line2)}
+.hz-page .card:hover{background:linear-gradient(180deg,var(--panel2),var(--bg2));border-color:var(--acc)}
+.hz-page .card.drag{background:rgba(255,49,49,.10);border-color:var(--acc)}
+.hz-page .card.filled{border-color:var(--ok);background:linear-gradient(180deg,var(--panel),rgba(63,185,80,.07))}
+.hz-page .card .step{background:var(--panel2);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.hz-page .card:nth-child(3) .step{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+.hz-page .chip{background:var(--panel2);border-color:var(--line2);color:var(--ink)}
+.hz-page .chip-x{background:rgba(255,255,255,.10);color:var(--ink)}
+.hz-page .chip-x:hover{background:var(--acc);color:#fff}
+
+/* ---- primary / link buttons ---- */
+.hz-page .primary{background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:10px;
+  box-shadow:0 6px 18px rgba(255,49,49,.32)}
+.hz-page .primary:hover:not(:disabled){filter:brightness(1.08);background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.hz-page .link{color:var(--mut)}
+.hz-page .link:hover{color:var(--acc2)}
+
+/* ---- progress / review / result panels ---- */
+.hz-page .panel{border-color:var(--line)}
+.hz-page .bar{background:var(--panel2)}
+.hz-page .bar-fill{background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.hz-page .log{background:var(--bg2);border-color:var(--line);color:var(--mut)}
+.hz-page .summary{color:var(--acc2)}
+.hz-page .table-wrap{border-color:var(--line)}
+.hz-page .review-table th{background:var(--panel2);color:var(--mut);border-bottom-color:var(--line)}
+.hz-page .review-table td{border-bottom-color:var(--line)}
+.hz-page .review-table select{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);
+  border-radius:8px;padding:6px 9px;font-family:inherit}
+.hz-page .tip kbd{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;
+  padding:1px 6px;font-family:var(--mono);font-size:12px;color:var(--ink)}

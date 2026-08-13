@@ -18,6 +18,13 @@
     Referrer-Policy = "no-referrer"
 
 [[headers]]
+  for = "/pricing.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
   for = "/css/*"
   [headers.values]
     Cache-Control = "public, max-age=86400"

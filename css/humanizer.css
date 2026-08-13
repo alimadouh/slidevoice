@@ -48,16 +48,9 @@
   .bar-top{gap:10px;min-width:0;flex-wrap:wrap}
   .topbar-right{gap:8px}
   .logo-svg{height:42px}
-  .back-link{padding:7px 12px;font-size:13px}
   .theme-toggle{width:34px;height:34px;font-size:15px}
   .wa-link{padding:8px 10px}
   .wa-link span{display:none}              /* icon-only WhatsApp on small screens */
-  .hz-page .hz-tab{padding:8px 14px;font-size:13.5px}
-  .hz-page .hz-tab svg{width:16px;height:16px}
-}
-@media(max-width:380px){
-  .hz-page .hz-tab span,.hz-page .hz-tab{gap:6px}
-  .back-link .bk-arrow{margin-right:-2px}
 }
 .theme-toggle{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;
   cursor:pointer;border-radius:10px;background:#fff;border:1.5px solid #e8e6ea;color:#1a1a1f;transition:.15s;line-height:1}
@@ -124,69 +117,9 @@ body.hz-page.light .chip,body.hz-page.light .chip-x{background:#eef2f8}
   background:none;border:none;font-family:inherit}
 .login-back:hover{color:var(--ink)}
 
-/* ---- back button (works on both light narrator + dark humanizer) ---- */
-.back-link{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;text-decoration:none;
-  white-space:nowrap;padding:8px 15px;border-radius:999px;transition:.15s;color:#6e6e78;border:1.5px solid #e8e6ea;background:#fff}
-.back-link:hover{color:#1a1a1f;border-color:#ff3131}
-.back-link .bk-arrow{font-size:17px;line-height:1;margin-top:-1px}
-body.dark .back-link{color:#8b97a8;border-color:#2c3645;background:#161b26}
-body.dark .back-link:hover{color:#e8edf4;border-color:#ff3131}
-
-/* ---- home chooser ---- */
-.home-wrap{max-width:900px;margin:0 auto;padding:46px clamp(18px,5vw,60px) 80px}
-.home-head{text-align:center;margin:6px 0 38px}
-.home-head h1{font-size:clamp(28px,5vw,46px);font-weight:850;letter-spacing:-.025em;margin:0 0 10px;color:#16161a}
-.home-head p{font-size:17px;margin:0;color:#6e6e78}
-.home-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-@media(max-width:720px){.home-cards{grid-template-columns:1fr}}
-.home-card{display:flex;flex-direction:column;gap:13px;text-decoration:none;padding:30px 26px;border-radius:18px;
-  background:#fff;border:1.5px solid #e8e6ea;box-shadow:0 16px 44px -24px rgba(20,20,23,.5);position:relative;overflow:hidden;
-  transition:transform .24s cubic-bezier(.34,1.4,.5,1),border-color .2s,box-shadow .24s;animation:home-in .5s both}
-/* hover (desktop) AND active (mobile tap) trigger the same effects */
-.home-card:hover,.home-card:active{transform:translateY(-6px) scale(1.014);border-color:#ff3131;box-shadow:0 26px 56px -22px rgba(255,49,49,.5)}
-/* shine sweep on hover / tap */
-.home-card::before{content:"";position:absolute;top:0;left:-65%;width:45%;height:100%;pointer-events:none;z-index:1;
-  background:linear-gradient(105deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);opacity:0}
-.home-card:hover::before,.home-card:active::before{animation:home-shine .85s ease}
-@keyframes home-shine{0%{left:-65%;opacity:1}100%{left:135%;opacity:1}}
-@keyframes home-in{from{opacity:0}to{opacity:1}}        /* opacity-only so it never blocks the hover transform */
-.home-cards .home-card:nth-child(1){animation-delay:.04s}
-.home-cards .home-card:nth-child(2){animation-delay:.11s}
-.home-wide{animation-delay:.18s}
-
-.home-ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;position:relative;z-index:2;
-  background:linear-gradient(135deg,#ff3131,#ff6a4d);color:#fff;box-shadow:0 10px 24px -10px rgba(255,49,49,.7);
-  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
-.home-ic svg{width:30px;height:30px;transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
-.home-card:hover .home-ic,.home-card:active .home-ic{transform:scale(1.09) rotate(-5deg);box-shadow:0 14px 30px -8px rgba(255,49,49,.8)}
-.home-card:hover .home-ic svg,.home-card:active .home-ic svg{transform:rotate(5deg)}
-.home-head-row{display:flex;align-items:center;gap:14px;position:relative;z-index:2}
-.home-card h2{margin:0;font-size:22px;letter-spacing:-.01em;color:#16161a}
-.home-desc{margin:0;font-size:14.5px;line-height:1.55;color:#6e6e78;position:relative;z-index:2}
-.home-card p{margin:0;font-size:14.5px;line-height:1.6;color:#6e6e78}
-.home-go{margin-top:2px;color:#d41f1f;font-weight:700;font-size:14px;display:inline-block;position:relative;z-index:2;transition:transform .2s}
-.home-card:hover .home-go,.home-card:active .home-go{transform:translateX(5px)}
-
-.home-wide{margin-top:22px}                 /* full-width card below the two tools */
-.home-ic.wa-ic{background:linear-gradient(135deg,#25d366,#1ebe59);box-shadow:0 10px 24px -10px rgba(37,211,102,.7)}
-.home-card:hover .home-ic.wa-ic,.home-card:active .home-ic.wa-ic{box-shadow:0 14px 30px -8px rgba(37,211,102,.85)}
-.home-go.wa-go{color:#1ba84e}
-.home-wide:hover,.home-wide:active{border-color:#25d366;box-shadow:0 26px 56px -22px rgba(37,211,102,.5)}
-@media(prefers-reduced-motion:reduce){.home-card,.home-card::before{animation:none}
-  .home-card:hover,.home-card:active{transform:translateY(-3px)}
-  .home-card:hover .home-ic,.home-card:active .home-ic,.home-card:hover .home-go,.home-card:active .home-go{transform:none}}
-
-/* dark-theme overrides for the above when on .hz-page */
-.hz-page .back-link{color:var(--mut);border-color:var(--line2);background:var(--panel2)}
-.hz-page .back-link:hover{color:var(--ink);border-color:var(--acc)}
-.hz-page .home-head h1{color:var(--ink)}
-.hz-page .home-head p{color:var(--mut)}
-.hz-page .home-card{background:linear-gradient(180deg,var(--panel),var(--bg2));border-color:var(--line);box-shadow:0 12px 40px rgba(0,0,0,.35)}
-.hz-page .home-card:hover{border-color:var(--acc);box-shadow:0 18px 50px rgba(255,49,49,.18)}
-.hz-page .home-card h2{color:var(--ink)}
-.hz-page .home-card p,.hz-page .home-desc{color:var(--mut)}
-.hz-page .home-go{color:var(--acc2)}
-.hz-page .home-go.wa-go{color:#34e07a}
+/* The 'Back' pill, the home-chooser cards and their dark overrides lived here
+   until the app-shell redesign (see shell.css): index.html is a redirect now and
+   the sidebar does the navigating, so nothing rendered them any more. */
 
 body.hz-page{
   --bg:#0b0e14; --bg2:#0e1218; --panel:#12161f; --panel2:#161b26;
@@ -212,24 +145,17 @@ body.hz-page{
 .hz-page .nav a:hover{color:var(--ink)}
 .hz-page .nav a.on{color:#fff;background:var(--panel2)}
 
-/* ---- tabs ---- */
-.hz-page .hz-tabs{display:inline-flex;gap:5px;padding:5px;border-radius:13px;margin:0 0 0 6px;
-  background:var(--panel2);border:1px solid var(--line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.hz-page .hz-tab{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:750;letter-spacing:.01em;
-  color:var(--mut);padding:9px 20px;border-radius:9px;cursor:pointer;border:none;background:none;
-  font-family:inherit;transition:transform .15s,color .15s,background .15s,box-shadow .25s}
-.hz-page .hz-tab svg{width:18px;height:18px;flex:none}
-.hz-page .hz-tab:hover:not(.on){color:var(--ink);background:rgba(255,255,255,.05)}
-.hz-page .hz-tab.on{color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));
-  box-shadow:0 10px 24px -8px rgba(255,49,49,.7),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px)}
-.hz-page .hz-tab:active{transform:translateY(0) scale(.97)}
+/* The Text / PowerPoint tab strip lived here. Both are sidebar items now and the
+   page picks its pane from the #pptx hash, so the strip is gone. */
 
-.hz-page main{max-width:1640px}
-.hz-pane{margin-top:4px}
+/* The app shell owns the scrolling now (see shell.css): the view is a flex column
+   and the workspace fills it, so the panes size to the window instead of to a
+   fixed 80vh block on a scrolling page. Same behaviour as Grade A. */
+.hz-pane{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .hz-pane.hidden{display:none}
 
 /* ================= workspace ================= */
-.hz-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.hz-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%}
 @media(max-width:860px){.hz-grid{grid-template-columns:1fr}}
 
 .pane{
@@ -237,9 +163,9 @@ body.hz-page{
   border:1px solid var(--line);border-radius:var(--r);
   display:flex;flex-direction:column;min-height:0;overflow:hidden;
   box-shadow:0 12px 40px rgba(0,0,0,.35);
-  height:min(80vh,860px);
 }
-@media(max-width:860px){.pane{height:auto;min-height:60vh}}
+/* Stacked on phones, where the view scrolls with the page rather than clipping. */
+@media(max-width:860px){.pane .editor{min-height:200px;max-height:48vh}}
 
 .pane-head{
   flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:space-between;
@@ -277,6 +203,10 @@ body.hz-page{
 .btn-primary{justify-content:center;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
   box-shadow:0 6px 18px rgba(255,49,49,.32);position:relative;overflow:hidden}
 .btn-primary:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+/* In a pane's footer the primary action takes the leftover width, as on Grade A.
+   Scoped to .pane-foot so it can't stretch the buttons inside the plan cards,
+   which are vertical flex containers. */
+.pane-foot .btn-primary{flex:1}
 .btn-ghost{background:var(--panel2);border-color:var(--line2);color:var(--ink)}
 .btn-ghost:hover:not(:disabled){background:#1d2433;border-color:#384355}
 .btn-ghost .dot{width:8px;height:8px;border-radius:50%;background:var(--acc)}
@@ -366,6 +296,10 @@ body.hz-page{
 
 /* ================= PowerPoint pane ================= */
 .pp-wrap{max-width:620px}
+.pp-wrap .view-title{margin-bottom:8px}
+/* What the tool costs, said once, under the controls rather than in the lede. */
+.pp-note{margin:18px 0 0;font-size:13px;line-height:1.55;color:var(--faint);
+  padding-top:14px;border-top:1px solid var(--line)}
 .pp-wrap .lede{color:var(--mut);font-size:16px;margin:0 0 18px}
 .pp-wrap .lede b{color:var(--ink)}
 .pp-drop{position:relative;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1.5px dashed var(--line2);
@@ -388,16 +322,11 @@ body.hz-page{
   font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;transition:.15s}
 .chip-x:hover{background:var(--bad);color:#fff}
 
-/* ================= plans ================= */
-.plans-title{margin:2.2rem 0 1rem;font-size:20px;letter-spacing:-.01em;color:var(--ink)}
-.plan-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;max-width:760px}
-.plan-card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
-  border-radius:var(--r);padding:1.2rem 1.2rem 1.4rem;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-.plan-card h3{margin:0 0 .3rem;color:var(--ink);font-size:16px}
-.plan-price{font-size:1.6rem;font-weight:700;margin:.4rem 0 .8rem;color:var(--ink)}
-.plan-price span{font-size:.8rem;font-weight:400;opacity:.7}
-.plan-card ul{margin:0 0 1rem 1.1rem;padding:0;color:var(--mut);font-size:14px}
-.plan-card li{margin:.3rem 0}
+/* ================= words meter (output pane) ================= */
+/* Prices live on pricing.html — this only reports the balance. */
 #b7-meter{margin-left:auto;opacity:.85}
-#b7-meter.low{color:var(--warn);font-weight:600}
+#b7-meter.low{color:var(--warn);font-weight:600;opacity:1}
+#b7-meter a{color:var(--acc2);font-weight:700;text-decoration:none}
+#b7-meter a:hover{text-decoration:underline}
+.hz-msg a{color:var(--acc2);font-weight:700}
 .hz-msg.bad{color:var(--bad)}

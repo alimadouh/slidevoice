@@ -1,10 +1,12 @@
 /* Turnitin scan page — built on the hz-page token set (--panel/--line/--ink/--mut/--acc…)
    defined in humanizer.css for BOTH themes. Turnitin blue (#0096ff) appears only in the
    logo and the drop-zone focus ring: it marks the co-brand, nothing else. */
-.tn-wrap { max-width: 760px; margin: 0 auto; padding: 34px 16px 72px; }
+/* Left-aligned inside the app shell's view, like every other Grade A view — the
+   view supplies the padding, so this only caps the reading width. */
+.tn-wrap { max-width: 760px; margin: 0; padding: 4px 0 40px; }
 
 /* hero: just the Turnitin logo as the page title */
-.tn-hero { text-align: center; margin-bottom: 28px; }
+.tn-hero { margin-bottom: 28px; }
 .tn-tiilogo { height: clamp(44px, 7vw, 60px); width: auto; color: var(--ink); }
 
 /* submit pane */

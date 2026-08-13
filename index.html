@@ -3,88 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>B7oothKw — AI Humanizer & Slide Narrator</title>
-<meta name="description" content="B7oothKw — pick a tool: humanize AI text (and PowerPoint decks) so it reads naturally, or add your voice narration to every slide. Free, in your browser." />
+<title>B7oothKw — AI Humanizer</title>
+<meta name="description" content="B7oothKw — humanize AI text and PowerPoint decks so they read naturally, check documents on real Turnitin, and narrate your slides." />
 <link rel="icon" href="assets/icon.png" />
-<script src="js/guard.js"></script>
-<link rel="stylesheet" href="css/styles.css" />
-<link rel="stylesheet" href="css/humanizer.css" />
+<link rel="canonical" href="https://b7ooth-ai.com/humanizer.html" />
+<!-- The tool picker is gone: the sidebar is the picker now, and you land straight
+     in the humanizer (same as Grade A). replace() keeps this page out of history
+     so Back from the humanizer doesn't bounce here forever. -->
+<meta http-equiv="refresh" content="0; url=humanizer.html" />
+<script>location.replace("humanizer.html" + location.hash);</script>
+<style>
+  html,body{height:100%;margin:0;background:#0b0e14;color:#8b97a8;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  main{height:100%;display:grid;place-items:center;text-align:center;padding:24px}
+  a{color:#ff6a4d;font-weight:700}
+</style>
 </head>
-<body class="hz-page">
-<script src="js/theme.js"></script>
-<header class="topbar">
-  <div class="bar-top">
-    <a class="brand logo-link" href="./" aria-label="B7oothKw — home">
-      <svg class="logo-svg" viewBox="0 0 1243 360" role="img" aria-label="B7oothKw" xmlns="http://www.w3.org/2000/svg">
-        <g class="lg-cap" fill="#16161a">
-          <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>
-          <polygon points="126.0,173.04 152.0,185.52 178.0,188.64 204.0,185.52 230.0,173.04 230.0,198.0 209.2,212.56 178.0,217.76 146.8,212.56 126.0,198.0"/>
-          <ellipse cx="178.0" cy="103.36" rx="9.36" ry="9.36"/>
-        </g>
-        <g class="lg-tassel">
-          <path d="M178.0,94.0 Q276.8,98.16 318.4,146.0 L318.4,208.4" fill="none" stroke="#FF3131" stroke-width="7.28" stroke-linecap="round" stroke-linejoin="round"/>
-          <ellipse cx="318.4" cy="208.4" rx="11.44" ry="11.44" fill="#FF3131"/>
-          <polygon points="308.0,212.56 328.8,212.56 324.64,247.92 312.16,247.92" fill="#FF3131"/>
-        </g>
-        <path class="lg-must" d="M180.0,258.0 C188.0,239.0 204.0,237.0 220.0,243.0 C238.0,249.0 246.0,253.0 258.0,251.0 C272.0,249.0 281.0,235.0 285.0,220.0 C281.0,237.0 273.0,248.0 260.0,254.0 C240.0,270.0 220.0,280.0 202.0,282.0 C194.0,283.0 187.0,282.0 180.0,280.0 C173.0,282.0 166.0,283.0 158.0,282.0 C140.0,280.0 120.0,270.0 100.0,254.0 C87.0,248.0 79.0,237.0 75.0,220.0 C79.0,235.0 88.0,249.0 102.0,251.0 C114.0,253.0 122.0,249.0 140.0,243.0 C156.0,237.0 172.0,239.0 180.0,258.0 Z" fill="#16161a"/>
-        <text class="lg-word" x="352" y="191" font-family="'Segoe UI', system-ui, Arial, sans-serif" font-weight="900" font-size="170" dominant-baseline="middle" letter-spacing="-2">B7ooth<tspan fill="#FF3131">Kw</tspan></text>
-      </svg>
-    </a>
-  </div>
-  <div class="topbar-right">
-  <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">☀</button>
-  <button class="back-link" id="acctBtn" type="button">Log out</button>
-  </div>
-</header>
-
-<main class="home-wrap">
-  <div class="home-head">
-    <h1>What do you want to do?</h1>
-    <p>Pick a tool to get started.</p>
-  </div>
-  <div class="home-cards">
-    <a class="home-card" href="humanizer.html">
-      <div class="home-head-row">
-        <span class="home-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z"/><path d="M19 14l.8 2 .2.8 2-.8-2-.2-.8-2-.2 2z"/><path d="M5 15l.6 1.5L7 17l-1.4.5L5 19l-.6-1.5L3 17l1.4-.5L5 15z"/></svg>
-        </span>
-        <h2>AI Humanizer</h2>
-      </div>
-      <p class="home-desc">Rewrite AI text so it reads naturally — and humanize PowerPoint slides too.</p>
-      <span class="home-go">Open Humanizer →</span>
-    </a>
-    <a class="home-card" href="narrator.html">
-      <div class="home-head-row">
-        <span class="home-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-        </span>
-        <h2>Slide Voiceover</h2>
-      </div>
-      <p class="home-desc">Add your own voice to every slide, automatically.</p>
-      <span class="home-go">Open Voiceover →</span>
-    </a>
-    <a class="home-card" href="turnitin.html">
-      <div class="home-head-row">
-        <span class="home-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
-        </span>
-        <h2>Turnitin Scan</h2>
-      </div>
-      <p class="home-desc">Get your document checked on real Turnitin — AI and similarity reports.</p>
-      <span class="home-go">Open Turnitin →</span>
-    </a>
-    <a class="home-card" href="https://wa.me/96555495757" target="_blank" rel="noopener" aria-label="Get help on WhatsApp">
-    <div class="home-head-row">
-      <span class="home-ic wa-ic">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.2 4.79 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm0 1.67c2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.82c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.14l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 01-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23zm4.52 9.95c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.25 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/></svg>
-      </span>
-      <h2>Assignment Help</h2>
-    </div>
-    <p class="home-desc">Stuck on a project or assignment? Message us on WhatsApp.</p>
-    <span class="home-go wa-go">Chat on WhatsApp →</span>
-    </a>
-  </div>
-</main>
-<script src="js/auth.js"></script>
+<body>
+<main><p>Opening the humanizer… <a href="humanizer.html">Continue</a></p></main>
 </body>
 </html>

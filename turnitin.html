@@ -10,35 +10,15 @@
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/humanizer.css" />
 <link rel="stylesheet" href="css/turnitin.css" />
+<link rel="stylesheet" href="css/shell.css" />
 </head>
-<body class="hz-page">
+<body class="hz-page" data-view="turnitin">
 <script src="js/theme.js"></script>
-<header class="topbar">
-  <div class="bar-top">
-    <a class="brand logo-link" href="./" aria-label="B7oothKw — home">
-      <svg class="logo-svg" viewBox="0 0 1243 360" role="img" aria-label="B7oothKw" xmlns="http://www.w3.org/2000/svg">
-        <g class="lg-cap" fill="#16161a">
-          <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>
-          <polygon points="126.0,173.04 152.0,185.52 178.0,188.64 204.0,185.52 230.0,173.04 230.0,198.0 209.2,212.56 178.0,217.76 146.8,212.56 126.0,198.0"/>
-          <ellipse cx="178.0" cy="103.36" rx="9.36" ry="9.36"/>
-        </g>
-        <g class="lg-tassel">
-          <path d="M178.0,94.0 Q276.8,98.16 318.4,146.0 L318.4,208.4" fill="none" stroke="#FF3131" stroke-width="7.28" stroke-linecap="round" stroke-linejoin="round"/>
-          <ellipse cx="318.4" cy="208.4" rx="11.44" ry="11.44" fill="#FF3131"/>
-          <polygon points="308.0,212.56 328.8,212.56 324.64,247.92 312.16,247.92" fill="#FF3131"/>
-        </g>
-        <path class="lg-must" d="M180.0,258.0 C188.0,239.0 204.0,237.0 220.0,243.0 C238.0,249.0 246.0,253.0 258.0,251.0 C272.0,249.0 281.0,235.0 285.0,220.0 C281.0,237.0 273.0,248.0 260.0,254.0 C240.0,270.0 220.0,280.0 202.0,282.0 C194.0,283.0 187.0,282.0 180.0,280.0 C173.0,282.0 166.0,283.0 158.0,282.0 C140.0,280.0 120.0,270.0 100.0,254.0 C87.0,248.0 79.0,237.0 75.0,220.0 C79.0,235.0 88.0,249.0 102.0,251.0 C114.0,253.0 122.0,249.0 140.0,243.0 C156.0,237.0 172.0,239.0 180.0,258.0 Z" fill="#16161a"/>
-        <text class="lg-word" x="352" y="191" font-family="'Segoe UI', system-ui, Arial, sans-serif" font-weight="900" font-size="170" dominant-baseline="middle" letter-spacing="-2">B7ooth<tspan fill="#FF3131">Kw</tspan></text>
-      </svg>
-    </a>
-  </div>
-  <div class="topbar-right">
-  <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">☀</button>
-  <button class="back-link" id="acctBtn" type="button">Log out</button>
-  </div>
-</header>
-
-<main class="tn-wrap">
+<div class="app-shell" id="appShell">
+  <main class="content">
+    <section class="view" id="view-turnitin">
+      <h1 class="sr-only">B7oothKw Turnitin Scan</h1>
+      <div class="tn-wrap">
   <div class="tn-hero">
     <svg class="tn-tiilogo" viewBox="0 0 653 200" role="img" aria-label="Turnitin Scan" xmlns="http://www.w3.org/2000/svg">
         <path d="M8.2 74.4L5.6 90.9h26.3C11.2 109.6 0 138.7 0 157.5c0 13.9 4.4 24.7 13.3 32.1 7.1 6 16.9 9.3 29.1 10.1l1.2.1V194l-.9-.2c-11.1-2.5-29.6-9.9-29.8-32.4-.1-16.8 17.2-48.2 37.2-61.4l-5.3 30.5h16.9l9.5-56-63-.1z" fill="#0096ff"></path>
@@ -70,7 +50,10 @@
     <h2 class="tn-listtitle">My scans</h2>
     <div id="tnOrders"><p class="tn-empty">Loading…</p></div>
   </section>
-</main>
+      </div>
+    </section>
+  </main>
+</div>
 
 <div class="tn-chat-ovl hidden" id="tnChatOvl">
   <div class="tn-chat" role="dialog" aria-modal="true">
@@ -85,6 +68,7 @@
 
 <script src="js/auth.js"></script>
 <script src="js/config.js"></script>
+<script src="js/shell.js"></script>
 <script src="js/turnitin.js"></script>
 </body>
 </html>

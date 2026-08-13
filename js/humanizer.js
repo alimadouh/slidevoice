@@ -25,17 +25,19 @@ function needLogin(message) {
   return true;
 }
 
-// ---------------------------------------------------------------- tabs
-const panes = { text: $("pane-text"), pptx: $("pane-pptx") };
-const tabs  = { text: $("tab-text"), pptx: $("tab-pptx") };
+// ---------------------------------------------------------------- panes
+// Text, PowerPoint and Word are three sidebar items on one page: the hash picks
+// which pane shows, and js/shell.js moves the highlight. There are no tab buttons.
+const panes = { text: $("pane-text"), pptx: $("pane-pptx"), word: $("pane-word") };
 function showTab(which) {
-  for (const k of ["text", "pptx"]) {
-    tabs[k].classList.toggle("on", k === which);
-    panes[k].classList.toggle("hidden", k !== which);
-  }
+  for (const k of Object.keys(panes)) panes[k].classList.toggle("hidden", k !== which);
 }
-tabs.text.onclick = () => showTab("text");
-tabs.pptx.onclick = () => showTab("pptx");
+const paneForHash = () => {
+  const h = location.hash.replace("#", "");
+  return panes[h] ? h : "text";
+};
+showTab(paneForHash());
+window.addEventListener("hashchange", () => showTab(paneForHash()));
 
 // ---------------------------------------------------------------- elements
 const input = $("hz-input"), out = $("hz-out");
@@ -50,6 +52,17 @@ let humAbort = null, greenAbort = null;
 
 // ---------------------------------------------------------------- helpers
 function msg(t, ok) { msgEl.textContent = t || ""; msgEl.classList.toggle("ok", !!ok); }
+// Out of words — either the free trial or a membership pool. The server already wrote
+// the sentence; all this adds is the way out, since neither pool refills on its own.
+const isQuota = (reason) => reason === "b7_trial" || reason === "b7_words";
+function quotaMsg(text) {
+  msgEl.textContent = "";
+  msgEl.appendChild(document.createTextNode((text || "") + " "));
+  const a = document.createElement("a");
+  a.href = "pricing.html"; a.textContent = "See plans";
+  msgEl.appendChild(a);
+  msgEl.classList.remove("ok");
+}
 const wordCount = (s) => (s.match(/\S+/g) || []).length;
 
 function setInWords() { $("inWords").innerHTML = `<b>${wordCount(input.value)}</b> words`; }
@@ -167,19 +180,14 @@ async function humanize() {
     });
     const p = await r.json();
     if (p.error) {
-      if (p.reason === "b7_words") {
-        msgEl.innerHTML = esc("You've used your membership's 10,000 words — ") + '<a href="#plans">Add another month</a>';
-        msgEl.classList.remove("ok");
-        fetchMe().then(renderMeter);
-      } else {
-        msg(p.error);
-      }
+      if (isQuota(p.reason)) { quotaMsg(p.error); fetchMe().then(renderMeter); }
+      else msg(p.error);
       return;
     }
     if (p.cancelled) { msg("Stopped."); return; }
     applyData(p, true);
     msg(hasFlagged(lastBlocks) ? "Done. Run “Go Green” to clean up the highlights." : "Done — all clear.", true);
-    if (p.b7_words_remaining != null) fetchMe().then(renderMeter);
+    if (p.b7_words_remaining != null || p.b7_trial_remaining != null) fetchMe().then(renderMeter);
   } catch (e) {
     if (e.name === "AbortError") msg("Stopped.");
     else msg("Couldn’t reach the humanizer. Please try again.");
@@ -241,7 +249,11 @@ async function makeAllGreen() {
         buf = buf.slice(i + 2);
         if (!line) continue;
         let o; try { o = JSON.parse(line); } catch { continue; }
-        if (o.error) { msg(o.error); finished = true; break; }
+        if (o.error) {
+          if (isQuota(o.reason)) { quotaMsg(o.error); fetchMe().then(renderMeter); }
+          else msg(o.error);
+          finished = true; break;
+        }
         if (o.done) { applyData(o.payload, true); finished = true; }
         else if (o.left != null && startRed > 0)
           barFill.style.width = Math.max(0, Math.min(100, Math.round(100 * (startRed - o.left) / startRed))) + "%";
@@ -289,107 +301,134 @@ btnCopy.onclick = async () => {
   } catch { btnCopy.textContent = "Copy failed"; setTimeout(() => (btnCopy.textContent = "Copy"), 1500); }
 };
 
-// ---------------------------------------------------------------- PowerPoint tool
-const ppDrop = $("pp-drop"), ppFile = $("pp-file"), ppFiles = $("pp-files");
-const ppGo = $("pp-go"), ppBar = $("pp-bar"), ppBarFill = $("pp-bar-fill"), ppMsg = $("pp-msg");
-let ppPicked = null, ppBusy = false;
-
-function ppSetFile(f) {
-  if (f && !/\.pptx$/i.test(f.name)) { ppMsg.textContent = "Please choose a .pptx file."; return; }
-  ppPicked = f || null;
-  ppDrop.classList.toggle("filled", !!ppPicked);
-  ppFiles.innerHTML = ppPicked
-    ? `<span class="chip"><span class="chip-name">${esc(ppPicked.name)}</span><button class="chip-x" type="button" aria-label="Remove">×</button></span>` : "";
-  if (ppPicked) ppFiles.querySelector(".chip-x").onclick = (e) => { e.stopPropagation(); ppSetFile(null); };
-  ppGo.disabled = !ppPicked || ppBusy;
-  ppMsg.textContent = ""; ppMsg.classList.remove("ok");
-}
-ppDrop.onclick = () => !ppBusy && ppFile.click();
-ppFile.onchange = () => ppSetFile(ppFile.files[0]);
-["dragover", "dragenter"].forEach((ev) => ppDrop.addEventListener(ev, (e) => { e.preventDefault(); ppDrop.classList.add("drag"); }));
-["dragleave", "drop"].forEach((ev) => ppDrop.addEventListener(ev, (e) => { e.preventDefault(); ppDrop.classList.remove("drag"); }));
-ppDrop.addEventListener("drop", (e) => {
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (f) ppSetFile(f);                       // only the FIRST file — one deck at a time
-});
-
+// ------------------------------------------------- file tools (PowerPoint + Word)
+// Both are the same job: upload, poll a job id, download the result. The only
+// differences are the endpoint, the extension and the wording, so they share one
+// implementation rather than two copies that drift.
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const ppStatus = (id) => fetch(`${API}/api/pptx/status/${id}`, { headers: BH }).then((r) => r.json());
 
-async function ppRun() {
-  if (needLogin("Log in to humanize PowerPoint files.")) return;
-  if (!ppPicked || ppBusy) return;
-  ppBusy = true; ppGo.disabled = true; ppGo.classList.add("loading");
-  ppBar.hidden = false; ppBarFill.style.width = "15%";
-  ppMsg.textContent = "Uploading…"; ppMsg.classList.remove("ok");
-  try {
-    const fd = new FormData();
-    fd.append("file", ppPicked, ppPicked.name);
-    const r = await fetch(`${API}/api/pptx`, { method: "POST", headers: BH, body: fd });
-    const j = await r.json();
-    if (j.error) { ppMsg.textContent = j.error; return; }
-    const jobId = j.job_id;
-    ppMsg.textContent = "Humanizing your deck…"; ppBarFill.style.width = "45%";
-    let misses = 0;
-    for (let i = 0; i < 400; i++) {            // ~20 min ceiling
-      await sleep(3000);
-      let s;
-      try { s = await ppStatus(jobId); } catch { if (++misses > 6) throw new Error("lost"); continue; }
-      misses = 0;
-      if (s.state === "processing") { ppBarFill.style.width = "70%"; continue; }
-      if (s.state === "done") {
-        ppBarFill.style.width = "90%";
-        const dl = await fetch(`${API}/api/pptx/result/${jobId}`, { headers: BH });
-        if (!dl.ok) { ppMsg.textContent = "Couldn’t download the result. Please try again."; return; }
-        const changed = dl.headers.get("X-Changed") || "0";
-        const blob = await dl.blob();
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = j.name || "presentation (humanized).pptx";
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        ppBarFill.style.width = "100%";
-        ppMsg.textContent = `Done — ${changed} line${changed === "1" ? "" : "s"} rewritten. Your download is ready.`;
-        ppMsg.classList.add("ok");
+function fileTool(cfg) {
+  const drop = $(cfg.drop), input = $(cfg.input), files = $(cfg.files);
+  const go = $(cfg.go), bar = $(cfg.bar), fill = $(cfg.fill), msgBox = $(cfg.msg);
+  let picked = null, busy = false;
+
+  const say = (t, ok) => { msgBox.textContent = t || ""; msgBox.classList.toggle("ok", !!ok); };
+  // Out of words / no membership: the server wrote the sentence, we add the way out.
+  function sayQuota(text) {
+    msgBox.textContent = (text || "") + " ";
+    const a = document.createElement("a");
+    a.href = "pricing.html"; a.textContent = "See plans";
+    msgBox.appendChild(a);
+    msgBox.classList.remove("ok");
+  }
+
+  function setFile(f) {
+    if (f && !cfg.ext.test(f.name)) { say(cfg.wrongType); return; }
+    picked = f || null;
+    drop.classList.toggle("filled", !!picked);
+    files.innerHTML = picked
+      ? `<span class="chip"><span class="chip-name">${esc(picked.name)}</span><button class="chip-x" type="button" aria-label="Remove">×</button></span>` : "";
+    if (picked) files.querySelector(".chip-x").onclick = (e) => { e.stopPropagation(); setFile(null); };
+    go.disabled = !picked || busy;
+    say("");
+  }
+
+  drop.onclick = () => !busy && input.click();
+  input.onchange = () => setFile(input.files[0]);
+  ["dragover", "dragenter"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
+  drop.addEventListener("drop", (e) => {
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) setFile(f);                          // only the FIRST file — one at a time
+  });
+
+  const status = (id) => fetch(`${API}${cfg.api}/status/${id}`, { headers: BH }).then((r) => r.json());
+
+  async function run() {
+    if (needLogin(cfg.loginMsg)) return;
+    if (!picked || busy) return;
+    busy = true; go.disabled = true; go.classList.add("loading");
+    bar.hidden = false; fill.style.width = "15%";
+    say("Uploading…");
+    try {
+      const fd = new FormData();
+      fd.append("file", picked, picked.name);
+      const r = await fetch(`${API}${cfg.api}`, { method: "POST", headers: BH, body: fd });
+      const j = await r.json();
+      if (j.error) {
+        if (isQuota(j.reason) || j.reason === "b7_membership") { sayQuota(j.error); fetchMe().then(renderMeter); }
+        else say(j.error);
         return;
       }
-      if (s.state === "error") { ppMsg.textContent = s.error || "Couldn’t process this file."; return; }
-      if (s.state === "missing") { ppMsg.textContent = "The job expired. Please upload again."; return; }
+      const jobId = j.job_id;
+      say(cfg.working); fill.style.width = "45%";
+      fetchMe().then(renderMeter);               // a member's balance just changed
+      let misses = 0;
+      for (let i = 0; i < 400; i++) {            // ~20 min ceiling
+        await sleep(3000);
+        let st;
+        try { st = await status(jobId); } catch { if (++misses > 6) throw new Error("lost"); continue; }
+        misses = 0;
+        if (st.state === "processing") { fill.style.width = "70%"; continue; }
+        if (st.state === "done") {
+          fill.style.width = "90%";
+          const dl = await fetch(`${API}${cfg.api}/result/${jobId}`, { headers: BH });
+          if (!dl.ok) { say("Couldn't download the result. Please try again."); return; }
+          const changed = dl.headers.get("X-Changed") || "0";
+          const blob = await dl.blob();
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = j.name || cfg.fallbackName;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+          fill.style.width = "100%";
+          say(`Done — ${changed} ${changed === "1" ? cfg.unit : cfg.unitPlural} rewritten. Your download is ready.`, true);
+          return;
+        }
+        if (st.state === "error") {
+          // A failed job refunds a member's words, so re-read the balance.
+          fetchMe().then(renderMeter);
+          say(st.error || "Couldn't process this file."); return;
+        }
+        if (st.state === "missing") { say("The job expired. Please upload again."); return; }
+      }
+      say(cfg.tooLong);
+    } catch (e) {
+      say("Upload failed. Please check your connection and try again.");
+    } finally {
+      busy = false; go.disabled = !picked; go.classList.remove("loading");
+      setTimeout(() => (bar.hidden = true), 1200);
     }
-    ppMsg.textContent = "This is taking too long — please try a smaller deck.";
-  } catch (e) {
-    ppMsg.textContent = "Upload failed. Please check your connection and try again.";
-  } finally {
-    ppBusy = false; ppGo.disabled = !ppPicked; ppGo.classList.remove("loading");
-    setTimeout(() => (ppBar.hidden = true), 1200);
   }
+  go.onclick = run;
 }
-ppGo.onclick = ppRun;
 
-// ---------------------------------------------------------------- plans / membership
-const plansMsg = $("plans-msg");
-function planSay(t, bad) { if (plansMsg) { plansMsg.textContent = t; plansMsg.classList.toggle("bad", !!bad); } }
+fileTool({
+  drop: "pp-drop", input: "pp-file", files: "pp-files",
+  go: "pp-go", bar: "pp-bar", fill: "pp-bar-fill", msg: "pp-msg",
+  api: "/api/pptx", ext: /\.pptx$/i,
+  wrongType: "Please choose a .pptx file.",
+  loginMsg: "Log in to humanize PowerPoint files.",
+  working: "Humanizing your deck…",
+  fallbackName: "presentation (humanized).pptx",
+  unit: "line", unitPlural: "lines",
+  tooLong: "This is taking too long — please try a smaller deck.",
+});
 
-let buyBusy = false;
-async function buyPlan(plan) {
-  if (needLogin("Sign in to buy.")) return;
-  if (buyBusy) return;                       // one invoice per click; a redirect is coming
-  buyBusy = true;
-  try {
-    const r = await fetch(API + "/api/myfatoorah/checkout", {
-      method: "POST", headers: JH, body: JSON.stringify({ plan, quantity: 1 }),
-    });
-    const d = await r.json();
-    if (d && d.url) { location.href = d.url; return }   // webhook grants; redirect just pays
-    planSay((d && d.error) || "Couldn't start checkout. Please try again.", true);
-  } catch (e) {
-    planSay("Couldn't reach the payment gateway. Please try again.", true);
-  } finally { buyBusy = false; }
-}
-$("buy-month").onclick = () => buyPlan("B7oothMonth");
-$("buy-scan").onclick = () => buyPlan("B7oothScan");
+fileTool({
+  drop: "wd-drop", input: "wd-file", files: "wd-files",
+  go: "wd-go", bar: "wd-bar", fill: "wd-bar-fill", msg: "wd-msg",
+  api: "/api/docx", ext: /\.docx$/i,
+  wrongType: "Please choose a .docx file (not .doc).",
+  loginMsg: "Log in to humanize Word documents.",
+  working: "Humanizing your document…",
+  fallbackName: "document (humanized).docx",
+  unit: "paragraph", unitPlural: "paragraphs",
+  tooLong: "This is taking too long — please try a shorter document.",
+});
 
-// Membership meter: words left + expiry, warning under 2k.
+// ---------------------------------------------------------------- words meter
+// Prices live on pricing.html; this page only ever says how many words are left.
 async function fetchMe() {
   if (!TOKEN) return null;
   try { return await (await fetch(API + "/api/auth/me", { headers: BH })).json(); }
@@ -404,17 +443,30 @@ function renderMeter(me) {
     if (bar) bar.appendChild(el); else return;
   }
   const b7 = me && me.b7;
-  const inLimit = $("inLimit");
-  if (!b7 || !b7.active) {
-    el.textContent = "";
-    if (inLimit && inLimit.textContent.includes("membership")) inLimit.textContent = inLimit.textContent.replace("membership", "free");
+  el.textContent = "";
+  el.classList.remove("low");
+  if (!b7) return;                                    // signed out, or an older backend
+  if (b7.active) {
+    const t = Date.parse(b7.expiry);
+    const end = Number.isFinite(t)
+      ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+    el.textContent = `${b7.words.toLocaleString("en-US")} words left` + (end ? ` · ends ${end}` : "");
+    el.classList.toggle("low", b7.words <= 2000);
     return;
   }
-  if (inLimit && inLimit.textContent.includes("free")) inLimit.textContent = inLimit.textContent.replace("free", "membership");
-  const t = Date.parse(b7.expiry);
-  const end = Number.isFinite(t) ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-  el.textContent = `Membership: ${b7.words.toLocaleString("en-US")} words left` + (end ? ` · ends ${end}` : "");
-  el.classList.toggle("low", b7.words <= 2000);
+  // No membership: the one-time trial. It never refills, so once it's gone the only
+  // honest thing to show is where to get more.
+  const left = b7.trial || 0;
+  if (left > 0) {
+    el.textContent = `${left.toLocaleString("en-US")} free words left`;
+    el.classList.toggle("low", left <= 50);
+    return;
+  }
+  el.classList.add("low");
+  el.appendChild(document.createTextNode("No free words left · "));
+  const a = document.createElement("a");
+  a.href = "pricing.html"; a.textContent = "See plans";
+  el.appendChild(a);
 }
 fetchMe().then(renderMeter);
 
