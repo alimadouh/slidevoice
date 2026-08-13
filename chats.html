@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>B7oothKw — Chats</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="assets/icon.png" />
+<script src="js/guard.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/humanizer.css" />
+<link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
+<link rel="stylesheet" href="css/support.css" />
+<link rel="stylesheet" href="css/chats.css" />
+</head>
+<body class="hz-page" data-view="chats">
+<script src="js/theme.js"></script>
+<div class="app-shell" id="appShell">
+  <main class="content">
+    <section class="view" id="view-chats">
+      <h1 class="sr-only">B7oothKw Chats</h1>
+      <h2 class="view-title"><span class="nav-ic" style="color:var(--acc)">📨</span> Chats</h2>
+      <p class="ch-note">Live support conversations from <b>B7oothKw</b> customers — Grade A's
+        own conversations stay on Grade A. Pick one to read it and reply.</p>
+
+      <div class="inbox">
+        <div class="inbox-list" id="inboxList"></div>
+        <div class="inbox-conv">
+          <div class="inbox-empty" id="inboxEmpty">
+            <div class="inbox-empty-ic">💬</div>
+            <div class="inbox-empty-title">Your conversations</div>
+            <div class="inbox-empty-sub">Pick a conversation on the left to read the messages
+              and reply to the customer.</div>
+          </div>
+          <div class="inbox-thread hidden" id="inboxThread">
+            <div class="inbox-conv-head" id="inboxConvHead"></div>
+            <div class="chat-body" id="inboxBody"></div>
+            <form class="chat-input" id="inboxForm">
+              <input type="text" id="inboxText" placeholder="Type a reply…" autocomplete="off" maxlength="4000">
+              <button type="submit" class="chat-send" id="inboxSend" aria-label="Send">➤</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <p class="ch-msg" id="chMsg"></p>
+    </section>
+  </main>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/config.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/chats.js"></script>
+</body>
+</html>

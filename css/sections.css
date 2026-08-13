@@ -103,6 +103,12 @@
   .ft-grid{grid-template-columns:1fr}
   .ft-rail{position:static}
 }
+/* On a phone the rail is no longer a side rail — it's a screenful of explanation
+   stacked under the thing you came to use, so you scroll past it to reach nothing.
+   The upload card says what to do on its own. Owner call 2026-08-13. */
+@media (max-width:760px){
+  .ft-rail{display:none}
+}
 
 /* ---------- plan cards ---------- */
 .plans{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;max-width:720px;margin:44px auto 0}

@@ -1,0 +1,65 @@
+/* Staff → Chats. Ported from Grade A's .inbox-* block (static/style.css), red accent.
+   The message bubbles themselves are the shared .chat-* rules in support.css, which
+   this page also loads — the thread a moderator reads is the same thread the customer
+   sees, and it should look it. */
+
+.inbox{display:flex;gap:16px;height:min(72vh,660px)}
+.inbox-list{width:340px;flex-shrink:0;overflow-y:auto;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 4px rgba(0,0,0,.22)}
+.inbox-listhead{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;align-items:center;gap:8px;
+  padding:14px 16px 11px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--faint);border-bottom:1px solid var(--line)}
+.inbox-listcount{background:var(--panel2);color:var(--mut);font-size:11px;font-weight:800;
+  padding:2px 8px;border-radius:999px}
+.inbox-delconv{margin-left:auto;flex-shrink:0;background:transparent;border:1px solid var(--line2);
+  border-radius:8px;color:var(--faint);padding:7px 11px;font-size:13px;cursor:pointer;transition:.15s}
+.inbox-delconv:hover{border-color:var(--bad);color:var(--bad)}
+.inbox-noconv{padding:34px 16px;text-align:center;color:var(--faint);font-size:13px}
+
+.inbox-item{position:relative;display:flex;gap:12px;align-items:center;padding:13px 14px;margin:5px 8px;
+  border-radius:12px;cursor:pointer;transition:.12s}
+.inbox-item:hover{background:var(--panel2)}
+.inbox-item.active{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.inbox-item.active::before{content:"";position:absolute;left:-1px;top:14px;bottom:14px;width:3px;
+  border-radius:0 3px 3px 0;background:var(--acc)}
+.inbox-av{width:40px;height:40px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:700;color:#fff;font-size:16px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 2px 7px rgba(255,49,49,.3)}
+.inbox-meta{flex:1;min-width:0}
+.inbox-row1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.inbox-email{font-weight:700;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-time{font-size:11px;color:var(--faint);flex-shrink:0}
+.inbox-row2{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:3px}
+.inbox-prev{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-item.unread .inbox-prev{color:var(--ink);font-weight:600}
+.inbox-unread{flex-shrink:0;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--bad);
+  color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 3px rgba(248,81,73,.18)}
+
+.inbox-conv{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.22)}
+.inbox-empty{margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px;gap:6px}
+.inbox-empty-ic{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:34px;background:color-mix(in srgb,var(--acc) 10%,transparent);margin-bottom:8px}
+.inbox-empty-title{font-size:17px;font-weight:700;color:var(--ink)}
+.inbox-empty-sub{font-size:13.5px;color:var(--mut);max-width:280px;line-height:1.5}
+.inbox-thread{display:flex;flex-direction:column;height:100%}
+.inbox-thread.hidden,.inbox-empty.hidden{display:none}
+.inbox-conv-head{display:flex;align-items:center;gap:11px;padding:13px 18px;
+  border-bottom:1px solid var(--line);background:var(--panel2)}
+.inbox-conv-head .inbox-av{width:38px;height:38px;font-size:15px}
+.inbox-conv-head-meta{display:flex;flex-direction:column;min-width:0}
+.inbox-conv-head-email{font-weight:700;color:var(--ink);font-size:14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-conv-head-sub{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
+.inbox-thread .chat-body{flex:1}
+
+.ch-note{font-size:13.5px;color:var(--mut);margin:0 0 16px;max-width:70ch;line-height:1.6}
+.ch-msg{font-size:13.5px;font-weight:600;color:var(--bad);margin:12px 0 0;min-height:1.2em}
+
+@media (max-width:760px){
+  .inbox{flex-direction:column;height:auto}
+  .inbox-list{width:100%;max-height:260px}
+  .inbox-conv{min-height:420px}
+}

@@ -39,6 +39,49 @@ const paneForHash = () => {
 showTab(paneForHash());
 window.addEventListener("hashchange", () => showTab(paneForHash()));
 
+// ---------------------------------------------------------------- output spelling
+// One switch, three panes. The models write mixed spelling — one output routinely
+// contains both "organisation" and "organization" — so the server converts the whole
+// result to whichever English you pick. The choice is remembered per browser (set it
+// once) and rides on EVERY request that produces text: humanize, Go Green, PowerPoint
+// and Word. If it rode on only some, a deck would come back in a different English
+// from the essay beside it.
+let selectedDialect = "us";
+try { if (localStorage.getItem("b7_dialect") === "uk") selectedDialect = "uk"; } catch (e) {}
+
+// The file panes get a CLONE of the text pane's switch rather than their own markup,
+// so the three can never drift apart.
+function mountDialect(hostId) {
+  const host = $(hostId), src = $("dialectToggle");
+  if (!host || !src) return;
+  const copy = src.cloneNode(true);
+  copy.id = hostId + "Toggle";                      // a clone cannot share the original's id
+  // The Union Jack clips its red diagonals through a clipPath referenced by id, so
+  // each copy needs its own or the page carries duplicate ids.
+  copy.querySelectorAll("clipPath").forEach((cp) => {
+    const was = cp.id, now = was + "-" + hostId;
+    cp.id = now;
+    copy.querySelectorAll('[clip-path="url(#' + was + ')"]')
+        .forEach((el) => el.setAttribute("clip-path", "url(#" + now + ")"));
+  });
+  host.appendChild(copy);
+}
+mountDialect("ppDialect");
+mountDialect("wdDialect");
+
+function syncDialect() {
+  document.querySelectorAll("[data-dialect]").forEach(
+    (b) => b.classList.toggle("active", b.dataset.dialect === selectedDialect));
+}
+document.querySelectorAll("[data-dialect]").forEach((b) => {
+  b.addEventListener("click", () => {
+    selectedDialect = b.dataset.dialect === "uk" ? "uk" : "us";
+    try { localStorage.setItem("b7_dialect", selectedDialect); } catch (e) {}
+    syncDialect();                       // every copy of the switch, not just this one
+  });
+});
+syncDialect();
+
 // ---------------------------------------------------------------- elements
 const input = $("hz-input"), out = $("hz-out");
 const inPane = $("inPane"), outPane = $("outPane");
@@ -67,11 +110,24 @@ const wordCount = (s) => (s.match(/\S+/g) || []).length;
 
 // The input bar's right side now carries your remaining words, so the old static
 // "Up to 500 words per run" is gone. Say it here instead — but only once the text
-// is actually over the cap, where it's the thing you need to know.
-const PER_RUN = 500;                      // mirrors api.py's BRANCH_WORDS_PER
+// is actually over the ceiling, where it's the thing you need to know.
+// Mirrors api.py's BRANCH_WORDS_PER / BRANCH_WORDS_PER_MEMBER. A month doubles what one
+// run may chew, so this is not a constant any more — renderMeter sets it from the account.
+const PER_RUN_FREE = 500, PER_RUN_MEMBER = 1000;
+let PER_RUN = PER_RUN_FREE;
+// What this account can actually spend right now (null = unknown, or staff). On the
+// free 150 the per-run cap is unreachable, so quoting 500 there was noise: the real
+// ceiling is whichever is smaller.
+let spendable = null;
 function setInWords() {
-  const n = wordCount(input.value), over = n > PER_RUN;
-  $("inWords").innerHTML = `<b>${n}</b> words` + (over ? ` · max ${PER_RUN} per run` : "");
+  const n = wordCount(input.value);
+  const short = spendable != null && spendable < PER_RUN;
+  const cap = short ? spendable : PER_RUN;
+  const over = n > cap;
+  const note = short
+    ? ` · only ${cap.toLocaleString("en-US")} word${cap === 1 ? "" : "s"} left`
+    : ` · max ${PER_RUN} per run`;
+  $("inWords").innerHTML = `<b>${n}</b> words` + (over ? note : "");
   $("inWords").classList.toggle("over", over);
 }
 function setOutWords() { $("outWords").innerHTML = `<b>${wordCount(lastText)}</b> words`; }
@@ -184,7 +240,7 @@ async function humanize() {
   try {
     const r = await fetch(API + "/api/humanize", {
       method: "POST", headers: JH, signal: humAbort.signal,
-      body: JSON.stringify({ text, level: LEVEL, model: 2 }),
+      body: JSON.stringify({ text, level: LEVEL, model: 2, dialect: selectedDialect }),
     });
     const p = await r.json();
     if (p.error) {
@@ -242,7 +298,8 @@ async function makeAllGreen() {
   try {
     const r = await fetch(API + "/api/makeallgreen", {
       method: "POST", headers: JH, signal: greenAbort.signal,
-      body: JSON.stringify({ blocks: lastBlocks, level: LEVEL, threshold: AMBER, model: 2 }),
+      body: JSON.stringify({ blocks: lastBlocks, level: LEVEL, threshold: AMBER, model: 2,
+                             dialect: selectedDialect }),
     });
     if (!r.ok || !r.body) { msg("Go Green is unavailable right now."); return; }
     const reader = r.body.getReader(), dec = new TextDecoder();
@@ -367,6 +424,7 @@ function fileTool(cfg) {
     try {
       const fd = new FormData();
       fd.append("file", picked, picked.name);
+      fd.append("dialect", selectedDialect);       // same switch as the text pane
       const r = await fetch(`${API}${cfg.api}`, { method: "POST", headers: BH, body: fd });
       const j = await r.json();
       if (j.error) {
@@ -449,42 +507,71 @@ async function fetchMe() {
   catch (e) { return null; }
 }
 function renderMeter(me) {
-  // It sits in the INPUT bar, opposite the live word count — that's where you look
-  // before you paste, and it replaced the static per-run limit that used to be there.
-  let el = $("b7-meter");
-  if (!el) {
-    el = document.createElement("span");
-    el.id = "b7-meter";
-    const bar = document.querySelector("#inPane .usage-bar");
-    if (bar) bar.appendChild(el); else return;
-  }
-  const b7 = me && me.b7;
-  // Empty means no pill at all (the CSS hangs on :not(:empty)), so clear it first
-  // and only fill it once we actually know the balance.
-  el.textContent = "";
-  el.classList.remove("low", "out");
-  if (!b7) return;                                    // signed out, or an older backend
+  // One pill, shown in every pane that can spend words: the input bar here, and beside
+  // the PowerPoint and Word titles. A balance that only exists on the text tab is
+  // missing from the pane where a single upload can spend 10,000 of them.
+  const els = document.querySelectorAll(".b7-meter");
+  if (!els.length) return;
   const n = (v) => Number(v || 0).toLocaleString("en-US");
-  const pill = (html, cls) => { el.innerHTML = "✦ " + html; if (cls) el.classList.add(cls); };
-
-  if (b7.active) {
-    const t = Date.parse(b7.expiry);
-    const end = Number.isFinite(t)
+  const dayOf = (iso) => {
+    const t = Date.parse(iso);
+    return Number.isFinite(t)
       ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-    pill(`<b>${n(b7.words)}</b> words left` + (end ? ` · ends ${end}` : ""),
-         b7.words <= 2000 ? "low" : "");
-    return;
+  };
+  const b7 = me && me.b7;
+  let html = "", cls = "", tip = "";
+  spendable = null;
+  PER_RUN = (me && (me.is_admin || (b7 && b7.active))) ? PER_RUN_MEMBER : PER_RUN_FREE;
+
+  if (me && me.is_admin) {
+    // Staff spend from neither pool; a "150 free words" pill would just be wrong.
+  } else if (b7 && b7.active) {
+    spendable = b7.words;
+    const end = dayOf(b7.expiry);
+    html = `<b>${n(b7.words)}</b> words left` + (end ? ` · ends ${end}` : "");
+    cls = b7.words <= 2000 ? "low" : "";
+  } else if (b7 && b7.trial != null) {
+    // No live membership. The trial is what's spendable; anything in b7.words is left
+    // over from a month that ended. Those words are NOT lost — a re-buy stacks on top
+    // of them — so saying only "150 free words left" understates the account.
+    const trial = b7.trial, frozen = Number(b7.words || 0);
+    spendable = trial;
+    if (frozen > 0) tip = "Words from a month that ended. Buy another month and they're yours again.";
+    if (trial > 0) {
+      html = `<b>${n(trial)}</b> free words left` + (frozen > 0 ? ` · <b>${n(frozen)}</b> waiting` : "");
+      cls = trial <= 50 ? "low" : "";
+    } else if (frozen > 0) {
+      html = `<b>${n(frozen)}</b> words waiting · <a href="pricing.html">renew</a>`;
+      cls = "low";
+    } else {
+      html = 'No free words left · <a href="pricing.html">See plans</a>';
+      cls = "out";
+    }
   }
-  // No membership: the one-time trial. It never refills, so once it's gone the only
-  // honest thing to show is where to get more.
-  const left = b7.trial;
-  if (left == null) return;     // a backend that predates the trial: say nothing rather
-                                // than "no words left", which would be a lie on a fresh account
-  if (left > 0) {
-    pill(`<b>${n(left)}</b> free words left`, left <= 50 ? "low" : "");
-    return;
-  }
-  pill('No free words left · <a href="pricing.html">See plans</a>', "out");
+  // Empty means no pill at all (the CSS hangs on :not(:empty)) — that's the right state
+  // for a signed-out visitor or a backend that predates the trial, where any number
+  // would be a guess.
+  els.forEach((el) => {
+    el.innerHTML = html ? "✦ " + html : "";
+    el.classList.remove("low", "out");
+    if (cls) el.classList.add(cls);
+    if (tip) el.title = tip; else el.removeAttribute("title");
+  });
+  setInWords();                 // the per-run note depends on what's left
+  applyGate(me);
+}
+
+// Both file tools are members-only — a file's words come out of the membership's
+// 10,000 — and the page can know that before the upload instead of after it. Only lock
+// on a POSITIVE answer: if /auth/me didn't come back, leave the panes open rather than
+// shutting a paying member out over a hiccup.
+function applyGate(me) {
+  const b7 = me && me.b7;
+  const locked = !!b7 && !b7.active && !(me && me.is_admin);
+  ["wd-lock", "pp-lock"].forEach((id) => {
+    const lock = $(id);
+    if (lock) lock.classList.toggle("hidden", !locked);
+  });
 }
 fetchMe().then(renderMeter);
 

@@ -56,13 +56,15 @@
     { v: "narrator",  href: "narrator.html",       ic: "♪", label: "Slide Narrator", icColor: "#36d6e7" },
   ];
   var ACCOUNT = [
-    { v: "plans", href: "pricing.html", ic: "◆", label: "Plans" },
+    { v: "plans", href: "pricing.html", ic: "◆", label: "Pricing & Plans" },
     { v: "redeem", href: "redeem.html", ic: "🎟", label: "Redeem Code" },
     { v: "support", href: "support.html", ic: "💬", label: "Support & FAQ", badge: "supportBadge" },
     // The real WhatsApp glyph rather than a phone dingbat — it's the one mark here
     // people recognise before they read the label. No <defs>, so inlining is safe.
-    { v: "help",  href: "https://wa.me/96555495757", label: "Help on WhatsApp",
-      cls: "nav-wa", external: true,
+    // Points at our own page rather than straight out to wa.me: the page fills the
+    // account email into the first message, offers the number to copy, and says what
+    // WhatsApp is the wrong tool for. Its button is the wa.me link.
+    { v: "help",  href: "whatsapp.html", label: "WhatsApp us", cls: "nav-wa",
       svg: '<svg class="nav-tn-icon" viewBox="0 0 24 24" fill="#25d366" aria-hidden="true">' +
              '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15' +
              '-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475' +
@@ -97,6 +99,8 @@
   // gate is the server's (every /api/admin/* route checks the token), this only
   // decides whether the link is worth showing.
   var STAFF = [
+    { v: "chats", href: "chats.html", ic: "📨", label: "Chats", cls: "nav-staff hidden",
+      badge: "chatsBadge" },
     { v: "codes", href: "codes.html", ic: "🎟", label: "Codes", cls: "nav-staff hidden" },
   ];
 
@@ -204,14 +208,42 @@
   // Staff links start hidden and are revealed for an admin or moderator. This is
   // presentation only — every /api/admin/* route checks the token itself, so hiding
   // the link is a tidiness measure, not the gate.
+  function showStaff() {
+    aside.querySelectorAll(".nav-staff").forEach(function (el) { el.classList.remove("hidden"); });
+  }
+  // Localhost is the owner's preview and is treated as admin throughout (see auth.js,
+  // which signs it in and pulls a token from the local panel). Show the staff links
+  // straight away so the preview isn't missing half the site while that round trip
+  // happens — or when the panel isn't running at all.
+  if (window.b7IsLocal) showStaff();
   if (API && TOK) {
     fetch(API + "/api/auth/me", { headers: AUTH })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.is_admin) return;
-        aside.querySelectorAll(".nav-staff").forEach(function (el) { el.classList.remove("hidden"); });
+        showStaff();
+        staffMail();
       })
       .catch(function () {});
+  }
+
+  // Unread customer mail, B7oothKw's own only — the same ?source= the Chats page
+  // lists by, so the badge can never count a conversation that page won't show.
+  function staffMail() {
+    if (here === "chats") return;            // don't badge what you're reading
+    function tick() {
+      fetch(API + "/api/support/admin-unread?source=b7ooth", { headers: AUTH })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var b = document.getElementById("chatsBadge");
+          if (!b || !d || d.error || d.unread == null) return;   // a blip leaves it alone
+          if (d.unread > 0) { b.textContent = d.unread > 99 ? "99+" : d.unread; b.classList.remove("hidden"); }
+          else b.classList.add("hidden");
+        })
+        .catch(function () {});
+    }
+    tick();
+    setInterval(tick, 30000);
   }
 
   // ---- unread badge on Support & FAQ ----

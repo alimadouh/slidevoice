@@ -23,8 +23,50 @@
     <div class="hz-grid">
       <!-- INPUT -->
       <div class="pane" id="inPane">
-        <div class="pane-head"><span class="pane-title">Input</span></div>
-        <div class="usage-bar"><span id="inWords"><b>0</b> words</span><span id="b7-meter"></span></div>
+        <div class="pane-head"><span class="pane-title">Input</span>
+          <!-- Output spelling. Drawn as SVG, not the 🇺🇸/🇬🇧 emoji: Windows has no flag
+               glyphs and renders those as the letters US / GB. This is the ONE copy in
+               the page; js/humanizer.js clones it into the PowerPoint and Word panes so
+               the three can't drift apart. -->
+          <div class="dl-toggle" id="dialectToggle" role="group" aria-label="Spelling used in the output">
+              <button type="button" class="dl-btn active" data-dialect="us"
+                      aria-label="American spelling"
+                      title="American spelling in the output — color, organize, center, analyze.">
+                <svg class="flag" viewBox="0 0 30 20" width="22" height="14" aria-hidden="true" focusable="false">
+                  <rect width="30" height="20" fill="#fff"/>
+                  <g fill="#b22234"><rect width="30" height="1.54" y="0"/>
+                    <rect width="30" height="1.54" y="3.08"/><rect width="30" height="1.54" y="6.15"/>
+                    <rect width="30" height="1.54" y="9.23"/><rect width="30" height="1.54" y="12.31"/>
+                    <rect width="30" height="1.54" y="15.38"/><rect width="30" height="1.54" y="18.46"/></g>
+                  <rect width="12" height="10.77" fill="#3c3b6e"/>
+                  <g fill="#fff">
+                    <circle cx="1.8" cy="1.9" r=".85"/><circle cx="4.6" cy="1.9" r=".85"/>
+                    <circle cx="7.4" cy="1.9" r=".85"/><circle cx="10.2" cy="1.9" r=".85"/>
+                    <circle cx="1.8" cy="5.4" r=".85"/><circle cx="4.6" cy="5.4" r=".85"/>
+                    <circle cx="7.4" cy="5.4" r=".85"/><circle cx="10.2" cy="5.4" r=".85"/>
+                    <circle cx="1.8" cy="8.9" r=".85"/><circle cx="4.6" cy="8.9" r=".85"/>
+                    <circle cx="7.4" cy="8.9" r=".85"/><circle cx="10.2" cy="8.9" r=".85"/></g>
+                </svg>
+              </button>
+              <button type="button" class="dl-btn" data-dialect="uk"
+                      aria-label="British spelling"
+                      title="British spelling in the output — colour, organise, centre, analyse.">
+                <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="none"
+                     width="22" height="14" aria-hidden="true" focusable="false">
+                  <clipPath id="ukJackClip">
+                    <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/>
+                  </clipPath>
+                  <rect width="60" height="30" fill="#012169"/>
+                  <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+                  <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#ukJackClip)"
+                        stroke="#c8102e" stroke-width="4"/>
+                  <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+                  <path d="M30,0 V30 M0,15 H60" stroke="#c8102e" stroke-width="6"/>
+                </svg>
+              </button>
+          </div>
+        </div>
+        <div class="usage-bar"><span id="inWords"><b>0</b> words</span><span class="b7-meter"></span></div>
         <textarea id="hz-input" class="editor" placeholder="Paste your AI-sounding text here…" spellcheck="false"></textarea>
         <div class="pane-foot">
           <button id="btn-clear" class="btn btn-clear" title="Clear input & output" aria-label="Clear all">
@@ -43,6 +85,9 @@
             <span class="ring-num" id="ringNum">—</span>
             <i class="ring-bar"></i>
           </span>
+          <!-- Names what the ring is measuring; without it the dial is a number with
+               no unit. Same cluster as Grade A's output head. -->
+          <div class="score-chip"><span class="tn-word">AI score</span></div>
         </div>
         <div class="usage-bar"><span id="outWords"><b>0</b> words</span></div>
         <div id="hz-out" class="editor result"><div class="placeholder">Humanized / scanned text appears here.</div></div>
@@ -62,9 +107,21 @@
 
   <!-- ===================== POWERPOINT ===================== -->
   <section class="hz-pane hidden" id="pane-pptx">
-    <h2 class="view-title"><img src="assets/pptx_icon.svg" class="title-tn-icon" alt=""> PowerPoint Humanizer</h2>
+    <h2 class="view-title"><img src="assets/pptx_icon.svg" class="title-tn-icon" alt=""> PowerPoint Humanizer<span class="b7-meter"></span></h2>
     <div class="ft-grid">
       <div class="tno-upcard">
+        <!-- Members only, same as Word: a deck's words come out of the 10,000, and a
+             non-member has no pool to spend. Refusing here beats refusing after the
+             upload has finished. -->
+        <div class="feat-lock hidden" id="pp-lock">
+          <div class="feat-lock-box">
+            <div class="feat-lock-ic">🔒</div>
+            <div class="feat-lock-title">Members only</div>
+            <p class="feat-lock-sub">Humanizing a whole deck comes out of a membership's
+              10,000 words. Your free words still work on the text humanizer.</p>
+            <a class="btn btn-primary feat-lock-btn" href="pricing.html">See plans</a>
+          </div>
+        </div>
         <div class="tno-uparea">
           <div class="upload-zone upz-big" id="pp-drop" role="button" tabindex="0" aria-label="Choose a PowerPoint file to humanize">
             <input type="file" id="pp-file" accept=".pptx" hidden>
@@ -72,6 +129,7 @@
             <div class="upz-title">Drop your PowerPoint here or <span>browse</span></div>
           </div>
           <div class="tno-selected hidden" id="pp-files"></div>
+          <div class="ft-dialect" id="ppDialect"></div>
           <button class="btn btn-primary tno-submit" id="pp-go" disabled>Humanize PowerPoint</button>
           <div class="hz-bar" id="pp-bar" hidden><div class="hz-bar-fill" id="pp-bar-fill"></div></div>
           <p class="hz-msg" id="pp-msg"></p>
@@ -90,12 +148,13 @@
           <li>Slide <b>titles</b>, short lines and references are never rewritten.</li>
           <li>Layout, fonts, colours and bullets stay <b>exactly the same</b>.</li>
           <li>You get a brand-new file &mdash; your original is never touched.</li>
+          <li>The word count comes out of your <b>membership's 10,000</b>.</li>
         </ul>
         <div class="ft-chips">
           <span class="ft-chip"><b>.pptx</b></span>
           <span class="ft-chip">up to <b>25 MB</b></span>
-          <span class="ft-chip"><b>8</b> decks a day</span>
-          <span class="ft-chip"><b>Free</b> with any account</span>
+          <span class="ft-chip"><b>3</b> decks a day</span>
+          <span class="ft-chip"><b>Membership</b></span>
         </div>
       </aside>
     </div>
@@ -103,9 +162,20 @@
 
   <!-- ===================== WORD ===================== -->
   <section class="hz-pane hidden" id="pane-word">
-    <h2 class="view-title"><img src="assets/word_icon.svg" class="title-tn-icon" alt=""> Word Humanizer</h2>
+    <h2 class="view-title"><img src="assets/word_icon.svg" class="title-tn-icon" alt=""> Word Humanizer<span class="b7-meter"></span></h2>
     <div class="ft-grid">
       <div class="tno-upcard">
+        <!-- Members only. The refusal used to arrive after the upload had finished,
+             which spent someone's time to tell them something the page knew all along. -->
+        <div class="feat-lock hidden" id="wd-lock">
+          <div class="feat-lock-box">
+            <div class="feat-lock-ic">🔒</div>
+            <div class="feat-lock-title">Members only</div>
+            <p class="feat-lock-sub">The Word humanizer rewrites a whole document in one go,
+              so it needs a B7oothKw month. Your free words still work on the text humanizer.</p>
+            <a class="btn btn-primary feat-lock-btn" href="pricing.html">See plans</a>
+          </div>
+        </div>
         <div class="tno-uparea">
           <div class="upload-zone upz-big" id="wd-drop" role="button" tabindex="0" aria-label="Choose a Word file to humanize">
             <input type="file" id="wd-file" accept=".docx" hidden>
@@ -113,6 +183,7 @@
             <div class="upz-title">Drop your Word document here or <span>browse</span></div>
           </div>
           <div class="tno-selected hidden" id="wd-files"></div>
+          <div class="ft-dialect" id="wdDialect"></div>
           <button class="btn btn-primary tno-submit" id="wd-go" disabled>Humanize Word</button>
           <div class="hz-bar" id="wd-bar" hidden><div class="hz-bar-fill" id="wd-bar-fill"></div></div>
           <p class="hz-msg" id="wd-msg"></p>
@@ -135,7 +206,7 @@
         <div class="ft-chips">
           <span class="ft-chip"><b>.docx</b></span>
           <span class="ft-chip">up to <b>10,000</b> words a file</span>
-          <span class="ft-chip"><b>5</b> files a day</span>
+          <span class="ft-chip"><b>3</b> files a day</span>
           <span class="ft-chip"><b>Membership</b></span>
         </div>
       </aside>

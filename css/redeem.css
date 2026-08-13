@@ -40,6 +40,20 @@
   -webkit-mask-composite:source-in;
   mask-composite:intersect}
 
+/* The weave and the inset highlight are tuned for the dark theme; on white they read as
+   grime, and the serial field's rgba(0,0,0,.22) turned into a grey slab. Grade A carries
+   the same two rules (body.light .rd-ticket / .rd-row input); they just weren't ported.
+   The ticket keeps its shape, tear line and foil. */
+body.hz-page.light .rd-ticket{
+  background:
+    linear-gradient(114deg, transparent 32%, color-mix(in srgb,var(--acc) 8%,transparent) 47%,
+                    transparent 62%),
+    linear-gradient(180deg,#ffffff,var(--panel2));
+  box-shadow:0 14px 34px rgba(20,30,60,.14),
+             0 0 0 1px color-mix(in srgb,var(--acc) 26%,transparent)}
+body.hz-page.light .rd-row input{background:#fff}
+body.hz-page.light .rd-row input:focus{background:#fff}
+
 /* Counterfoil — the half a real ticket keeps. Wordmark above, barcode below. */
 .rd-stub{flex:0 0 118px;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:26px;padding:40px 0;

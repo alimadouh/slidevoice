@@ -39,6 +39,14 @@
         ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
       text = `You have ${n(b7.words)} words left` + (end ? ` · your month ends ${end}` : "");
       cls = "is-member";
+    } else if (Number(b7.words || 0) > 0) {
+      // A month that ended with words unspent. They are not gone — a re-buy stacks on
+      // top of whatever is left — so "you've used all your free words" would be the
+      // opposite of the truth here.
+      text = `Your month has ended, with ${n(b7.words)} words still on the account` +
+             (b7.trial > 0 ? ` and ${n(b7.trial)} free words unused` : "") +
+             ". Buy another month and they're yours again";
+      cls = "is-trial";
     } else if (b7.trial > 0) {
       // "150 of your 150 left" reads like an accident on an account that hasn't
       // started yet — say what it is instead.

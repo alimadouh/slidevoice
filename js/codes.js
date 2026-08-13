@@ -1,7 +1,11 @@
-// Staff → Codes: mint B7oothKw word codes, see who redeemed them, revoke one.
+// Staff → Codes: mint B7oothKw word codes, see what happened to them, revoke one.
 //
 // The backend's code table is shared with Grade A, so this page filters to the
 // B7oothKw kind and never shows — or touches — a Grade A plan code.
+//
+// A B7oothKw code is single-use by design, which is what shapes this screen: there
+// is nothing to fill in when making one, and a code has at most one redeemer, so its
+// story fits on one row — who took it and when — with no counter and nothing to expand.
 (function () {
   const API = (window.HUMANIZER_API || "").replace(/\/+$/, "");
   const BKEY = window.BRANCH_KEY || "";
@@ -20,9 +24,21 @@
   const B7_PLAN = "B7oothWords";        // matches auth.B7_CODE_PLAN
   const B7_KIND = "b7_words";           // matches auth.B7_CODE_KIND
 
+  // The backend's own words for a code's state, and what staff call them here.
+  const LABEL = { active: "Unused", "used up": "Redeemed", expired: "Expired", revoked: "Revoked" };
+
   function say(t, ok) { const m = $("cdMsg"); m.textContent = t || ""; m.classList.toggle("ok", !!ok); }
 
   let all = [];
+  let filt = "all";
+  let fresh = "";                       // the code made this session, highlighted in the list
+
+  async function copy(text, el) {
+    const was = el.textContent;
+    try { await navigator.clipboard.writeText(text); el.textContent = "Copied"; }
+    catch (e) { el.textContent = "Copy failed"; }
+    setTimeout(() => { el.textContent = was; }, 1400);
+  }
 
   // ---- mint ----
   $("codeGenBtn").onclick = async () => {
@@ -31,27 +47,20 @@
     try {
       const d = await (await fetch(API + "/api/admin/codes", {
         method: "POST", headers: JH,
-        body: JSON.stringify({
-          plan: B7_PLAN,
-          days: 0,                       // a words code has no duration; the server ignores it
-          uses: Math.max(1, parseInt($("codeUses").value, 10) || 1),
-          note: $("codeNote").value || "",
-        }),
+        // One code, one account: a B7oothKw code is a single 1,000-word grant, so
+        // there is nothing for staff to choose here — hence no uses or note field.
+        body: JSON.stringify({ plan: B7_PLAN, days: 0, uses: 1, note: "" }),
       })).json();
       if (d.error) { say(d.error); return; }
+      fresh = d.code;
       const out = $("codeOut");
       out.innerHTML =
-        '<div class="code-out-code">' + esc(d.code) + "</div>" +
-        '<div class="code-out-sub">' + n(d.words) + " words &middot; " +
-        d.max_uses + (d.max_uses === 1 ? " use" : " uses") + "</div>" +
-        '<button class="code-btn" id="codeCopy" type="button">Copy code</button>';
+        '<div class="cd-out-eyebrow">New code</div>' +
+        '<div class="cd-out-code">' + esc(d.code) + "</div>" +
+        '<div class="cd-out-sub">' + n(d.words) + " words &middot; one account</div>" +
+        '<button class="btn btn-primary cd-out-copy" id="codeCopy" type="button">Copy code</button>';
       out.classList.remove("hidden");
-      $("codeCopy").onclick = async (e) => {
-        try { await navigator.clipboard.writeText(d.code); e.target.textContent = "Copied"; }
-        catch (err) { e.target.textContent = "Copy failed"; }
-        setTimeout(() => (e.target.textContent = "Copy code"), 1500);
-      };
-      $("codeNote").value = "";
+      $("codeCopy").onclick = (e) => copy(d.code, e.target);
       load();
     } catch (e) {
       say("Couldn't reach the server. Please try again.");
@@ -61,55 +70,52 @@
   };
 
   // ---- list ----
+  function counts() {
+    const c = { all: all.length, active: 0, "used up": 0, expired: 0, revoked: 0 };
+    all.forEach((x) => { if (c[x.state] != null) c[x.state]++; });
+    document.querySelectorAll(".cd-n").forEach((el) => { el.textContent = c[el.dataset.n] || 0; });
+  }
+
+  // One line per code: who took it, or — while nobody has — when it stops working.
+  function sub(c) {
+    const r = (c.redemptions || [])[0];
+    if (r) return esc(r.email) + " &middot; " + when(r.ts);
+    if (c.state === "active") return "expires " + when(c.expires);
+    return "made " + when(c.created);
+  }
+
+  function row(c) {
+    const live = c.state === "active";
+    const dead = c.state === "expired" || c.state === "revoked";
+    return '<div class="cd-row' + (c.code === fresh ? " new" : "") + (dead ? " dead" : "") + '">' +
+      '<button class="cd-copy" type="button" data-code="' + esc(c.code) + '" title="Copy code">' +
+        '<span class="cd-code">' + esc(c.code) + "</span></button>" +
+      '<span class="cd-sub">' + sub(c) + "</span>" +
+      '<span class="cd-pill st-' + c.state.replace(" ", "-") + '">' +
+        esc(LABEL[c.state] || c.state) + "</span>" +
+      (live ? '<button class="code-btn cd-rev" type="button" data-code="' + esc(c.code) +
+              '">Revoke</button>' : '<span class="cd-rev-gap"></span>') +
+      "</div>";
+  }
+
   function render() {
     const q = ($("codeSearch").value || "").trim().toLowerCase();
-    const st = $("codeFState").value;
     const rows = all.filter((c) => {
-      if (st !== "all" && c.state !== st) return false;
+      if (filt !== "all" && c.state !== filt) return false;
       if (!q) return true;
-      const hay = [c.code, c.note, (c.redemptions || []).map((r) => r.email).join(" ")]
-        .join(" ").toLowerCase();
-      return hay.indexOf(q) >= 0;
+      return [c.code, (c.redemptions || []).map((r) => r.email).join(" ")]
+        .join(" ").toLowerCase().indexOf(q) >= 0;
     });
-    $("codeCounts").textContent =
-      rows.length + " of " + all.length + (all.length === 1 ? " code" : " codes");
     if (!rows.length) {
       $("codeBody").innerHTML = '<p class="code-empty">' +
         (all.length ? "No codes match that." : "No codes yet — generate one above.") + "</p>";
       return;
     }
-    $("codeBody").innerHTML = '<div class="code-list">' + rows.map(item).join("") + "</div>";
-    // Open a card to see who redeemed it.
-    $("codeBody").querySelectorAll(".code-head").forEach((h) => {
-      h.onclick = () => h.closest(".code-item").classList.toggle("open");
+    $("codeBody").innerHTML = '<div class="cd-list">' + rows.map(row).join("") + "</div>";
+    $("codeBody").querySelectorAll(".cd-copy").forEach((b) => {
+      b.onclick = () => copy(b.dataset.code, b.querySelector(".cd-code"));
     });
-    $("codeBody").querySelectorAll(".code-rev").forEach((b) => { b.onclick = () => revoke(b.dataset.code); });
-  }
-
-  function item(c) {
-    const live = c.state === "active";
-    const reds = c.redemptions || [];
-    return '<div class="code-item">' +
-      '<button class="code-head" type="button">' +
-        '<span class="code-val">' + esc(c.code) + "</span>" +
-        '<span class="code-tags">' +
-          '<span class="code-tag words">' + n(c.words) + " words</span>" +
-          '<span class="code-tag">' + c.uses + "/" + c.max_uses + " used</span>" +
-          '<span class="code-tag ' + (live ? "code-st-on" : "code-st-off") + '">' + esc(c.state) + "</span>" +
-        "</span>" +
-      "</button>" +
-      '<div class="code-meta"><span>' +
-        (c.note ? esc(c.note) + " &middot; " : "") +
-        "made " + when(c.created) + " &middot; expires " + when(c.expires) +
-      "</span>" +
-      (live ? '<span class="code-acts"><button class="code-btn code-rev" type="button" data-code="' +
-                esc(c.code) + '">Revoke</button></span>' : "") +
-      "</div>" +
-      '<div class="code-reds">' + (reds.length
-        ? reds.map((r) => '<div class="prow"><span>' + esc(r.email) + "</span><span>" +
-                           when(r.ts) + "</span></div>").join("")
-        : '<div class="prow"><span>Not redeemed yet.</span><span></span></div>') +
-      "</div></div>";
+    $("codeBody").querySelectorAll(".cd-rev").forEach((b) => { b.onclick = () => revoke(b.dataset.code); });
   }
 
   async function revoke(code) {
@@ -129,24 +135,29 @@
     }
   }
 
+  function fail(msg) { $("codeBody").innerHTML = '<p class="code-empty">' + esc(msg) + "</p>"; }
+
   async function load() {
-    if (!TOKEN) { $("codeBody").innerHTML = '<p class="code-empty">Please sign in.</p>'; return; }
+    if (!TOKEN) { fail(window.b7NoTokenMsg ? b7NoTokenMsg() : "Please sign in."); return; }
     try {
       const d = await (await fetch(API + "/api/admin/codes", { headers: H })).json();
-      if (d.error) {
-        $("codeBody").innerHTML = '<p class="code-empty">' + esc(d.error) + "</p>";
-        return;
-      }
+      if (d.error) { fail(d.error); return; }
       all = (d.codes || []).filter((c) => c.kind === B7_KIND);
-      if (d.b7_words) $("cdWorth").textContent = n(d.b7_words) + " words";
+      counts();
       render();
     } catch (e) {
-      $("codeBody").innerHTML = '<p class="code-empty">Couldn\'t load the codes. Check your connection.</p>';
+      fail("Couldn't load the codes. Check your connection.");
     }
   }
 
+  $("codeTabs").addEventListener("click", (e) => {
+    const t = e.target.closest(".cd-tab");
+    if (!t) return;
+    filt = t.dataset.st;
+    $("codeTabs").querySelectorAll(".cd-tab").forEach((b) => b.classList.toggle("on", b === t));
+    render();
+  });
   $("codeSearch").oninput = render;
-  $("codeFState").onchange = render;
   $("codeRefreshBtn").onclick = load;
   load();
 })();

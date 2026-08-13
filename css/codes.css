@@ -1,64 +1,103 @@
-/* Staff → Codes. Ported from Grade A's .code-* block (static/style.css), with the
-   plan and duration controls dropped: a B7oothKw code is one thing — 1,000 words —
-   so a selector with a single option would only be furniture. */
+/* Staff → Codes. Built around the one fact that decides the whole screen: a B7oothKw
+   code is single-use, so making one takes no input and reading one takes no expanding.
+   The page is therefore three bands — mint, filter, list — and nothing else. */
 
-.cd-note{font-size:13.5px;color:var(--mut);margin:0 0 16px;max-width:70ch;line-height:1.6}
-.cd-note b{color:var(--ink)}
+:root{ --cd-w:1000px; }
 
-/* ---- mint ---- */
-.code-new{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  padding:16px 18px;margin-bottom:18px;max-width:1100px}
-.code-new-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-.code-f{display:flex;flex-direction:column;gap:5px;min-width:110px}
-.code-f-wide{flex:1 1 190px}
-.code-f > span{font-size:12px;color:var(--mut)}
-.code-f input{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
-  color:var(--ink);padding:9px 11px;font-family:inherit;font-size:13.5px}
-.code-f input:focus{outline:none;border-color:var(--acc)}
-.code-gen{white-space:nowrap}
-.code-out{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);text-align:center}
+/* ---- mint ----
+   The only control on the page, so it gets the stage: one centred button, and the
+   code it just made directly underneath it. */
+.cd-mint{max-width:var(--cd-w);background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:26px 22px 24px;margin:4px 0 18px;text-align:center;
+  background-image:radial-gradient(120% 130% at 50% -30%,
+    color-mix(in srgb,var(--acc) 12%,transparent),transparent 62%)}
+.code-gen{white-space:nowrap;padding:15px 40px;font-size:16px;border-radius:12px}
+
+/* the code you just made — the one moment worth interrupting the page for */
+.code-out{margin:20px auto 0;padding-top:18px;border-top:1px dashed var(--line);max-width:420px}
 .code-out.hidden{display:none}
-.code-out-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;
-  font-weight:800;color:var(--acc);letter-spacing:2px}
-.code-out-sub{font-size:12.5px;color:var(--mut);margin:5px 0 11px}
+.cd-out-eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--mut)}
+.cd-out-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:27px;
+  font-weight:800;color:var(--acc);letter-spacing:2px;margin-top:4px}
+.cd-out-sub{font-size:12.5px;color:var(--mut);margin:4px 0 14px}
+.cd-out-copy{padding:9px 22px;font-size:13.5px;border-radius:10px}
 
-/* ---- list ---- */
-.code-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px;max-width:1100px}
-.code-counts{font-size:12.5px;color:var(--mut);margin-right:auto}
-.code-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.code-filters input,.code-filters select{background:var(--panel2);border:1px solid var(--line);
-  border-radius:9px;color:var(--ink);padding:8px 10px;font-family:inherit;font-size:13px}
-.code-filters input{min-width:210px}
-.code-filters input:focus,.code-filters select:focus{outline:none;border-color:var(--acc)}
-.code-filters input::placeholder{color:var(--faint)}
+/* ---- filter bar ---- */
+.code-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px;
+  max-width:var(--cd-w)}
+.cd-tabs{display:flex;gap:2px;padding:3px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:11px;margin-right:auto;flex-wrap:wrap}
+.cd-tab{display:flex;align-items:center;gap:6px;background:none;border:0;border-radius:8px;
+  color:var(--mut);font-family:inherit;font-size:12.5px;padding:7px 11px;cursor:pointer}
+.cd-tab:hover{color:var(--ink)}
+.cd-tab.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.28)}
+.cd-n{font-size:11px;font-variant-numeric:tabular-nums;color:var(--faint);
+  background:var(--bg,transparent);padding:1px 6px;border-radius:999px;
+  border:1px solid var(--line)}
+.cd-tab.on .cd-n{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+
+.cd-search{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+  color:var(--ink);padding:9px 12px;font-family:inherit;font-size:13px;min-width:220px}
+.cd-search:focus{outline:none;border-color:var(--acc)}
+.cd-search::placeholder{color:var(--faint)}
 .code-refresh{background:var(--panel2);border:1px solid var(--line2);color:var(--mut);
-  border-radius:9px;padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer}
+  border-radius:9px;padding:9px 14px;font-family:inherit;font-size:13px;cursor:pointer}
 .code-refresh:hover{color:var(--ink)}
 
-.code-list{display:flex;flex-direction:column;gap:9px;max-width:1100px}
-.code-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.code-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
-  padding:12px 14px;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer}
-.code-val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;
-  font-weight:700;color:var(--ink);letter-spacing:1px}
-.code-tags{display:flex;gap:6px;flex-wrap:wrap}
-.code-tag{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--panel2);
-  border:1px solid var(--line);color:var(--mut);white-space:nowrap}
-.code-tag.words{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,var(--line))}
-.code-st-on{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
-.code-st-off{color:var(--faint)}
-.code-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:0 14px 12px;font-size:12px;color:var(--faint)}
-.code-acts{display:flex;gap:7px}
+/* ---- list ----
+   One row per code: the code (click to copy), its one line of history, its state,
+   and — only while it can still be redeemed — the way to stop it. */
+.cd-list{display:flex;flex-direction:column;gap:7px;max-width:var(--cd-w)}
+.cd-row{display:flex;align-items:center;gap:14px;background:var(--panel);
+  border:1px solid var(--line);border-radius:11px;padding:10px 12px 10px 14px}
+.cd-row.dead{opacity:.6}
+.cd-row.new{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));
+  background-image:linear-gradient(90deg,color-mix(in srgb,var(--acc) 9%,transparent),transparent 45%)}
+
+.cd-copy{display:flex;align-items:baseline;gap:8px;background:none;border:0;padding:0;
+  cursor:pointer;font-family:inherit;text-align:left}
+.cd-code{display:inline-block;min-width:148px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:14.5px;font-weight:700;letter-spacing:1px;color:var(--ink)}
+/* the row is copyable; say so on hover rather than leaving staff to guess */
+.cd-copy::after{content:"copy";font-size:10px;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--acc);opacity:0;transition:opacity .12s}
+.cd-copy:hover .cd-code{color:var(--acc)}
+.cd-copy:hover::after,.cd-copy:focus-visible::after{opacity:1}
+.cd-row.dead .cd-code{text-decoration:line-through}
+
+.cd-sub{flex:1 1 auto;min-width:120px;font-size:12.5px;color:var(--faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* fixed width so the states read as one column down the list, not a ragged edge */
+.cd-pill{min-width:86px;text-align:center;font-size:11px;font-weight:600;padding:4px 10px;
+  border-radius:999px;white-space:nowrap;background:var(--panel2);border:1px solid var(--line);
+  color:var(--mut)}
+.cd-pill.st-active{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,var(--line));
+  background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.cd-pill.st-used-up{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,var(--line));
+  background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.cd-pill.st-expired,.cd-pill.st-revoked{color:var(--faint)}
+
 .code-btn{background:var(--panel2);border:1px solid var(--line);color:var(--mut);
-  border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+  border-radius:8px;padding:6px 11px;font-family:inherit;font-size:12px;cursor:pointer}
 .code-btn:hover{color:var(--ink);border-color:var(--line2)}
-.code-rev:hover{color:var(--bad);border-color:var(--bad)}
-.code-reds{display:none;border-top:1px solid var(--line);padding:4px 14px 10px}
-.code-item.open .code-reds{display:block}
-.code-reds .prow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;
-  font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--line)}
-.code-reds .prow:last-child{border-bottom:none}
-.code-empty{color:var(--faint);font-size:13.5px;padding:18px 2px}
-.cd-msg{font-size:13.5px;font-weight:600;color:var(--bad);margin:12px 0 0;min-height:1.2em}
+.cd-rev{width:72px;text-align:center}
+.cd-rev:hover{color:var(--bad);border-color:var(--bad)}
+.cd-rev-gap{width:72px}          /* keeps the pills in one column when there's no button */
+
+/* The list is empty far more often than it is full — an empty state that holds the
+   same shape as the list beats a stray line of grey text in a wide blank page. */
+.code-empty{color:var(--mut);font-size:13.5px;text-align:center;margin:0;max-width:var(--cd-w);
+  padding:46px 18px;border:1px dashed var(--line2);border-radius:var(--r)}
+.cd-msg{font-size:13.5px;font-weight:600;color:var(--bad);margin:12px 0 0;min-height:1.2em;
+  max-width:var(--cd-w);text-align:center}
 .cd-msg.ok{color:var(--ok)}
+
+@media (max-width:640px){
+  .cd-tabs{width:100%;margin-right:0}
+  .cd-search{flex:1 1 160px;min-width:0}
+  .cd-code{min-width:0}
+  .cd-sub{flex-basis:100%;order:3}
+  .cd-rev-gap{display:none}
+}

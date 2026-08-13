@@ -162,15 +162,61 @@ body.hz-page{
   border:1px solid var(--line);border-radius:var(--r);
   display:flex;flex-direction:column;min-height:0;overflow:hidden;
   box-shadow:0 12px 40px rgba(0,0,0,.35);
+  transition:border-color .25s,box-shadow .35s;
 }
+/* Hover: the pane under the pointer lifts out of the page, the way Grade A's does.
+   Each side glows in its own colour — the same red-in / green-out story the top
+   hairline and the title dot tell — so the highlight says WHICH pane you're on
+   rather than just "something is hovered". */
+.hz-grid>.pane:hover{
+  border-color:color-mix(in srgb,var(--acc) 30%,var(--line));
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,
+             0 34px 80px -34px rgba(0,0,0,.72),
+             0 0 50px -20px color-mix(in srgb,var(--acc) 70%,transparent)}
+.hz-grid>.pane:last-of-type:hover{
+  border-color:color-mix(in srgb,var(--ok) 30%,var(--line));
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,
+             0 34px 80px -34px rgba(0,0,0,.72),
+             0 0 50px -20px color-mix(in srgb,var(--ok) 60%,transparent)}
+/* On white, the deep drop shadow reads as dirt — keep the tint, lose the depth. */
+body.hz-page.light .hz-grid>.pane:hover{
+  box-shadow:0 20px 44px -24px rgba(40,60,120,.35),
+             0 0 36px -22px color-mix(in srgb,var(--acc) 60%,transparent)}
+body.hz-page.light .hz-grid>.pane:last-of-type:hover{
+  box-shadow:0 20px 44px -24px rgba(40,60,120,.35),
+             0 0 36px -22px color-mix(in srgb,var(--ok) 55%,transparent)}
 /* Stacked on phones, where the view scrolls with the page rather than clipping. */
 @media(max-width:860px){.pane .editor{min-height:200px;max-height:48vh}}
 
+/* A fixed 64px strip, like Grade A's: the output side carries a 48px ring, and a head
+   that grows to fit it would leave the two panes' bars at different heights. */
 .pane-head{
   flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015);
+  gap:10px;height:64px;min-height:64px;box-sizing:border-box;
+  padding:0 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015);
 }
-.pane-title{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)}
+.pane-head .head-ring,.pane-head .score-chip{align-self:center}
+.pane-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+
+/* The input → output story, told twice: a coloured hairline on each pane's top edge
+   and a status dot beside its title. Input = the brand red (AI in), output = green
+   (human out). ::before is free on .pane — the fx-* animations own ::after. */
+.hz-grid>.pane{position:relative}
+.hz-grid>.pane::before{
+  content:"";position:absolute;top:0;left:7%;right:7%;height:2px;z-index:8;pointer-events:none;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--acc) 65%,transparent),transparent)}
+.hz-grid>.pane:last-of-type::before{
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ok) 60%,transparent),transparent)}
+.hz-grid .pane-title::before{
+  content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-right:8px;vertical-align:1px;background:var(--acc);box-shadow:0 0 10px var(--acc)}
+.hz-grid>.pane:last-of-type .pane-title::before{
+  background:var(--ok);box-shadow:0 0 10px color-mix(in srgb,var(--ok) 55%,transparent)}
+
+/* Names what the ring measures. A pill, so it reads as a label rather than a button. */
+.score-chip{display:flex;align-items:center;background:var(--panel2);
+  border:1px solid var(--line2);border-radius:999px;padding:5px 11px}
+.tn-word{font-size:14px;font-weight:600;letter-spacing:-.2px;color:var(--ink);line-height:1.2}
 .usage-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto;
   padding:7px 16px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line);background:var(--panel2)}
 .usage-bar b{color:var(--ink);font-weight:700}
@@ -240,18 +286,28 @@ body.hz-page{
 @keyframes trashShake{0%,100%{transform:rotate(0)}15%{transform:rotate(-16deg)}35%{transform:rotate(13deg)}55%{transform:rotate(-9deg)}75%{transform:rotate(5deg)}}
 
 /* ================= score ring ================= */
-.head-ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
-.ring{flex:0 0 auto;padding:4px 11px 6px;border-radius:12px;background:rgba(127,140,170,.07);
-  border:1px solid color-mix(in srgb,var(--col) 50%,var(--line));box-shadow:0 0 18px -5px var(--col);
-  display:flex;flex-direction:column;align-items:center;gap:5px;transition:box-shadow .4s,border-color .4s}
-.ring-num{font-size:13px;font-weight:800;color:var(--col);line-height:1;
-  text-shadow:0 0 10px color-mix(in srgb,var(--col) 55%,transparent)}
-.ring-bar{display:block;width:44px;height:3px;border-radius:3px;background:rgba(255,255,255,.10);overflow:hidden}
-.ring-bar::before{content:"";display:block;height:100%;border-radius:3px;width:calc(var(--lvl,0) * 1%);
-  background:var(--col);box-shadow:0 0 8px -1px var(--col);transition:width .85s cubic-bezier(.22,1,.36,1),background .5s}
+/* The score dial. A real RING, as on Grade A — the 87→0 motif from the ads — rather
+   than the flat chip this used to be, which read as a squashed pill beside the round
+   one next door. app.js-side, nothing changes: --lvl (0-100) and --col still drive it,
+   and the conic sweep animates because --lvl is a registered property. */
+@property --lvl{syntax:'<number>';initial-value:0;inherits:false}
+.ring{position:relative;flex:0 0 auto;width:48px;height:48px;padding:0;border:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(from -90deg,var(--col) calc(var(--lvl,0)*3.6deg),rgba(127,140,170,.30) 0);
+  box-shadow:0 0 24px -9px var(--col);
+  transition:--lvl .9s cubic-bezier(.22,1,.36,1),--col .5s linear,box-shadow .4s}
+.ring::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--panel)}
+/* AFTER .ring, deliberately: both selectors weigh the same, so whichever is written
+   last wins `position`. With this rule first, .ring's own `relative` dropped the dial
+   back into the flow and it sat on top of the AI score chip. */
+.head-ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+body.hz-page.light .ring::before{box-shadow:inset 0 1px 4px rgba(30,40,70,.15)}
+.ring-num{position:relative;z-index:1;font-size:12.5px;font-weight:800;color:var(--col);line-height:1}
+.ring-bar{display:none}                 /* the ring IS the bar now */
 .ring.fx-pop{animation:fx-ring-pop .6s ease-out}
 @keyframes fx-ring-pop{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
-.ring.safe::after{content:"";position:absolute;inset:-3px;border-radius:14px;pointer-events:none;z-index:-1;
+.ring.safe::after{content:"";position:absolute;inset:-3px;border-radius:50%;pointer-events:none;z-index:-1;
   box-shadow:0 0 20px 1px var(--col);animation:fx-ring-breathe 2.2s ease-in-out infinite}
 @keyframes fx-ring-breathe{0%,100%{opacity:.3}50%{opacity:.9}}
 
@@ -286,6 +342,7 @@ body.hz-page{
 @media(prefers-reduced-motion:reduce){
   .pane.fx-humanizing,.pane.fx-greening,.pane.fx-scanning::after,.ring.safe::after,
   #hz-out.fx-reveal::after,#hz-out.fx-ripple .sent,#btn-humanize::before{animation:none!important}
+  .ring{transition:none}                 /* the conic sweep is motion too */
 }
 
 .hz-msg{margin:14px 0 0;font-size:14px;font-weight:600;color:var(--acc2);min-height:1.2em}
@@ -309,19 +366,58 @@ body.hz-page{
    of its usage bar (#usageHumanize in app-refresh.css) — accent text on a 12% wash
    of itself. Red here instead of indigo. :not(:empty) keeps a signed-out account
    from painting a bare pill with nothing in it. */
-#b7-meter:not(:empty){
-  margin-left:auto;padding:3px 10px;border-radius:999px;white-space:nowrap;
+/* A class, not an id: the same pill is drawn in the text pane's usage bar AND beside
+   the PowerPoint and Word titles, because those panes spend the same balance. */
+.b7-meter:not(:empty){
+  padding:3px 10px;border-radius:999px;white-space:nowrap;
   background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);
   font-weight:600;font-size:11.5px;letter-spacing:.1px}
-#b7-meter b{color:inherit;font-weight:800}
+.usage-bar .b7-meter:not(:empty){margin-left:auto}
+.view-title .b7-meter:not(:empty){margin-left:4px;font-size:11px;position:relative;top:1px}
+.b7-meter b{color:inherit;font-weight:800}
 /* running low, and run out: the pill changes colour with the news it carries */
-#b7-meter.low:not(:empty){background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
-#b7-meter.out:not(:empty){background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
-#b7-meter a{color:inherit;font-weight:800;text-decoration:underline}
-/* over the per-run cap: the count itself carries the warning */
+.b7-meter.low:not(:empty){background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.b7-meter.out:not(:empty){background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+/* over the ceiling (per-run cap, or what's left): the count carries the warning */
 #inWords.over,#inWords.over b{color:var(--warn)}
-#b7-meter.low{color:var(--warn);font-weight:600;opacity:1}
-#b7-meter a{color:var(--acc2);font-weight:700;text-decoration:none}
-#b7-meter a:hover{text-decoration:underline}
+.b7-meter a{color:var(--acc2);font-weight:700;text-decoration:none}
+.b7-meter a:hover{text-decoration:underline}
+
+/* ================= output spelling (US / UK) =================
+   Same switch as Grade A's, and the same reasoning: the accent gradient the other
+   toggles use would fight the flags' own colours, so the chosen one is marked by
+   being the only one at FULL strength, inside an accent ring. Dimming the other is
+   what makes the choice readable at a glance. */
+.dl-toggle{display:inline-flex;flex:0 0 auto;gap:2px;padding:2px;
+  background:var(--panel2);border:1px solid var(--line2);border-radius:10px}
+.dl-btn{display:flex;align-items:center;background:transparent;border:0;border-radius:8px;
+  cursor:pointer;padding:5px 9px;line-height:0;transition:background .15s,box-shadow .15s}
+.dl-btn .flag{display:block;border-radius:2px;opacity:.45;filter:saturate(.7);
+  box-shadow:0 0 0 1px rgba(0,0,0,.3);transition:opacity .15s,filter .15s}
+.dl-btn:hover .flag{opacity:.8;filter:saturate(.9)}
+.dl-btn.active{background:var(--panel2);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.dl-btn.active .flag{opacity:1;filter:none}
+.dl-btn:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+/* On the file views the switch is its own step between the drop zone and the button,
+   with room either side — and big enough that the Union Jack's diagonals and the star
+   field actually read as flags, which they can't at the 22px the 64px head allows. */
+.ft-dialect{display:flex;justify-content:center;margin:18px 0 16px}
+.ft-dialect .dl-btn{padding:7px 12px}
+.ft-dialect .flag{width:34px;height:22px;border-radius:3px}
+
+/* ---- members-only cover for the Word pane (Grade A's .feat-lock, ported) ----
+   It sits over the upload card, so the file picker can't be reached at all rather
+   than accepting a file and refusing it after the upload. */
+.ft-grid .tno-upcard{position:relative}
+.feat-lock{position:absolute;inset:0;z-index:30;display:flex;align-items:center;
+  justify-content:center;text-align:center;padding:24px;border-radius:inherit;
+  background:rgba(13,16,23,.74);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+body.hz-page.light .feat-lock{background:rgba(245,247,250,.82)}
+.feat-lock.hidden{display:none}
+.feat-lock-box{max-width:330px}
+.feat-lock-ic{font-size:38px;margin-bottom:10px}
+.feat-lock-title{font-size:18px;font-weight:700}
+.feat-lock-sub{font-size:13px;color:var(--mut);margin:6px 0 18px;line-height:1.55}
+.feat-lock-btn{flex:0 0 auto;display:inline-flex;text-decoration:none}
 .hz-msg a{color:var(--acc2);font-weight:700}
 .hz-msg.bad{color:var(--bad)}

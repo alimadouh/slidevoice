@@ -1,0 +1,53 @@
+/* WhatsApp — the same shape as Grade A's Discord page (.dc-*), in WhatsApp's own
+   green rather than B7oothKw red. That's the same rule Grade A follows: the hero wears
+   the PLATFORM's colour, because it is a door out to that platform, and the site's own
+   accent goes back to work on the cards below. Red here would also collide with every
+   primary button on the site. */
+
+.wa-wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+.wa-hero{position:relative;overflow:hidden;border-radius:22px;padding:54px 28px;text-align:center;
+  background:radial-gradient(120% 140% at 50% -10%,#25d366 0%,#12a150 38%,#0b6b39 78%,#08321f 100%);
+  box-shadow:0 22px 60px rgba(37,211,102,.28)}
+.wa-orb{position:absolute;border-radius:50%;filter:blur(8px);opacity:.45;pointer-events:none;
+  background:radial-gradient(circle,#fff,transparent 70%)}
+.wa-orb1{width:160px;height:160px;top:-50px;left:-40px;animation:waFloat 7s ease-in-out infinite}
+.wa-orb2{width:210px;height:210px;bottom:-80px;right:-50px;opacity:.3;
+  animation:waFloat 9s ease-in-out infinite reverse}
+@keyframes waFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(18px)}}
+
+.wa-hero-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+/* White tile, not the app's dark one: icon.png is black artwork on transparency, so on
+   anything dark the cap vanishes and only the red tassel survives. */
+.wa-logo{width:104px;height:104px;border-radius:26px;overflow:hidden;background:#fff;
+  padding:13px;box-sizing:border-box;box-shadow:0 14px 34px rgba(0,0,0,.32);margin-bottom:8px;
+  animation:waPop .5s cubic-bezier(.2,1.3,.4,1)}
+.wa-logo-img{width:100%;height:100%;object-fit:contain;display:block}
+@keyframes waPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.wa-title{font-size:30px;font-weight:800;color:#fff;margin:4px 0 0;letter-spacing:-.5px}
+.wa-sub{font-size:14.5px;color:rgba(255,255,255,.86);max-width:480px;margin:0 0 8px;line-height:1.6}
+
+.wa-open{background:#fff;color:#0b6b39;font-weight:800;font-size:15px;padding:14px 28px;
+  border-radius:30px;text-decoration:none;box-shadow:0 10px 26px rgba(0,0,0,.28);
+  transition:transform .15s,box-shadow .15s}
+.wa-open:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 34px rgba(0,0,0,.36)}
+.wa-open-ic{width:19px;height:19px;display:block;flex:0 0 auto}
+
+.wa-note{font-size:11.5px;color:rgba(255,255,255,.68);max-width:440px;margin-top:12px;line-height:1.55}
+.wa-note b{color:#fff}
+.wa-note:empty{display:none}       /* signed out: no note, and no gap where one would be */
+
+.wa-perks{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.wa-perk{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 16px;
+  display:flex;flex-direction:column;gap:5px;transition:border-color .15s,transform .15s}
+.wa-perk:hover{border-color:var(--acc);transform:translateY(-2px)}
+.wa-perk-ic{font-size:24px;line-height:1}
+.wa-perk b{font-size:14px;color:var(--ink)}
+.wa-perk small{font-size:11.5px;color:var(--mut);line-height:1.45}
+
+@media (max-width:760px){
+  .wa-perks{grid-template-columns:1fr 1fr}
+  .wa-title{font-size:24px}
+  .wa-hero{padding:40px 20px}
+}
+@media (max-width:440px){.wa-perks{grid-template-columns:1fr}}

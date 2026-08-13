@@ -20,38 +20,26 @@
     <section class="view" id="view-codes">
       <h1 class="sr-only">B7oothKw Codes</h1>
       <h2 class="view-title"><span class="nav-ic" style="color:var(--acc)">🎟</span> Codes</h2>
-      <p class="cd-note">Every code is worth <b id="cdWorth">1,000 words</b> on a B7oothKw
-        account, and each account may redeem a given code once. Codes stop working
-        90 days after they're made.</p>
 
-      <div class="code-new">
-        <div class="code-new-row">
-          <label class="code-f"><span>Uses</span>
-            <input id="codeUses" type="number" min="1" max="500" value="1" inputmode="numeric">
-          </label>
-          <label class="code-f code-f-wide"><span>Note (optional)</span>
-            <input id="codeNote" type="text" maxlength="200" placeholder="e.g. Instagram giveaway">
-          </label>
-          <button class="btn btn-primary code-gen" id="codeGenBtn" type="button">Generate</button>
-        </div>
+      <!-- The whole form: one button. The code it makes appears underneath. -->
+      <div class="cd-mint">
+        <button class="btn btn-primary code-gen" id="codeGenBtn" type="button">Generate code</button>
         <div class="code-out hidden" id="codeOut"></div>
       </div>
 
       <div class="code-bar">
-        <span class="code-counts" id="codeCounts"></span>
-        <div class="code-filters">
-          <input id="codeSearch" type="search" autocomplete="off" spellcheck="false"
-                 placeholder="Search code, note or email" aria-label="Search codes">
-          <select id="codeFState" aria-label="Filter by status">
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-            <option value="used up">Used up</option>
-            <option value="expired">Expired</option>
-            <option value="revoked">Revoked</option>
-          </select>
+        <div class="cd-tabs" id="codeTabs">
+          <button class="cd-tab on" type="button" data-st="all">All <span class="cd-n" data-n="all">0</span></button>
+          <button class="cd-tab" type="button" data-st="active">Unused <span class="cd-n" data-n="active">0</span></button>
+          <button class="cd-tab" type="button" data-st="used up">Redeemed <span class="cd-n" data-n="used up">0</span></button>
+          <button class="cd-tab" type="button" data-st="expired">Expired <span class="cd-n" data-n="expired">0</span></button>
+          <button class="cd-tab" type="button" data-st="revoked">Revoked <span class="cd-n" data-n="revoked">0</span></button>
         </div>
-        <button class="code-refresh" id="codeRefreshBtn" type="button">Refresh</button>
+        <input id="codeSearch" class="cd-search" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Search code or email" aria-label="Search codes">
+        <button class="code-refresh" id="codeRefreshBtn" type="button" title="Refresh">Refresh</button>
       </div>
+
       <div id="codeBody"><p class="code-empty">Loading&hellip;</p></div>
       <p class="cd-msg" id="cdMsg"></p>
     </section>

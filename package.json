@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "npx --yes serve@14 -l 5000 ."
+    "dev": "npx --yes serve@14 -l 8123 ."
   },
   "keywords": ["powerpoint", "pptx", "narration", "whisper", "transformers.js", "ffmpeg.wasm"],
   "license": "MIT"

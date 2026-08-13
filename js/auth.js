@@ -22,6 +22,17 @@
     }).catch(function () {});
   }
   window.b7IsGuest = function () { return !window.b7HasToken(); };
+
+  // What a page should say when it has no token to call the API with. On localhost
+  // that is never "please sign in" — the preview IS the owner; the token just hasn't
+  // arrived, which only happens when the control panel isn't running or the page is
+  // served from a port it doesn't hand tokens to (it answers 8123/8124 — the port
+  // `npm run dev` uses).
+  window.b7NoTokenMsg = function () {
+    return LOCAL
+      ? "Local preview: start the control panel (127.0.0.1:8760) and serve this site on port 8124 to load real data."
+      : "Please sign in.";
+  };
   window.b7Logout = function () {
     try { localStorage.removeItem(TOKEN); localStorage.removeItem(GUEST); } catch (e) {}
     location.href = "login.html";

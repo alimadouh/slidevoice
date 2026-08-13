@@ -194,6 +194,34 @@
   };
   $("tnChatInp").addEventListener("keydown", (e) => { if (e.key === "Enter") $("tnChatSend").click(); });
 
+  // ---- back from MyFatoorah ----
+  // A scan now returns HERE rather than to the humanizer, because this is the page with
+  // the upload box it pays for. The webhook is what grants the credit, so poll for a
+  // real INCREASE over the balance before checkout — a re-buy already had credits, so
+  // ">0" would toast success before the grant landed (or when it never did).
+  (async function () {
+    const paid = new URLSearchParams(location.search).get("paid");
+    if (paid == null) return;
+    history.replaceState(null, "", location.pathname);       // don't re-toast on refresh
+    if (paid === "0") { say("Payment didn't complete — you weren't charged.", true); return; }
+    say("Payment received — activating…");
+    const m0 = await me();
+    const before = (m0 && m0.tn_credits) || 0;
+    let tries = 0;
+    const t = setInterval(async () => {
+      const m = await me();
+      if (m && (m.tn_credits == null || (m.tn_credits || 0) > before)) {
+        clearInterval(t); refreshCredits();
+        say("You're all set — your scan is ready to use.");
+        return;
+      }
+      if (++tries >= 12) {
+        clearInterval(t);
+        say("Payment is processing — it can take a minute. Refresh shortly.");
+      }
+    }, 3000);
+  })();
+
   setInterval(() => { if (!document.hidden) refresh(); }, 30000);
   refreshCredits();
   refresh();
