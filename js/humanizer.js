@@ -413,7 +413,7 @@ function renderMeter(me) {
   if (inLimit && inLimit.textContent.includes("free")) inLimit.textContent = inLimit.textContent.replace("free", "membership");
   const t = Date.parse(b7.expiry);
   const end = Number.isFinite(t) ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-  el.textContent = `Membership: ${b7.words.toLocaleString()} words left` + (end ? ` · ends ${end}` : "");
+  el.textContent = `Membership: ${b7.words.toLocaleString("en-US")} words left` + (end ? ` · ends ${end}` : "");
   el.classList.toggle("low", b7.words <= 2000);
 }
 fetchMe().then(renderMeter);
