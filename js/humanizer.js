@@ -170,6 +170,7 @@ async function humanize() {
       if (p.reason === "b7_words") {
         msgEl.innerHTML = esc("You've used your membership's 10,000 words — ") + '<a href="#plans">Add another month</a>';
         msgEl.classList.remove("ok");
+        fetchMe().then(renderMeter);
       } else {
         msg(p.error);
       }
@@ -399,13 +400,20 @@ function renderMeter(me) {
   if (!el) {
     el = document.createElement("div");
     el.id = "b7-meter";
-    const bar = document.querySelector("#pane-text .usage-bar");
+    const bar = document.querySelector("#outPane .usage-bar");
     if (bar) bar.appendChild(el); else return;
   }
   const b7 = me && me.b7;
-  if (!b7 || !b7.active) { el.textContent = ""; return; }
-  const end = (function () { try { return new Date(b7.expiry).toLocaleDateString([], { month: "short", day: "numeric" }); } catch (e) { return ""; } })();
-  el.textContent = `Membership: ${b7.words.toLocaleString()} words left · ends ${end}`;
+  const inLimit = $("inLimit");
+  if (!b7 || !b7.active) {
+    el.textContent = "";
+    if (inLimit && inLimit.textContent.includes("membership")) inLimit.textContent = inLimit.textContent.replace("membership", "free");
+    return;
+  }
+  if (inLimit && inLimit.textContent.includes("free")) inLimit.textContent = inLimit.textContent.replace("free", "membership");
+  const t = Date.parse(b7.expiry);
+  const end = Number.isFinite(t) ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+  el.textContent = `Membership: ${b7.words.toLocaleString()} words left` + (end ? ` · ends ${end}` : "");
   el.classList.toggle("low", b7.words <= 2000);
 }
 fetchMe().then(renderMeter);
