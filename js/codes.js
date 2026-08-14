@@ -91,7 +91,10 @@
       '<button class="cd-copy" type="button" data-code="' + esc(c.code) + '" title="Copy code">' +
         '<span class="cd-code">' + esc(c.code) + "</span></button>" +
       '<span class="cd-sub">' + sub(c) + "</span>" +
-      '<span class="cd-pill st-' + c.state.replace(" ", "-") + '">' +
+      // Through esc() like everything else here: c.state is server-typed and the four
+      // known values are in LABEL above, but this one lands in a CLASS attribute, which
+      // is the one place on this page a raw string would be worth something.
+      '<span class="cd-pill st-' + esc(String(c.state || "").replace(" ", "-")) + '">' +
         esc(LABEL[c.state] || c.state) + "</span>" +
       (live ? '<button class="code-btn cd-rev" type="button" data-code="' + esc(c.code) +
               '">Revoke</button>' : '<span class="cd-rev-gap"></span>') +

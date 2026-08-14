@@ -47,6 +47,11 @@
         headers: Object.assign({ "Content-Type": "application/json" }, H),
         body: JSON.stringify({ plan: "B7oothScan", quantity: 1 }),
       })).json();
+      // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
+      if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
+        say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
+        return;
+      }
       if (d && d.url) { location.href = d.url; return }
       say((d && d.error) || "Couldn't start checkout. Please try again.", true);
     } catch (e) { say("Couldn't reach the payment gateway. Please try again.", true); }
@@ -105,12 +110,17 @@
 
   // ---- my orders ----
   function badge(st) { return st === "done" ? `<span class="tn-badge done">Completed</span>` : `<span class="tn-badge pend">Pending</span>`; }
+  // Number() rather than esc() on the two percentages: they land in a style attribute and
+  // in text, they are always numbers coming out of the API, and a number is the only thing
+  // either place should accept. Same reason as esc() everywhere else — this file's rule is
+  // that nothing reaches innerHTML raw, and these were the last three that did.
   function gauge(label, v, warnAt, badAt) {
     if (v == null) return "";
     const cls = v < warnAt ? "good" : (v < badAt ? "warn" : "bad");
-    const w = Math.max(3, Math.min(100, v));
+    const num = Number(v) || 0;
+    const w = Math.max(3, Math.min(100, num));
     return `<div class="tn-gauge ${cls}">
-      <div class="tn-gauge-top"><span>${label}</span><span class="tn-gauge-val">${v}%</span></div>
+      <div class="tn-gauge-top"><span>${esc(label)}</span><span class="tn-gauge-val">${num}%</span></div>
       <div class="tn-gauge-bar"><i style="width:${w}%"></i></div>
     </div>`;
   }
@@ -121,17 +131,17 @@
         (o.result_note ? `<p class="tn-note">“${esc(o.result_note)}”</p>` : "")
       : `<div class="tn-waiting"><span class="tn-spin"></span> Pending — we're running it on Turnitin.</div>`;
     const dl = (o.status === "done")
-      ? `${o.has_ai_report ? `<button class="tn-dl" data-id="${o.id}" data-kind="ai">⬇ AI report</button>` : ""}` +
-        `${o.has_sim_report ? `<button class="tn-dl" data-id="${o.id}" data-kind="sim">⬇ Similarity report</button>` : ""}`
+      ? `${o.has_ai_report ? `<button class="tn-dl" data-id="${esc(o.id)}" data-kind="ai">⬇ AI report</button>` : ""}` +
+        `${o.has_sim_report ? `<button class="tn-dl" data-id="${esc(o.id)}" data-kind="sim">⬇ Similarity report</button>` : ""}`
       : "";
-    const unread = o.chat_unread ? `<span class="tn-unread">${o.chat_unread}</span>` : "";
+    const unread = o.chat_unread ? `<span class="tn-unread">${Number(o.chat_unread) || 0}</span>` : "";
     const keep = (o.status === "done" && (o.has_ai_report || o.has_sim_report))
       ? `<p class="tn-keep">Reports stay downloadable for 7 days — save them soon.</p>` : "";
     return `<div class="tn-pane tn-order">
       <div class="tn-row"><span class="tn-file">📄 ${esc(o.filename || "document")}</span>${badge(o.status)}</div>
-      <div class="tn-meta">${o.words ? o.words.toLocaleString() + " words · " : ""}${fmt(o.created)}</div>
+      <div class="tn-meta">${o.words ? (Number(o.words) || 0).toLocaleString() + " words · " : ""}${esc(fmt(o.created))}</div>
       ${scores}
-      <div class="tn-actions">${dl}<button class="tn-chatbtn" data-id="${o.id}" data-name="${esc(o.filename || "document")}">💬 Chat${unread}</button></div>
+      <div class="tn-actions">${dl}<button class="tn-chatbtn" data-id="${esc(o.id)}" data-name="${esc(o.filename || "document")}">💬 Chat${unread}</button></div>
       ${keep}
     </div>`;
   }

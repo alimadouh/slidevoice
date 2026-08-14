@@ -17,6 +17,12 @@
     if (btn) {
       btn.textContent = eff === "dark" ? "☀" : "☾";   // ☀ when dark / ☾ when light
       btn.setAttribute("aria-label", eff === "dark" ? "Switch to light theme" : "Switch to dark theme");
+      // Wire the click here rather than in an onclick="" attribute. login.html is the one
+      // page with no app shell, so its button used to carry the handler inline — and that
+      // single attribute was enough to keep 'unsafe-inline' alive in the CSP for the whole
+      // site. Assignment, not addEventListener: shell.js sets the same property on the
+      // pages it builds, so the two can never stack into a double toggle.
+      btn.onclick = window.toggleTheme;
     }
   }
 

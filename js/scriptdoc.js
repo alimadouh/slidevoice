@@ -1,7 +1,7 @@
 // scriptdoc.js — turn an uploaded script into a map of slideNumber -> text.
 // Supports .docx (Word), .txt and .md. Recognizes "Slide N" headings; if none
 // are found, falls back to splitting on blank lines in upload order.
-import JSZip from 'https://esm.sh/jszip@3.10.1';
+import JSZip from '../vendor/jszip/jszip.mjs';        // self-hosted; see js/pptx.js
 
 function decodeEntities(s) {
   return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>')

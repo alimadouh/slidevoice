@@ -16,7 +16,10 @@ const $ = (id) => document.getElementById(id);
 // Includes the single quote, unlike an earlier copy of this helper — so it is safe in a
 // single-quoted attribute too, matching the esc() in turnitin.js/chats.js/codes.js and
 // removing the trap where a copy-paste into an attribute context would be exploitable.
-const esc = (s) => (s || "").replace(/[&<>"']/g, (c) =>
+// String() first, like those four: `(s || "")` threw a TypeError the moment a server
+// field came back as a number or an object, and the exception blanked the whole pane
+// mid-render instead of printing the value.
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -110,6 +113,22 @@ function quotaMsg(text) {
   msgEl.classList.remove("ok");
 }
 const wordCount = (s) => (s.match(/\S+/g) || []).length;
+const fmtNum = (v) => Number(v || 0).toLocaleString("en-US");
+
+// Which front-end created this account, straight from /api/auth/me.
+//
+// It matters because the API fills in a `b7` block for EVERY account, not just ours: a
+// Grade A account signed in on b7ooth-ai.com came back with {trial: 150} and the pill
+// dutifully said "150 free words left" — a number that never moved, because that account
+// actually spends Grade A's own refilling daily pool (api.py: _metered_branch_user reads
+// users.source, so a non-b7ooth account never touches a B7oothKw pool at all).
+//
+// users.source is the only thing that tells the two apart, so nothing here guesses. If
+// the API doesn't send it, brand is "" and every B7oothKw-specific number is withheld —
+// an empty pill beats a confident wrong one.
+const brandOf = (me) => String((me && (me.source || me.brand)) ||
+                               (me && me.b7 && me.b7.source) || "");
+const isB7Account = (me) => brandOf(me) === "b7ooth";
 
 // The input bar's right side now carries your remaining words, so the old static
 // "Up to 500 words per run" is gone. Say it here instead — but only once the text
@@ -132,8 +151,8 @@ function setInWords() {
   const cap = short ? spendable : PER_RUN;
   const over = perRunKnown && n > cap;
   const note = short
-    ? ` · only ${cap.toLocaleString("en-US")} word${cap === 1 ? "" : "s"} left`
-    : ` · max ${PER_RUN.toLocaleString("en-US")} per run`;
+    ? (cap > 0 ? ` · only ${fmtNum(cap)} word${cap === 1 ? "" : "s"} left` : " · no words left")
+    : ` · max ${fmtNum(PER_RUN)} per run`;
   $("inWords").innerHTML = `<b>${n}</b> words` + (over ? note : "");
   $("inWords").classList.toggle("over", over);
 }
@@ -519,49 +538,72 @@ function renderMeter(me) {
   // missing from the pane where a single upload can spend 10,000 of them.
   const els = document.querySelectorAll(".b7-meter");
   if (!els.length) return;
-  const n = (v) => Number(v || 0).toLocaleString("en-US");
+  const n = fmtNum;
   const dayOf = (iso) => {
     const t = Date.parse(iso);
     return Number.isFinite(t)
       ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
   };
   const b7 = me && me.b7;
+  const brand = brandOf(me), mine = brand === "b7ooth";
   let html = "", cls = "", tip = "";
   spendable = null;
-  PER_RUN = (me && (me.is_admin || (b7 && b7.active))) ? PER_RUN_MEMBER : PER_RUN_FREE;
-  perRunKnown = !!me;                 // a failed /auth/me leaves the note suppressed
+  PER_RUN = (me && (me.is_admin || (mine && b7 && b7.active))) ? PER_RUN_MEMBER : PER_RUN_FREE;
+  // The branch per-run cap only binds accounts the branch actually meters, so the note
+  // stays quiet for a Grade A account here — and for an unknown brand, where it would be
+  // the same guess as the pill.
+  perRunKnown = !!me && (mine || !!me.is_admin);
 
   if (me && me.is_admin) {
     // Staff spend from neither pool, so there is no balance to count down — but an
     // empty bar reads as a broken meter rather than as "nothing to worry about".
     // Grade A puts "Unlimited" in this exact spot; say the same thing here.
     html = "Unlimited";
-  } else if (b7 && b7.active) {
+  } else if (mine && b7 && b7.active) {
     spendable = b7.words;
     const end = dayOf(b7.expiry);
     html = `<b>${n(b7.words)}</b> words left` + (end ? ` · ends ${end}` : "");
     cls = b7.words <= 2000 ? "low" : "";
-  } else if (b7 && b7.trial != null) {
+  } else if (mine && b7 && b7.trial != null) {
     // No live membership. The trial is what's spendable; anything in b7.words is left
     // over from a month that ended. Those words are NOT lost — a re-buy stacks on top
     // of them — so saying only "150 free words left" understates the account.
     const trial = b7.trial, frozen = Number(b7.words || 0);
+    // A redeemed code lands in the SAME counter as the trial (auth.redeem_code adds to
+    // b7_trial), so a balance above the trial's own size has bought words inside it —
+    // and "1,000 free words left" is then the one thing it certainly isn't.
+    const total = Number(b7.trial_total || 0);
+    const granted = total > 0 && trial > total;
     spendable = trial;
-    if (frozen > 0) tip = "Words from a month that ended. Buy another month and they're yours again.";
+    if (frozen > 0) tip = "Your month has ended. Buy another month and these words are yours again.";
     if (trial > 0) {
-      html = `<b>${n(trial)}</b> free words left` + (frozen > 0 ? ` · <b>${n(frozen)}</b> waiting` : "");
+      html = `<b>${n(trial)}</b> ${granted ? "words" : "free words"} left` +
+             (frozen > 0 ? ` · <b>${n(frozen)}</b> waiting` : "");
       cls = trial <= 50 ? "low" : "";
     } else if (frozen > 0) {
       html = `<b>${n(frozen)}</b> words waiting · <a href="pricing.html">renew</a>`;
       cls = "low";
     } else {
-      html = 'No free words left · <a href="pricing.html">See plans</a>';
+      // Not "no FREE words left": by this point the account may have spent a redeemed
+      // grant, or a month, or both.
+      html = 'No words left · <a href="pricing.html">See plans</a>';
       cls = "out";
+    }
+  } else if (brand && me && !me.error) {
+    // Signed in on an account from our other site, Grade A. It holds no B7oothKw balance
+    // whatsoever, and a humanize started here comes out of that site's daily words — so
+    // that is the only number worth showing, and nothing at all if the API didn't send it
+    // (an unlimited plan reports null).
+    const left = me.usage && me.usage.daily_words_remaining;
+    if (left != null) {
+      html = `<b>${n(left)}</b> words left today`;
+      cls = left <= 50 ? "out" : (left <= 200 ? "low" : "");
+      tip = "This account was created on Grade A, so it spends that site's daily words.";
     }
   }
   // Empty means no pill at all (the CSS hangs on :not(:empty)) — that's the right state
-  // for a signed-out visitor or a backend that predates the trial, where any number
-  // would be a guess.
+  // for a signed-out visitor, and for a backend that doesn't say which site made the
+  // account, where any number would be a guess.
   els.forEach((el) => {
     el.innerHTML = html ? "✦ " + html : "";
     el.classList.remove("low", "out");
@@ -574,14 +616,34 @@ function renderMeter(me) {
 
 // Both file tools are members-only — a file's words come out of the membership's
 // 10,000 — and the page can know that before the upload instead of after it. Only lock
-// on a POSITIVE answer: if /auth/me didn't come back, leave the panes open rather than
-// shutting a paying member out over a hiccup.
+// on a POSITIVE answer: if /auth/me didn't come back, or didn't say which site made the
+// account, leave the panes open rather than shutting a paying member out over a hiccup.
+// A Grade A account is deliberately NOT locked either: its uploads never reach the
+// branch pool, they go through that site's own plan, which may well allow them.
 function applyGate(me) {
   const b7 = me && me.b7;
-  const locked = !!b7 && !b7.active && !(me && me.is_admin);
+  const locked = isB7Account(me) && !!b7 && !b7.active && !(me && me.is_admin);
+  // A month that ended is not the same story as never having bought one. The stock
+  // "your free words still work on the text humanizer" is wrong for a lapsed member —
+  // they may have none left, and the sentence says nothing about the words that ARE
+  // sitting there — so swap it for what actually happened, matching the pill above.
+  const waiting = locked ? Number((b7 && b7.words) || 0) : 0;
   ["wd-lock", "pp-lock"].forEach((id) => {
     const lock = $(id);
-    if (lock) lock.classList.toggle("hidden", !locked);
+    if (!lock) return;
+    lock.classList.toggle("hidden", !locked);
+    const title = lock.querySelector(".feat-lock-title");
+    const sub = lock.querySelector(".feat-lock-sub");
+    if (!title || !sub) return;
+    if (lock.dataset.stockTitle == null) {          // remember the markup's own wording once
+      lock.dataset.stockTitle = title.textContent;
+      lock.dataset.stockSub = sub.textContent;
+    }
+    title.textContent = waiting > 0 ? "Your month has ended" : lock.dataset.stockTitle;
+    sub.textContent = waiting > 0
+      ? `You still have ${fmtNum(waiting)} words on this account. Renew and they're yours ` +
+        `again — this humanizer with them.`
+      : lock.dataset.stockSub;
   });
 }
 fetchMe().then(renderMeter);

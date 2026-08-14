@@ -63,12 +63,17 @@
       '<div class="b7-modal" role="dialog" aria-modal="true">' +
         '<div class="b7-modal-ic">🔒</div>' +
         '<h3>Log in to continue</h3>' +
-        '<p>' + (message || "Sign in with Google or your phone to use this tool. It’s free.") + '</p>' +
+        '<p></p>' +
         '<div class="b7-row">' +
           '<button class="btn btn-primary" id="b7Login">Log in</button>' +
           '<button class="btn btn-ghost" id="b7Cancel">Not now</button>' +
         '</div>' +
       '</div>';
+    // The sentence goes in as TEXT, never as markup. Every caller today passes a literal,
+    // but the habit everywhere else in this codebase is say(d.error) — one careless
+    // b7PromptLogin(d.error) would otherwise turn a server string into script on the page.
+    ovl.querySelector(".b7-modal p").textContent =
+      message || "Sign in with Google or your phone to use this tool. It’s free.";
     document.body.appendChild(ovl);
     function close() { open = false; ovl.remove(); document.removeEventListener("keydown", onKey); }
     function onKey(e) { if (e.key === "Escape") close(); }
@@ -76,6 +81,23 @@
     ovl.querySelector("#b7Cancel").onclick = close;
     ovl.addEventListener("click", function (e) { if (e.target === ovl) close(); });
     document.addEventListener("keydown", onKey);
+  };
+
+  // ---- where a checkout link is allowed to send you ----
+  // /api/myfatoorah/checkout hands back MyFatoorah's own InvoiceURL and the page walks
+  // straight to it. That is the highest-trust click on the site — the customer is about
+  // to type a card number — so it is the last place to follow an unchecked URL: anything
+  // that ever influenced that response would get a one-hop redirect out of a page the
+  // customer believes is ours. Every host the payment rail uses is under myfatoorah.com
+  // (src/server/myfatoorah_client.py: api / apitest / api-ae / api-sa / api-qa / api-eg,
+  // and the portal the invoice itself lives on), so match that and nothing else, rather
+  // than hardcoding one portal hostname that a country switch would break.
+  window.b7PayUrlOk = function (url) {
+    try {
+      var u = new URL(String(url), location.href);
+      return u.protocol === "https:" &&
+             (u.hostname === "myfatoorah.com" || /\.myfatoorah\.com$/.test(u.hostname));
+    } catch (e) { return false; }
   };
 
   // ---- block a set of action buttons for guests (capture phase, before app handlers) ----

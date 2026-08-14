@@ -77,8 +77,14 @@
       const d = await (await fetch(API + "/api/myfatoorah/checkout", {
         method: "POST", headers: JH, body: JSON.stringify({ plan, quantity: 1 }),
       })).json();
-      if (d && d.url) { location.href = d.url; return }  // stays disabled; we're leaving the page
-      say((d && d.error) || "Couldn't start checkout. Please try again.", true);
+      // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
+      if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
+        say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
+      } else if (d && d.url) {
+        location.href = d.url; return;                  // stays disabled; we're leaving the page
+      } else {
+        say((d && d.error) || "Couldn't start checkout. Please try again.", true);
+      }
     } catch (e) {
       say("Couldn't reach the payment gateway. Please try again.", true);
     }

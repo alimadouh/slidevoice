@@ -1,6 +1,8 @@
 // pptx.js - parse a .pptx, read slide order/text, and embed narration audio.
 // Pure JS (no browser-only APIs) so it can be unit-tested under Node too.
-import JSZip from 'https://esm.sh/jszip@3.10.1';
+// Self-hosted, like the ffmpeg runtime next to it: an esm.sh entry in the CSP allowlist
+// buys nothing, since that host will serve any npm package anyone asks it for.
+import JSZip from '../vendor/jszip/jszip.mjs';
 
 const T_MEDIA = 'http://schemas.microsoft.com/office/2007/relationships/media';
 const T_AUDIO = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio';
