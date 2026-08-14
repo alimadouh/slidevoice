@@ -107,7 +107,13 @@
    stacked under the thing you came to use, so you scroll past it to reach nothing.
    The upload card says what to do on its own. Owner call 2026-08-13. */
 @media (max-width:760px){
-  .ft-rail{display:none}
+  /* Not display:none on the rail itself: the Turnitin trademark notice lives inside it,
+     and a legal line must not vanish because a layout column did. Hide the rail's
+     contents, keep that one paragraph, and strip the panel chrome so what's left reads
+     as a plain footnote rather than an empty card. */
+  .ft-rail{background:none;border:0;padding:0;position:static}
+  .ft-rail > *{display:none}
+  .ft-rail > .ft-tm{display:block;margin:4px 0 0}
 }
 
 /* ---------- plan cards ---------- */

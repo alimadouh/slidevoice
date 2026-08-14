@@ -18,7 +18,11 @@
 </div>
 <header class="topbar">
   <div class="bar-top">
-    <a class="brand logo-link lz-toplogo" href="./" aria-label="B7oothKw — home">
+    <!-- Not "./": the site root redirects to the humanizer, which bounces a signed-out
+         visitor straight back here, so the wordmark reloaded the page you're already on.
+         Point it at the plans page — public, and the thing someone who isn't signed in
+         most likely wants to see. -->
+    <a class="brand logo-link lz-toplogo" href="pricing.html" aria-label="B7oothKw — plans">
       <svg class="logo-svg" viewBox="0 0 1243 360" role="img" aria-label="B7oothKw" xmlns="http://www.w3.org/2000/svg">
         <g class="lg-cap" fill="#16161a">
           <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>
@@ -44,7 +48,11 @@
   <div class="lz-hero">
   <div class="lz-left">
     <div class="lz-brandblock">
-      <span class="lz-badge lz-badge-top"><span class="pulse"></span> The #1 AI humanizer — undetectable by design</span>
+      <!-- Was "The #1 AI humanizer — undetectable by design". Both halves were claims the
+           product does not make: the FAQ says plainly that no humanizer can guarantee a
+           detector score, so the landing page promising the opposite is the one that has
+           to give. -->
+      <span class="lz-badge lz-badge-top"><span class="pulse"></span> Built for Kuwait &mdash; pay in KWD with KNET</span>
       <svg class="lz-cap" viewBox="30 86 305 205" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
         <g class="lg-cap" fill="#16161a">
           <polygon points="178.0,96.08 318.4,146.0 178.0,195.92 37.6,146.0"/>

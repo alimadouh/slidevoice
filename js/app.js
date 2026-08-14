@@ -27,6 +27,13 @@ function wireDrop(zoneSel, inputSel, onFiles, canAdd) {
     if (blocked()) return;                         // already filled — must remove first
     input.click();
   });
+  // The zones are role="button" tabindex="0", so a keyboard user can reach them — and
+  // until now nothing happened when they pressed Enter or Space.
+  zone.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (!blocked()) input.click();
+  });
   zone.addEventListener('dragover', (e) => { e.preventDefault(); if (!blocked()) zone.classList.add('drag'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
   zone.addEventListener('drop', (e) => {

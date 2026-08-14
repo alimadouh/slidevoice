@@ -34,6 +34,20 @@
       : "Please sign in.";
   };
   window.b7Logout = function () {
+    // Tell the server to end the session BEFORE clearing local storage. Until now logout
+    // only forgot the token locally, so the session row stayed valid for its full 90-day
+    // life — a token captured on a shared machine (or via any future XSS) could not be
+    // revoked by the user at all. keepalive lets the request outlive the navigation.
+    var t = get(TOKEN);
+    var api = window.HUMANIZER_API || "";
+    if (t && t !== "guest" && api) {
+      try {
+        fetch(api + "/api/auth/logout", {
+          method: "POST", keepalive: true,
+          headers: { "Authorization": "Bearer " + t },
+        });
+      } catch (e) {}
+    }
     try { localStorage.removeItem(TOKEN); localStorage.removeItem(GUEST); } catch (e) {}
     location.href = "login.html";
   };

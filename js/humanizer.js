@@ -13,8 +13,11 @@ const LEVEL = 8;                          // Model 2 ignores level; fixed reques
 const RED = 0.5, AMBER = 0.305;           // sentence colour thresholds
 
 const $ = (id) => document.getElementById(id);
-const esc = (s) => (s || "").replace(/[&<>"]/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// Includes the single quote, unlike an earlier copy of this helper — so it is safe in a
+// single-quoted attribute too, matching the esc() in turnitin.js/chats.js/codes.js and
+// removing the trap where a copy-paste into an attribute context would be exploitable.
+const esc = (s) => (s || "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Guests can see the UI but must log in to actually run a tool.
@@ -119,14 +122,18 @@ let PER_RUN = PER_RUN_FREE;
 // free 150 the per-run cap is unreachable, so quoting 500 there was noise: the real
 // ceiling is whichever is smaller.
 let spendable = null;
+// Until /api/auth/me answers we don't know which cap applies, and guessing the free 500
+// told a paying member the wrong number for the first second of every page load. Stay
+// quiet until renderMeter has set the real one.
+let perRunKnown = false;
 function setInWords() {
   const n = wordCount(input.value);
   const short = spendable != null && spendable < PER_RUN;
   const cap = short ? spendable : PER_RUN;
-  const over = n > cap;
+  const over = perRunKnown && n > cap;
   const note = short
     ? ` · only ${cap.toLocaleString("en-US")} word${cap === 1 ? "" : "s"} left`
-    : ` · max ${PER_RUN} per run`;
+    : ` · max ${PER_RUN.toLocaleString("en-US")} per run`;
   $("inWords").innerHTML = `<b>${n}</b> words` + (over ? note : "");
   $("inWords").classList.toggle("over", over);
 }
@@ -522,9 +529,13 @@ function renderMeter(me) {
   let html = "", cls = "", tip = "";
   spendable = null;
   PER_RUN = (me && (me.is_admin || (b7 && b7.active))) ? PER_RUN_MEMBER : PER_RUN_FREE;
+  perRunKnown = !!me;                 // a failed /auth/me leaves the note suppressed
 
   if (me && me.is_admin) {
-    // Staff spend from neither pool; a "150 free words" pill would just be wrong.
+    // Staff spend from neither pool, so there is no balance to count down — but an
+    // empty bar reads as a broken meter rather than as "nothing to worry about".
+    // Grade A puts "Unlimited" in this exact spot; say the same thing here.
+    html = "Unlimited";
   } else if (b7 && b7.active) {
     spendable = b7.words;
     const end = dayOf(b7.expiry);
@@ -579,6 +590,11 @@ fetchMe().then(renderMeter);
 (function () {
   const paid = new URLSearchParams(location.search).get("paid");
   if (paid == null) return;
+  // msg() writes into #hz-msg, which lives inside the TEXT pane. MyFatoorah can return
+  // to humanizer.html#pptx or #word, and then the whole payment conversation — including
+  // "Payment didn't complete" — would be written into a hidden element. Come back to the
+  // text pane so the customer actually sees what happened to their money.
+  showTab("text");
   history.replaceState(null, "", location.pathname);      // don't re-toast on refresh
   if (paid === "0") { msg("Payment didn't complete — you weren't charged.", false); return; }
   msg("Payment received — activating…", true);

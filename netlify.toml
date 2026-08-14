@@ -1,49 +1,38 @@
-# SlideVoice — static site, no build step. Netlify just serves the files.
+# B7oothKw — static site, no build step. Netlify just serves the files.
 [build]
   publish = "."
 
-# Long-cache the immutable-ish assets; always revalidate the HTML entry points.
+# One header block for every path. Two things it does:
+#
+# 1. Cache: revalidate HTML, CSS and JS on every load. None of the filenames are
+#    fingerprinted, so a long cache leaves returning visitors with fresh HTML over a
+#    day-old stylesheet — which is exactly what happened when the Turnitin note field
+#    rendered as a raw browser textarea for 24 hours after a class was renamed.
+#    Revalidating costs a 304 on files measured in single-digit KB.
+#
+# 2. Security headers, which used to be declared per-page and so were missing on half the
+#    site (login, turnitin, codes, chats, narrator, whatsapp, and the extensionless
+#    /pricing form used in ads). The important ones:
+#      - frame-ancestors 'none' + X-Frame-Options: the site can't be framed, closing the
+#        clickjacking attack where an invisible iframe of turnitin.html/pricing.html sits
+#        under a decoy button and a single click burns a scan or starts a payment.
+#      - connect-src: the page may only talk to its own API, so an injected script can't
+#        exfiltrate the localStorage session token to an arbitrary host.
+#      - object-src/base-uri 'none': no plugins, no <base> hijack.
+#
+# 'unsafe-inline' is still permitted for script and style, because two inline scripts
+# (index.html's redirect, narrator.html's gate call) and many inline style="" attributes
+# (shell.js, humanizer.js, turnitin.js) rely on it. Moving those two scripts into files
+# lets 'unsafe-inline' come off script-src — the single highest-value follow-up, since it
+# is what would neuter an injected inline <script>. The CDN hosts (esm.sh, jsdelivr,
+# huggingface) are the Slide Narrator's runtime modules and model; they come off the day
+# those are vendored locally like ffmpeg already is.
 [[headers]]
-  for = "/index.html"
+  for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
-
-[[headers]]
-  for = "/humanizer.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
-
-[[headers]]
-  for = "/pricing.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
-
-[[headers]]
-  for = "/redeem.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
-
-[[headers]]
-  for = "/support.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
-
-[[headers]]
-  for = "/css/*"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-
-[[headers]]
-  for = "/js/*"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "geolocation=(), camera=(), payment=(), usb=()"
+    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://esm.sh https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob: https://api.gahumanizer.com https://accounts.google.com https://esm.sh https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; frame-src https://accounts.google.com; upgrade-insecure-requests"

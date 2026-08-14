@@ -65,8 +65,17 @@
     };
   }
   $("tnFile").onchange = showFile;
-  // Drag & drop straight onto the zone.
   const drop = $("tnDrop");
+  // Click (and Enter/Space, since the zone is role="button" tabindex="0") opens the
+  // picker. Without this the only way in was drag-and-drop — which phones do not have,
+  // so the word "browse" did nothing and the paid scan could not be started at all.
+  // The input lives INSIDE the zone, so its own click bubbles back here; ignore that one
+  // rather than leaning on the browser's re-entrancy flag to break the loop.
+  drop.addEventListener("click", (e) => { if (e.target !== $("tnFile")) $("tnFile").click(); });
+  drop.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("tnFile").click(); }
+  });
+  // Drag & drop straight onto the zone.
   ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
   ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
   drop.addEventListener("drop", (e) => {
