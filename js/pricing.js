@@ -65,7 +65,7 @@
 
   // ---- buy ----
   let busy = false;
-  async function buyPlan(plan, btn) {
+  async function buyPlan(plan, btn, quantity) {
     if (!TOKEN) {
       if (window.b7PromptLogin) b7PromptLogin("Sign in first — your purchase is tied to your account.");
       else location.href = "login.html";
@@ -75,7 +75,8 @@
     busy = true; btn.disabled = true; say("Opening checkout…");
     try {
       const d = await (await fetch(API + "/api/myfatoorah/checkout", {
-        method: "POST", headers: JH, body: JSON.stringify({ plan, quantity: 1 }),
+        method: "POST", headers: JH,
+        body: JSON.stringify({ plan, quantity: quantity || 1 }),
       })).json();
       // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
       if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
@@ -91,8 +92,16 @@
     busy = false; btn.disabled = false;
   }
 
+  // Scans stack in one invoice, so the card sells N of them. The month does not — a
+  // second month is a re-buy that extends the same membership, and buyPlan sends 1.
+  const SCAN_QTY = b7Qty.mount({
+    input: $("prQty"), minus: $("prQtyMinus"), plus: $("prQtyPlus"),
+    label: $("prQtyLbl"), total: $("prQtyTotal"), button: $("buy-scan"),
+    plan: "B7oothScan", one: "Buy a scan", many: "Buy {n} scans",
+  });
+
   $("buy-month").onclick = (e) => buyPlan("B7oothMonth", e.currentTarget);
-  $("buy-scan").onclick = (e) => buyPlan("B7oothScan", e.currentTarget);
+  $("buy-scan").onclick = (e) => buyPlan("B7oothScan", e.currentTarget, SCAN_QTY.value());
 
   me().then(renderBalance);
 })();

@@ -43,6 +43,16 @@
             <li><b>Never expires</b></li>
             <li class="muted">Doesn't include humanizing</li>
           </ul>
+          <div class="tno-qty plan-qty">
+            <span class="tno-qty-lbl" id="prQtyLbl">Scans</span>
+            <div class="tno-step" role="group" aria-labelledby="prQtyLbl">
+              <button type="button" class="tno-step-btn" id="prQtyMinus" aria-label="One less scan">&minus;</button>
+              <input type="number" class="tno-step-in" id="prQty" value="1" min="1" max="20"
+                     inputmode="numeric" aria-label="Number of scans to buy">
+              <button type="button" class="tno-step-btn" id="prQtyPlus" aria-label="One more scan">+</button>
+            </div>
+            <span class="tno-qty-total" id="prQtyTotal"></span>
+          </div>
           <button id="buy-scan" class="btn btn-ghost plan-btn">Buy a scan</button>
           <p class="plan-fine">Results within 6 hours.</p>
         </div>
@@ -71,6 +81,7 @@
 <script src="js/auth.js"></script>
 <script src="js/config.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/qty.js"></script>
 <script src="js/pricing.js"></script>
 </body>
 </html>

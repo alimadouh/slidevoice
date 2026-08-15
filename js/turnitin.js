@@ -20,24 +20,36 @@
     try { return await (await fetch(API + "/api/auth/me", { headers: H })).json(); }
     catch (e) { return null; }
   }
+  // How many scans to buy. The cap, the clamping and the total all live in js/qty.js,
+  // because the pricing card sells the same product and the two must not disagree.
+  const STEP = b7Qty.mount({
+    input: $("tnQty"), minus: $("tnQtyMinus"), plus: $("tnQtyPlus"),
+    label: $("tnQtyLbl"), total: $("tnQtyTotal"), button: $("tnBuy"),
+    plan: "B7oothScan", one: "Buy a scan", many: "Buy {n} scans",
+  });
+  const qty = STEP.value;
+
   // The credits strip: how many scans you hold, and the buy button beside it. Styled
   // green when you have some and amber when you don't, like Grade A's.
   async function refreshCredits() {
     const box = $("tnCredits"), txt = $("tnCredTxt"), buy = $("tnBuy");
+    const qbox = $("tnQtyBox");
     const show = (on) => box.classList.toggle("hidden", !on);
     box.classList.remove("has", "empty", "staff");
     const m = await me();
-    if (!m || m.error) { show(false); buy.classList.add("hidden"); return; }
+    if (!m || m.error) { show(false); buy.classList.add("hidden"); qbox.classList.add("hidden"); return; }
     const n = m.tn_credits;                       // null = staff (unlimited)
     if (n == null) {
       txt.innerHTML = "<b>Unlimited</b> scans on this account.";
-      box.classList.add("staff"); show(true); buy.classList.add("hidden"); return;
+      box.classList.add("staff"); show(true);
+      buy.classList.add("hidden"); qbox.classList.add("hidden"); return;
     }
     txt.innerHTML = n > 0
       ? `<b>${n}</b> scan${n === 1 ? "" : "s"} available.`
       : "No scans yet &mdash; buy one to submit your document.";
     box.classList.add(n > 0 ? "has" : "empty");
-    show(true); buy.classList.remove("hidden");
+    show(true); buy.classList.remove("hidden"); qbox.classList.remove("hidden");
+    STEP.render();
   }
   $("tnBuy").onclick = async () => {
     if (!TOKEN) { if (window.b7PromptLogin) b7PromptLogin("Sign in to buy a scan."); return; }
@@ -45,7 +57,7 @@
       const d = await (await fetch(API + "/api/myfatoorah/checkout", {
         method: "POST",
         headers: Object.assign({ "Content-Type": "application/json" }, H),
-        body: JSON.stringify({ plan: "B7oothScan", quantity: 1 }),
+        body: JSON.stringify({ plan: "B7oothScan", quantity: qty() }),
       })).json();
       // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
       if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {

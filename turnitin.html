@@ -33,7 +33,17 @@
         <div class="tno-upcard">
           <div class="tno-credits hidden" id="tnCredits">
             <span class="tno-cred-txt" id="tnCredTxt"></span>
-            <button class="tno-buy-scan hidden" id="tnBuy">Buy a scan &mdash; 3 KWD</button>
+            <div class="tno-qty hidden" id="tnQtyBox">
+              <span class="tno-qty-lbl" id="tnQtyLbl">Scans</span>
+              <div class="tno-step" role="group" aria-labelledby="tnQtyLbl">
+                <button type="button" class="tno-step-btn" id="tnQtyMinus" aria-label="One less scan">&minus;</button>
+                <input type="number" class="tno-step-in" id="tnQty" value="1" min="1" max="20"
+                       inputmode="numeric" aria-label="Number of scans to buy">
+                <button type="button" class="tno-step-btn" id="tnQtyPlus" aria-label="One more scan">+</button>
+              </div>
+              <span class="tno-qty-total" id="tnQtyTotal"></span>
+            </div>
+            <button class="tno-buy-scan hidden" id="tnBuy">Buy a scan</button>
           </div>
           <div class="tno-uparea">
             <div class="upload-zone upz-big" id="tnDrop" role="button" tabindex="0" aria-label="Choose a file to check on Turnitin">
@@ -99,6 +109,7 @@
 <script src="js/auth.js"></script>
 <script src="js/config.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/qty.js"></script>
 <script src="js/turnitin.js"></script>
 </body>
 </html>

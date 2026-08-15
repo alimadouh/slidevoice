@@ -62,6 +62,27 @@
 .tno-buy-scan:hover{filter:brightness(1.08)}
 .tno-buy-scan.hidden{display:none}
 
+/* how many scans to buy — the strip wraps, so on a narrow screen the stepper drops
+   to its own row rather than squeezing the balance text out of the way */
+.tno-qty{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tno-qty.hidden{display:none}
+.tno-qty-lbl{color:var(--mut);font-size:12.5px}
+.tno-step{display:flex;align-items:center;background:var(--panel);border:1px solid var(--line2);
+  border-radius:9px;overflow:hidden}
+.tno-step-btn{background:none;border:0;color:var(--ink);font-family:inherit;font-size:16px;
+  font-weight:700;line-height:1;padding:7px 11px;cursor:pointer}
+.tno-step-btn:hover:not(:disabled){background:var(--panel2)}
+.tno-step-btn:disabled{color:var(--mut);opacity:.45;cursor:default}
+.tno-step-in{width:44px;text-align:center;background:none;border:0;border-left:1px solid var(--line2);
+  border-right:1px solid var(--line2);color:var(--ink);font-family:inherit;font-size:13.5px;
+  font-weight:800;padding:7px 0;-moz-appearance:textfield}
+.tno-step-in::-webkit-outer-spin-button,
+.tno-step-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.tno-step-in:focus{outline:2px solid var(--acc);outline-offset:-2px}
+.tno-qty-total{font-size:13.5px;font-weight:800;color:var(--ink)}
+/* on a plan card the stepper is its own row above the button, not inline beside it */
+.plan-qty{justify-content:center;margin:0 0 10px}
+
 /* orders / results list under the card */
 .tno-section{max-width:840px;margin-top:30px}
 .tno-h3{font-size:16px;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:10px}
