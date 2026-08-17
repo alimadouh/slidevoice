@@ -29,6 +29,22 @@
   });
   const qty = STEP.value;
 
+  // Blur out and disable the whole upload flow when there is nothing to spend on it,
+  // the way Grade A does. Without this the drop zone, the note and the Submit button
+  // all looked usable with zero scans, and the only thing that said otherwise was the
+  // server refusing AFTER someone had picked a file and pressed Submit.
+  function lockUploads(locked) {
+    const area = $("tnUparea");
+    if (area) area.classList.toggle("tno-locked", locked);
+    const drop = $("tnDrop");
+    if (drop) drop.setAttribute("tabindex", locked ? "-1" : "0");
+  }
+
+  function isLocked() {
+    const area = $("tnUparea");
+    return !!area && area.classList.contains("tno-locked");
+  }
+
   // The credits strip: how many scans you hold, and the buy button beside it. Styled
   // green when you have some and amber when you don't, like Grade A's.
   async function refreshCredits() {
@@ -37,18 +53,23 @@
     const show = (on) => box.classList.toggle("hidden", !on);
     box.classList.remove("has", "empty", "staff");
     const m = await me();
-    if (!m || m.error) { show(false); buy.classList.add("hidden"); qbox.classList.add("hidden"); return; }
+    if (!m || m.error) {                          // signed out: nothing can be submitted
+      show(false); buy.classList.add("hidden"); qbox.classList.add("hidden");
+      lockUploads(true); return;
+    }
     const n = m.tn_credits;                       // null = staff (unlimited)
     if (n == null) {
       txt.innerHTML = "<b>Unlimited</b> scans on this account.";
       box.classList.add("staff"); show(true);
-      buy.classList.add("hidden"); qbox.classList.add("hidden"); return;
+      buy.classList.add("hidden"); qbox.classList.add("hidden");
+      lockUploads(false); return;
     }
     txt.innerHTML = n > 0
       ? `<b>${n}</b> scan${n === 1 ? "" : "s"} available.`
       : "No scans yet &mdash; buy one to submit your document.";
     box.classList.add(n > 0 ? "has" : "empty");
     show(true); buy.classList.remove("hidden"); qbox.classList.remove("hidden");
+    lockUploads(n <= 0);
     STEP.render();
   }
   $("tnBuy").onclick = async () => {
@@ -90,6 +111,10 @@
   // rather than leaning on the browser's re-entrancy flag to break the loop.
   drop.addEventListener("click", (e) => { if (e.target !== $("tnFile")) $("tnFile").click(); });
   drop.addEventListener("keydown", (e) => {
+    // The locked overlay is pointer-events:none, which stops the mouse but NOT the
+    // keyboard — the zone is still tabbable, so Enter would open the picker on a
+    // locked card. Check the state rather than relying on CSS to enforce it.
+    if (isLocked()) return;
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("tnFile").click(); }
   });
   // Drag & drop straight onto the zone.

@@ -83,6 +83,24 @@
 /* on a plan card the stepper is its own row above the button, not inline beside it */
 .plan-qty{justify-content:center;margin:0 0 10px}
 
+/* locked upload area (no scans): blur + disable the box, note and submit, and float a
+   lock chip over the middle — the same treatment Grade A uses. Without it the whole
+   upload flow looked available with no scans, and the only thing that said otherwise
+   was the server's refusal AFTER a file had been chosen and submitted. */
+.tno-uparea.tno-locked > .upload-zone,
+.tno-uparea.tno-locked > .tno-selected,
+.tno-uparea.tno-locked > textarea,
+.tno-uparea.tno-locked > .tno-submit{
+  filter:blur(3px);opacity:.4;pointer-events:none;user-select:none;transition:filter .2s,opacity .2s}
+.tno-lock{display:none}
+.tno-uparea.tno-locked .tno-lock{display:inline-flex;position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);z-index:5;align-items:center;gap:8px;pointer-events:none;
+  padding:9px 16px;border-radius:999px;background:rgba(20,24,33,.92);
+  border:1px solid var(--line2);box-shadow:0 8px 24px -10px rgba(0,0,0,.6);
+  color:var(--ink);font-weight:700;font-size:14px;text-align:center}
+.tno-lock-ic{font-size:16px;line-height:1}
+.tno-lock-txt{letter-spacing:.2px}
+
 /* orders / results list under the card */
 .tno-section{max-width:840px;margin-top:30px}
 .tno-h3{font-size:16px;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:10px}

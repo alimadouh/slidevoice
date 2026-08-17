@@ -45,7 +45,14 @@
             </div>
             <button class="tno-buy-scan hidden" id="tnBuy">Buy a scan</button>
           </div>
-          <div class="tno-uparea">
+          <!-- starts locked: refreshCredits unlocks it once it knows there is a scan to
+               spend. Starting open would flash an available upload flow at someone who
+               has none, which is the wrong direction to fail in. -->
+          <div class="tno-uparea tno-locked" id="tnUparea">
+            <span class="tno-lock" id="tnLock" aria-hidden="true">
+              <span class="tno-lock-ic">🔒</span>
+              <span class="tno-lock-txt">Buy a scan to upload</span>
+            </span>
             <div class="upload-zone upz-big" id="tnDrop" role="button" tabindex="0" aria-label="Choose a file to check on Turnitin">
               <input type="file" id="tnFile" accept=".doc,.docx,.ppt,.pptx,.pdf" hidden>
               <div class="upz-aura"><span class="upz-em">📄</span></div>

@@ -15,8 +15,12 @@
   var MAX = 20;
   var cache = null;                       // shared across every stepper on the page
 
+  // js/config.js publishes the backend base as window.HUMANIZER_API, and every other
+  // script here reads exactly that. Guessing at window.API instead made this fetch a
+  // RELATIVE /api/myfatoorah/config, which on b7ooth-ai.com is a 404 — the stepper
+  // worked but the total silently stayed blank on the live site.
   function api() {
-    return (window.API || (window.CONFIG && window.CONFIG.API) || "");
+    return (window.HUMANIZER_API || "").replace(/\/+$/, "");
   }
 
   // -> {amount, currency, dp} or null. dp comes from the configured string ("3.000" -> 3)
