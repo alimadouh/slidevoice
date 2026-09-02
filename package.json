@@ -6,8 +6,15 @@
   "private": true,
   "scripts": {
     "dev": "npx --yes serve@14 -l 8123 .",
-    "test": "node --test tests/match.test.mjs"
+    "test": "node --test tests/match.test.mjs tests/device.test.mjs"
   },
-  "keywords": ["powerpoint", "pptx", "narration", "whisper", "transformers.js", "ffmpeg.wasm"],
+  "keywords": [
+    "powerpoint",
+    "pptx",
+    "narration",
+    "whisper",
+    "transformers.js",
+    "ffmpeg.wasm"
+  ],
   "license": "MIT"
 }
