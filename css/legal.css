@@ -1,0 +1,28 @@
+/* Policy pages. Standalone rather than inside the app shell: a policy is read, not
+   used, and the sidebar's job (move between tools) is noise on a page you reached to
+   check one clause. Colours come from the tokens in styles.css only, so whatever
+   theme.js is doing carries through here without a second palette to maintain. */
+.legal-wrap{max-width:760px;margin:0 auto;padding:32px clamp(18px,5vw,40px) 72px}
+.legal-top{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:22px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.legal-brand{font-weight:800;font-size:17px;color:var(--ink);text-decoration:none;
+  letter-spacing:-.2px}
+.legal-brand span{color:var(--accent)}
+.legal-back{font-size:13.5px;color:var(--muted);text-decoration:none}
+.legal-back:hover{color:var(--ink)}
+.legal-wrap h1{font-size:clamp(28px,5vw,36px);line-height:1.15;margin:0 0 6px;
+  letter-spacing:-.6px}
+.legal-updated{color:var(--muted);font-size:13px;margin-bottom:26px}
+.legal-wrap h2{font-size:19px;margin:34px 0 10px;letter-spacing:-.2px}
+.legal-wrap p,.legal-wrap li{font-size:15px;line-height:1.65;color:var(--ink)}
+.legal-wrap ul{padding-left:22px;margin:10px 0}
+.legal-wrap li{margin:7px 0}
+.legal-wrap a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}
+/* The one thing on the page a reader must not scroll past. */
+.legal-note{background:var(--accent-soft);border:1px solid rgba(255,49,49,.28);
+  border-radius:var(--radius);padding:16px 18px;margin:22px 0}
+.legal-note p{margin:0}
+.legal-foot{display:flex;flex-wrap:wrap;gap:18px;margin-top:44px;padding-top:20px;
+  border-top:1px solid var(--line);font-size:13.5px}
+.legal-foot a{color:var(--muted);text-decoration:none}
+.legal-foot a:hover{color:var(--ink);text-decoration:underline}

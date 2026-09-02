@@ -103,5 +103,39 @@
   $("buy-month").onclick = (e) => buyPlan("B7oothMonth", e.currentTarget);
   $("buy-scan").onclick = (e) => buyPlan("B7oothScan", e.currentTarget, SCAN_QTY.value());
 
-  me().then(renderBalance);
+  // ---- stop it renewing ----
+  // Shown on b7.renewing, never on b7.active: a member who has already cancelled is
+  // still active for the days they paid for, and offering Cancel again would only
+  // produce "we can't find a renewing membership".
+  function renderCancel(m) {
+    const btn = $("cancel-month");
+    if (!btn) return;
+    btn.hidden = !(m && m.b7 && m.b7.renewing);
+  }
+
+  async function cancelMonth(e) {
+    const btn = e.currentTarget;
+    if (!confirm("Stop your membership renewing?\n\nYou keep the days and words you have "
+                 + "already paid for. Nothing is refunded.")) return;
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = "Cancelling\u2026";
+    try {
+      const d = await (await fetch(API + "/api/myfatoorah/cancel",
+                                   { method: "POST", headers: JH })).json();
+      if (d && d.ok) {
+        say(d.message || "Your membership won't renew.");
+        btn.hidden = true;                       // nothing left to cancel
+        me().then(renderBalance);
+      } else {
+        say((d && d.error) || "Couldn't cancel it just now. Please try again.", true);
+      }
+    } catch (err) {
+      say("Couldn't reach the server. Please try again.", true);
+    }
+    btn.disabled = false; btn.textContent = label;
+  }
+
+  if ($("cancel-month")) $("cancel-month").onclick = cancelMonth;
+
+  me().then((m) => { renderBalance(m); renderCancel(m); });
 })();
