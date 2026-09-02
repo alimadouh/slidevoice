@@ -103,6 +103,11 @@ button,.download{font-family:inherit}
 .badge.order{background:#fdf0dd;color:var(--warn)}
 .badge.manual{background:var(--accent-soft);color:var(--accent-ink)}
 .badge.unplaced{background:#fde7e7;color:#c0392b}
+/* The matcher can now say "I don't know" instead of dressing a 0% match as a match.
+   These two have to read as questions, not as failures: the placement may well be
+   right, it just wasn't earned by evidence. */
+.badge.unsure{background:#fdf0dd;color:var(--warn)}
+.badge.conflict{background:#fde7e7;color:#c0392b}
 .actions{display:flex;align-items:center;gap:18px;margin-top:20px;flex-wrap:wrap}
 
 .result{text-align:center}

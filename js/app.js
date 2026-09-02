@@ -3,7 +3,7 @@ import { parsePptx, embedNarration } from './pptx.js';
 import { parseScript } from './scriptdoc.js';
 import { processAudio, loadFfmpeg } from './audio.js';
 import { loadModel, transcribe, device } from './transcribe.js';
-import { proposeAssignments } from './match.js';
+import { proposeAssignments, slideReference, unnarratedSlides } from './match.js';
 
 const $ = (s) => document.querySelector(s);
 let uid = 0;
@@ -201,12 +201,17 @@ $('#btn-process').addEventListener('click', async () => {
     }
     if (!state.audioFiles.length) throw new Error('None of the added files contained audio we could read.');
 
-    setStage('Matching recordings to slides by script…'); setBar(72);
+    setStage('Matching recordings to slides…'); setBar(72);
     const audios = state.audioFiles.map(a => ({
       id: a.id, name: a.name, transcript: state.processed.get(a.id).transcript,
     }));
-    // useFilenames:false → match purely by what each recording says vs the script
-    state.assignments = proposeAssignments(audios, state.slides, state.scriptMap, { useFilenames: false });
+    // File names are read again. They used to be ignored outright (useFilenames:false),
+    // so a clip a user had carefully named "Slide 3.m4a" was placed by content alone --
+    // and when that clip opened with "um, so, yeah", content had nothing to go on and
+    // put it on whichever slide came first. The matcher now weighs the name against what
+    // the recording says and flags the row when the two disagree, so reading the name
+    // costs nothing on the occasions it is wrong.
+    state.assignments = proposeAssignments(audios, state.slides, state.scriptMap);
 
     setBar(100); setStage('Review the matches below.');
     renderReview();
@@ -221,6 +226,19 @@ $('#btn-process').addEventListener('click', async () => {
 });
 
 // ---------- review table ----------
+// Rows that need a human eye come first. Sorted by upload order, the one uncertain clip
+// sits in the middle of nine confident ones, which is the same as not showing it -- the
+// whole point of this table is the row that is wrong.
+const ATTENTION = { unplaced: 0, conflict: 1, unsure: 2, order: 3 };
+function needsAttention(a) { return a.method in ATTENTION; }
+function reviewOrder(a, b) {
+  const ra = needsAttention(a) ? ATTENTION[a.method] : 9;
+  const rb = needsAttention(b) ? ATTENTION[b.method] : 9;
+  if (ra !== rb) return ra - rb;
+  if (ra === 9) return (a.slideNumber ?? 999) - (b.slideNumber ?? 999);
+  return (a.confidence || 0) - (b.confidence || 0);
+}
+
 function renderReview() {
   const tbody = $('#review-rows');
   tbody.innerHTML = '';
@@ -232,16 +250,24 @@ function renderReview() {
     }
     return html;
   };
-  for (const a of state.assignments) {
+  for (const a of [...state.assignments].sort(reviewOrder)) {
     const proc = state.processed.get(a.id);
     const url = URL.createObjectURL(state.audioFiles.find(x => x.id === a.id).file);
     const tr = document.createElement('tr');
+    if (needsAttention(a)) tr.className = 'row-check';
+    // What the slide it landed on actually says. Without it the reviewer is asked to
+    // confirm a match while being shown only one of the two things being matched.
+    const slide = state.slides.find(s => s.number === a.slideNumber);
+    const against = slide ? slideReference(slide, state.scriptMap) : '';
     tr.innerHTML = `
       <td class="file"><div class="fname">${escapeHtml(a.name)}</div>
         <audio controls preload="none" src="${url}"></audio></td>
-      <td class="trans">${escapeHtml((proc.transcript || '').slice(0, 140)) || '<span class="muted">matched by name</span>'}</td>
-      <td><span class="badge ${a.method}">${methodLabel(a.method, a.confidence)}</span></td>
-      <td><select data-id="${a.id}" class="slide-pick">${slideOpts(a.slideNumber)}</select></td>`;
+      <td class="trans">${escapeHtml((proc.transcript || '').slice(0, 140))
+        || '<span class="muted">nothing was heard in this clip</span>'}</td>
+      <td><span class="badge ${a.method}">${methodLabel(a.method, a.confidence)}</span>
+        ${a.note ? `<div class="why">${escapeHtml(a.note)}</div>` : ''}</td>
+      <td><select data-id="${a.id}" class="slide-pick">${slideOpts(a.slideNumber)}</select>
+        ${against ? `<div class="against">slide says: ${escapeHtml(against.slice(0, 90))}${against.length > 90 ? '…' : ''}</div>` : ''}</td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll('.slide-pick').forEach(sel => {
@@ -249,23 +275,54 @@ function renderReview() {
       const id = +sel.dataset.id;
       const v = sel.value ? +sel.value : null;
       const asg = state.assignments.find(a => a.id === id);
-      asg.slideNumber = v; asg.method = 'manual';
-      // keep one-audio-per-slide: clear others pointing at the same slide
-      if (v != null) for (const o of state.assignments)
-        if (o.id !== id && o.slideNumber === v) { o.slideNumber = null; }
+      asg.slideNumber = v; asg.method = 'manual'; asg.confidence = 1; asg.note = '';
+      // keep one-audio-per-slide: whatever was on this slide has to come off it. Say so
+      // on that row -- it used to be emptied silently, so a clip could drop out of the
+      // deck because of a change the user made elsewhere in the table.
+      if (v != null) for (const o of state.assignments) {
+        if (o.id !== id && o.slideNumber === v) {
+          o.slideNumber = null; o.method = 'unplaced';
+          o.note = `moved off slide ${v} when you put "${asg.name}" there`;
+        }
+      }
       renderReview();
     });
   });
   const placed = state.assignments.filter(a => a.slideNumber != null).length;
-  $('#review-summary').textContent = `${placed} of ${state.assignments.length} recordings placed.`;
+  const check = state.assignments.filter(needsAttention).length;
+  $('#review-summary').textContent =
+    `${placed} of ${state.assignments.length} placed` +
+    (check ? ` — ${check} need${check === 1 ? 's' : ''} a look` : ' — all confident');
+  $('#review-summary').classList.toggle('warn', check > 0);
+
+  // Slides that will play silently. Nothing said this before: you found out by opening
+  // the finished deck and pressing F5.
+  const silent = unnarratedSlides(state.assignments, state.slides);
+  const el = $('#review-gaps');
+  if (el) {
+    if (silent.length) {
+      const list = silent.length > 12
+        ? silent.slice(0, 12).join(', ') + ` and ${silent.length - 12} more`
+        : silent.join(', ');
+      el.textContent = silent.length === state.slides.length
+        ? 'No slide has a recording yet.'
+        : `No recording for slide${silent.length > 1 ? 's' : ''} ${list} — ${silent.length > 1 ? 'they' : 'it'} will play silently.`;
+      el.hidden = false;
+    } else {
+      el.hidden = true;
+    }
+  }
 }
 
 function methodLabel(m, c) {
+  const pct = Math.round((c || 0) * 100);
   if (m === 'filename') return 'file name';
-  if (m === 'content') return `content ${Math.round((c || 0) * 100)}%`;
-  if (m === 'order') return 'order (check)';
+  if (m === 'content') return `heard it ${pct}%`;
+  if (m === 'conflict') return 'name vs audio';
+  if (m === 'unsure') return 'not sure';
+  if (m === 'order') return 'order only';
   if (m === 'manual') return 'you set';
-  return 'unplaced';
+  return 'not placed';
 }
 
 // ---------- generate ----------

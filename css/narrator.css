@@ -57,3 +57,26 @@ body.hz-page{
   border-radius:8px;padding:6px 9px;font-family:inherit}
 .hz-page .tip kbd{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;
   padding:1px 6px;font-family:var(--mono);font-size:12px;color:var(--ink)}
+
+/* --- review table, second pass ---------------------------------------------------
+   The table used to show the transcript and a percentage and ask the user to confirm
+   a match -- while showing only one of the two things being matched. These add the
+   other half (what the slide says) and the reason a row was placed where it was. */
+.review-table .why{margin-top:5px;font-size:11.5px;line-height:1.35;color:var(--mut);
+  max-width:220px;text-transform:none;letter-spacing:0}
+.review-table .against{margin-top:6px;font-size:11.5px;line-height:1.35;color:var(--mut);
+  max-width:260px}
+
+/* Rows we are not sure about. A left edge rather than a filled background: the row is
+   still ordinary content, it just needs looking at, and a table of red rows reads as
+   a broken tool. */
+.review-table tr.row-check td{background:color-mix(in srgb, var(--warn) 7%, transparent)}
+.review-table tr.row-check td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+
+.hz-page .summary.warn{color:var(--warn)}
+
+/* Slides that will play silently -- previously discovered by opening the finished
+   deck and pressing F5. */
+.gaps{margin:2px 0 14px;padding:9px 12px;border-radius:10px;font-size:13px;
+  background:color-mix(in srgb, var(--warn) 10%, transparent);
+  color:var(--ink);border:1px solid color-mix(in srgb, var(--warn) 35%, transparent)}
