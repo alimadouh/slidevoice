@@ -104,13 +104,17 @@
   $("buy-scan").onclick = (e) => buyPlan("B7oothScan", e.currentTarget, SCAN_QTY.value());
 
   // ---- stop it renewing ----
-  // Shown on b7.renewing, never on b7.active: a member who has already cancelled is
-  // still active for the days they paid for, and offering Cancel again would only
-  // produce "we can't find a renewing membership".
+  // Shown to anyone who HAS a membership, not only to accounts carrying a recurring id.
+  // Gating on b7.renewing alone hid this control from every real member: the id is only
+  // written once MyFatoorah's Recurring flag is on, so until then a member reads "renews
+  // every 30 days until you cancel" on this very card and is handed nothing to click.
+  // The endpoint answers both states honestly — it stops a live subscription, or it
+  // confirms nothing is scheduled — so one control is right today and after the flag
+  // flips.
   function renderCancel(m) {
     const btn = $("cancel-month");
     if (!btn) return;
-    btn.hidden = !(m && m.b7 && m.b7.renewing);
+    btn.hidden = !(m && m.b7 && (m.b7.renewing || m.b7.active));
   }
 
   async function cancelMonth(e) {
