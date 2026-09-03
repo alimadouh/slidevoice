@@ -88,11 +88,20 @@
       // charts too — which an earlier version did, because `refunds` is on every row —
       // put a red flag under a month in which nothing about signups or scans went wrong.
       const refunded = opts.money && r.refunds > 0;
-      const tip = fullMonth(r.m) + " · " +
-        series.map((x) => x.label + " " + fmt(x.get(r) || 0)).join(" · ") +
-        (refunded ? " · refunded " + kd(r.refunds) + " KD · net " + kd(r.total) + " KD" : "");
+      // One figure per line, and no month: the column being hovered sits directly above
+      // its own label on the axis, so naming the month again was the longest thing in the
+      // readout and the only part of it the reader could already see.
+      // Rendered as separate lines by white-space:pre-line on the bubble. The aria-label
+      // below still names the month, because a screen reader has no axis to glance at.
+      const rows = series.map((x) => x.label + " " + fmt(x.get(r) || 0));
+      if (refunded) {
+        rows.push("Refunded −" + kd(r.refunds) + " KD");
+        rows.push("Net " + kd(r.total) + " KD");
+      }
+      const tip = rows.join("\n");
       return '<div class="st-col' + (refunded ? " has-ref" : "") +
-             '" data-tip="' + esc(tip) + '" tabindex="0" role="img" aria-label="' + esc(tip) + '">' +
+             '" data-tip="' + esc(tip) + '" tabindex="0" role="img" aria-label="' +
+             esc(fullMonth(r.m) + ": " + rows.join(", ")) + '">' +
              '<span class="st-stack">' + parts + "</span></div>";
     }).join("");
 
@@ -162,22 +171,30 @@
             "hover it for the net.</p>" : "") +
       "</section>";
 
+    // How many of each thing, month by month — the counts behind the money above. Both
+    // product charts are read off the same payment rows as their revenue, so a chart here
+    // and a figure in the hero can never tell different stories.
+    //
+    // The two products are paired side by side because they are the comparison worth
+    // making, and they keep the colours they carry everywhere else on the page. Accounts
+    // gets its own full-width row: it is neither of them, it holds the most data, and
+    // three twelve-bar charts across one row leaves each column too narrow to label.
+    const countCard = (title, total, label, cls, get, opts) =>
+      '<section class="st-card">' +
+        "<header class=\"st-card-head\"><h3>" + title + "</h3>" +
+        '<span class="st-card-sub">' + n(total) + " total</span></header>" +
+        chart(months, [{ label: label, cls: cls, get: get }], n, opts) +
+      "</section>";
+
     const counts =
-      '<div class="st-two">' +
-        '<section class="st-card">' +
-          '<header class="st-card-head"><h3>New accounts</h3>' +
-          '<span class="st-card-sub">' + n(t.users) + " total</span></header>" +
-          chart(months, [{ label: "Signups", cls: "is-users", get: (r) => r.signups }], n,
-                { compactX: true }) +
-        "</section>" +
-        '<section class="st-card">' +
-          '<header class="st-card-head"><h3>Turnitin scans bought</h3>' +
-          '<span class="st-card-sub">' + n(t.scans) + " total</span></header>" +
-          // Counted off the same payment rows as the Turnitin revenue above, so this
-          // chart and that figure can never disagree.
-          chart(months, [{ label: "Bought", cls: "is-scans", get: (r) => r.scans }], n,
-                { compactX: true }) +
-        "</section>" +
+      '<div class="st-mini">' +
+        countCard("Memberships bought", t.memberships, "Bought", "is-subs",
+                  (r) => r.memberships, { compactX: true }) +
+        countCard("Turnitin scans bought", t.scans, "Bought", "is-scans",
+                  (r) => r.scans, { compactX: true }) +
+      "</div>" +
+      '<div class="st-wide">' +
+        countCard("New accounts", t.users, "Signups", "is-users", (r) => r.signups, {}) +
       "</div>";
 
     // Never silently dropped. If a payment's amount couldn't be read, the revenue figures
