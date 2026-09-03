@@ -27,8 +27,6 @@
   // is a dropped digit, not a tidier number.
   const kd = (v) => Number(v || 0).toLocaleString("en-US",
     { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  const usd = (v) => "$" + Number(v || 0).toLocaleString("en-US",
-    { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const n = (v) => Number(v || 0).toLocaleString("en-US");
   // Axis labels only: three trailing zeros on every gridline is noise, and the exact
   // figure is one hover away.
@@ -124,11 +122,17 @@
       '<section class="st-hero">' +
         '<div class="st-hero-label">Lifetime revenue</div>' +
         '<div class="st-hero-num">' + kd(t.all) + ' <span class="st-cur">KD</span></div>' +
+        // A segment worth 0.000 KD is not drawn at all. The bar gives every segment a
+        // min-width so a small share stays visible, which turned an empty product into a
+        // coloured nub claiming it had sold something.
         (gross > 0
           ? '<div class="st-split" role="img" aria-label="' +
               esc("Memberships " + kd(t.subs) + " KD, Turnitin " + kd(t.turnitin) + " KD") + '">' +
-              '<span class="st-split-seg is-subs" style="width:' + pct(t.subs) + '%"></span>' +
-              '<span class="st-split-seg is-tn" style="width:' + pct(t.turnitin) + '%"></span>' +
+              [["is-subs", t.subs], ["is-tn", t.turnitin]].map(function (s) {
+                return s[1] > 0
+                  ? '<span class="st-split-seg ' + s[0] + '" style="width:' + pct(s[1]) + '%"></span>'
+                  : "";
+              }).join("") +
             "</div>"
           : '<p class="st-hero-empty">No payments recorded yet.</p>') +
         '<ul class="st-legend">' +
@@ -138,13 +142,6 @@
             ? '<li><i class="is-ref"></i><span>Refunded</span><b>−' + kd(t.refunds) + " KD</b></li>"
             : "") +
         "</ul>" +
-        // Shown whenever a dollar figure went into that total. A converted number that
-        // doesn't say it was converted is the one number on this page most likely to be
-        // quietly wrong, so it says so, and names the rate it used.
-        (t.usd_converted > 0
-          ? '<p class="st-foot">Includes ' + usd(t.usd_converted) + " converted at " +
-            esc(String(d.kwd_per_usd)) + " KD per USD.</p>"
-          : "") +
       "</section>";
 
     const span = months.length
@@ -174,12 +171,12 @@
                 { compactX: true }) +
         "</section>" +
         '<section class="st-card">' +
-          '<header class="st-card-head"><h3>Turnitin scans</h3>' +
+          '<header class="st-card-head"><h3>Turnitin scans bought</h3>' +
           '<span class="st-card-sub">' + n(t.scans) + " total</span></header>" +
-          chart(months, [{ label: "Scans", cls: "is-scans", get: (r) => r.scans }], n,
+          // Counted off the same payment rows as the Turnitin revenue above, so this
+          // chart and that figure can never disagree.
+          chart(months, [{ label: "Bought", cls: "is-scans", get: (r) => r.scans }], n,
                 { compactX: true }) +
-          '<p class="st-card-note">Scans submitted, not scans bought — a scan can be ' +
-          "paid for one month and used the next.</p>" +
         "</section>" +
       "</div>";
 
