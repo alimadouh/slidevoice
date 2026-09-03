@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>B7oothKw — Stats</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="assets/icon.png" />
+<script src="js/guard.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/humanizer.css" />
+<link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/sections.css" />
+<link rel="stylesheet" href="css/stats.css" />
+</head>
+<body class="hz-page" data-view="stats">
+<script src="js/theme.js"></script>
+<div class="app-shell" id="appShell">
+  <main class="content">
+    <section class="view" id="view-stats">
+      <h1 class="sr-only">B7oothKw Stats</h1>
+      <div class="st-head">
+        <h2 class="view-title"><span class="nav-ic" style="color:var(--acc)">📊</span> Stats</h2>
+        <button class="st-refresh" id="stRefreshBtn" type="button">Refresh</button>
+      </div>
+
+      <!-- Everything below is filled in by js/stats.js. The markup is left empty rather
+           than seeded with zeros: a zero that turns out to be a failed request is worse
+           than an empty space, because it reads as a real answer. -->
+      <div id="stBody">
+        <p class="st-state">Loading&hellip;</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/config.js"></script>
+<script src="js/device.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/stats.js"></script>
+</body>
+</html>

@@ -102,6 +102,7 @@
     { v: "chats", href: "chats.html", ic: "📨", label: "Chats", cls: "nav-staff hidden",
       badge: "chatsBadge" },
     { v: "codes", href: "codes.html", ic: "🎟", label: "Codes", cls: "nav-staff hidden" },
+    { v: "stats", href: "stats.html", ic: "📊", label: "Stats", cls: "nav-staff hidden" },
   ];
 
   var aside = document.createElement("aside");

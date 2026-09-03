@@ -1,0 +1,132 @@
+/* Staff → Stats. A reading screen, not a working one: there is nothing to click except
+   Refresh, so the layout gives everything to legibility — one hero figure, then three
+   charts, then the caveats.
+
+   Colour carries meaning here and is spent carefully. Red (--acc/--acc2) is money and
+   only money; the accounts chart is deliberately neutral so that a tall grey bar never
+   reads as revenue at a glance. Every value below is a token, so light and dark both
+   work without a second palette. */
+
+:root{ --st-w:1060px; }
+
+.st-head{display:flex;align-items:center;gap:14px;max-width:var(--st-w)}
+.st-head .view-title{margin-right:auto}
+.st-refresh{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+  color:var(--mut);font-family:inherit;font-size:12.5px;padding:7px 14px;cursor:pointer;
+  transition:.15s}
+.st-refresh:hover:not(:disabled){color:var(--ink);border-color:var(--line2)}
+.st-refresh:disabled{opacity:.5;cursor:not-allowed}
+
+.st-state{max-width:var(--st-w);color:var(--mut);font-size:14px;padding:34px 2px}
+
+/* ---- hero -------------------------------------------------------------------------
+   The one figure the page exists to show, given the room to be read from across a desk.
+   The split bar underneath is the only ornament, and it is showing the subs/Turnitin
+   ratio rather than decorating. */
+.st-hero{max-width:var(--st-w);background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:24px 24px 20px;margin:4px 0 16px;
+  background-image:radial-gradient(120% 150% at 0% -40%,
+    color-mix(in srgb,var(--acc) 11%,transparent),transparent 60%)}
+.st-hero-label{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--mut)}
+.st-hero-num{font-size:44px;font-weight:800;line-height:1.1;letter-spacing:-1px;
+  color:var(--ink);margin-top:5px;font-variant-numeric:tabular-nums}
+.st-hero-num .st-cur{font-size:19px;font-weight:700;color:var(--mut);letter-spacing:0}
+.st-hero-empty{margin:12px 0 0;font-size:13px;color:var(--faint)}
+
+.st-split{display:flex;gap:3px;height:8px;margin:18px 0 14px;border-radius:999px;
+  overflow:hidden;background:var(--panel2)}
+.st-split-seg{display:block;border-radius:999px;min-width:3px}
+.st-split-seg.is-subs{background:var(--acc)}
+.st-split-seg.is-tn{background:var(--acc2)}
+
+.st-legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 26px}
+.st-legend li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+.st-legend i{width:9px;height:9px;border-radius:3px;flex:none}
+.st-legend i.is-subs{background:var(--acc)}
+.st-legend i.is-tn{background:var(--acc2)}
+.st-legend i.is-ref{background:var(--bad)}
+.st-legend b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+
+.st-foot{margin:16px 0 0;padding-top:13px;border-top:1px dashed var(--line);
+  font-size:12px;color:var(--faint)}
+
+/* ---- cards ---- */
+.st-card{max-width:var(--st-w);background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:18px 20px 16px;margin-bottom:16px}
+.st-card-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.st-card-head h3{margin:0;font-size:14.5px;font-weight:700;color:var(--ink)}
+.st-card-sub{margin-left:auto;font-size:11.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.st-card-note{margin:14px 0 0;font-size:11.5px;line-height:1.55;color:var(--faint)}
+
+.st-two{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:var(--st-w)}
+.st-two .st-card{max-width:none;margin-bottom:16px}
+
+/* ---- chart ------------------------------------------------------------------------
+   Bars are divs sized in percent of the plot. The stack is column-reverse so the first
+   series in the markup sits at the BOTTOM, which is the order the legend reads in. */
+.st-chart{--plot:190px}
+.st-two .st-chart{--plot:120px}
+
+.st-plot{display:flex;gap:10px;height:var(--plot)}
+.st-ylab{position:relative;width:46px;flex:none;font-size:10.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.st-ylab span{position:absolute;right:0;transform:translateY(-50%);white-space:nowrap}
+
+.st-area{flex:1;min-width:0;border-bottom:1px solid var(--line2);
+  /* gridlines at 0/25/50/75%; the baseline is the border above */
+  background-image:repeating-linear-gradient(to bottom,
+    var(--line) 0 1px, transparent 1px 25%)}
+
+.st-cols{display:flex;align-items:flex-end;gap:6px;height:100%}
+.st-col{position:relative;flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;
+  border-radius:4px 4px 0 0}
+.st-col:hover,.st-col:focus-visible{background:color-mix(in srgb,var(--ink) 6%,transparent);
+  outline:none}
+
+.st-stack{display:flex;flex-direction:column-reverse;justify-content:flex-start;
+  width:100%;height:100%}
+.st-seg{display:block;width:100%;min-height:2px}
+/* last DOM child is visually on top in column-reverse */
+.st-stack .st-seg:last-child{border-radius:3px 3px 0 0}
+.st-seg.is-subs{background:var(--acc)}
+.st-seg.is-tn{background:var(--acc2)}
+.st-seg.is-users{background:var(--mut)}
+.st-seg.is-scans{background:color-mix(in srgb,var(--acc2) 70%,transparent)}
+
+/* A month that had a refund. The bar is drawn gross, so the mark is what says the net is
+   lower; the hover readout gives the figures. */
+.st-col.has-ref::before{content:"";position:absolute;left:0;right:0;bottom:-4px;height:3px;
+  border-radius:2px;background:var(--bad)}
+
+.st-xlab{display:flex;gap:6px;margin:8px 0 0;padding-left:56px}
+.st-xlab span{flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--faint);
+  white-space:nowrap;overflow:hidden}
+
+/* hover readout */
+.st-col::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:max-content;max-width:230px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:9px;
+  padding:8px 11px;font-size:11.5px;line-height:1.5;color:var(--ink);
+  box-shadow:0 10px 30px -12px rgba(0,0,0,.65);
+  opacity:0;pointer-events:none;transition:opacity .12s;z-index:5}
+.st-col:hover::after,.st-col:focus-visible::after{opacity:1}
+/* the end columns would push their readout off the card */
+.st-col:first-child::after{left:0;transform:none}
+.st-col:last-child::after{left:auto;right:0;transform:none}
+
+.st-warn{max-width:var(--st-w);background:color-mix(in srgb,var(--warn) 12%,var(--panel));
+  border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));border-radius:11px;
+  padding:12px 15px;font-size:12.5px;line-height:1.6;color:var(--ink);margin:0 0 16px}
+
+@media (max-width:820px){
+  .st-two{grid-template-columns:1fr}
+  .st-hero-num{font-size:36px}
+}
+@media (max-width:560px){
+  /* twelve labels stop being readable long before the bars do */
+  .st-xlab span:nth-child(even){visibility:hidden}
+  .st-ylab{width:38px}
+  .st-xlab{padding-left:48px}
+}
