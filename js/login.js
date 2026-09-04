@@ -11,6 +11,14 @@ const $ = (id) => document.getElementById(id);
 const msgEl = $("loginMsg");
 function msg(t, ok) { msgEl.textContent = t || ""; msgEl.classList.toggle("ok", !!ok); }
 
+// Sent here by js/device.js after the server ended a session that turned up on a
+// second machine. Say so plainly: the person on the honest side of this is usually
+// someone whose own browser changed, and "signed out" with no reason reads as a bug.
+if (/(^|[?&])signedout=device(&|$)/.test(location.search)) {
+  msg("You were signed out because this account was used on another device. "
+      + "One account works on one computer and one phone. Sign in again to continue.");
+}
+
 function finishLogin(token) {
   try { localStorage.setItem(TOKEN_KEY, token); localStorage.removeItem("b7_guest"); } catch (e) {}
   msg("Signed in — redirecting…", true);

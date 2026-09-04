@@ -76,11 +76,13 @@
   var real = window.fetch;
   if (typeof real !== "function") return;
   window.fetch = function (input, init) {
+    var ours = false;
     try {
       var url = (typeof input === "string") ? input : (input && input.url) || "";
       var api = window.HUMANIZER_API || "";
       // Our backend only. Never attach a fingerprint to a third party's URL.
-      if (window.DEVICE_ID && api && url.indexOf(api) === 0) {
+      ours = !!(api && url.indexOf(api) === 0);
+      if (window.DEVICE_ID && ours) {
         init = Object.assign({}, init || {});
         var h = new Headers((init.headers) ||
                             (typeof input === "object" && input && input.headers) || {});
@@ -88,6 +90,25 @@
         init.headers = h;
       }
     } catch (e) {}                                // never let this break a request
-    return real.call(this, input, init);
+    return real.call(this, input, init).then(function (res) {
+      // The server ends a session the moment its token turns up on another machine
+      // (see session_device in api.py). That is not an error the page should try to
+      // render — the token in storage is dead, so drop it and ask for a sign-in.
+      // Told apart from an ordinary expiry by the header, which the backend exposes
+      // to us in its CORS config.
+      try {
+        if (ours && res && res.status === 401 &&
+            res.headers.get("X-Session-Ended") === "device") {
+          localStorage.removeItem("b7_token");
+          localStorage.removeItem("b7_guest");
+          // Netlify serves /login as well as /login.html, so compare the page the
+          // way guard.js does rather than matching a filename and looping.
+          var path = location.pathname.replace(/\/+$/, "");
+          var page = (path.split("/").pop() || "index").toLowerCase().replace(/\.html$/, "");
+          if (page !== "login") location.replace("login.html?signedout=device");
+        }
+      } catch (e) {}
+      return res;
+    });
   };
 })();
