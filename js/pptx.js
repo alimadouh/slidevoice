@@ -39,8 +39,18 @@ function runsText(xml) {
 // Parse a pptx ArrayBuffer/Uint8Array. Returns { zip, slides } in display order.
 export async function parsePptx(data) {
   const zip = await JSZip.loadAsync(data);
-  const presRels = await zip.file('ppt/_rels/presentation.xml.rels').async('string');
-  const presXml = await zip.file('ppt/presentation.xml').async('string');
+  // A .pptx is a zip with these two parts in it. A file that is merely NAMED .pptx -- a
+  // renamed .ppt, a Keynote export, a PDF someone retyped the extension on -- opens as a
+  // zip and then hands back null here, and the user was shown the raw
+  // "Cannot read properties of null (reading 'async')". Say what is actually wrong.
+  const relsFile = zip.file('ppt/_rels/presentation.xml.rels');
+  const presFile = zip.file('ppt/presentation.xml');
+  if (!relsFile || !presFile) {
+    throw new Error("That doesn't look like a PowerPoint file. Open it in PowerPoint and " +
+                    "use File > Save As to save a .pptx, then try again.");
+  }
+  const presRels = await relsFile.async('string');
+  const presXml = await presFile.async('string');
 
   const ridToTarget = {};
   for (const m of presRels.matchAll(/<Relationship\b[^>]*?\/?>/g)) {

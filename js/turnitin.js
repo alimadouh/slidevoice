@@ -15,9 +15,12 @@
   function say(text, bad) { const m = $("tnMsg"); m.textContent = text; m.classList.toggle("bad", !!bad); m.classList.remove("hidden"); }
 
   // ---- credits ----
+  // Kept from the last call so the checkout baseline costs no extra round trip -- it is
+  // the credit count already drawn in the strip above the uploader.
+  let lastMe = null;
   async function me() {
     if (!TOKEN) return null;
-    try { return await (await fetch(API + "/api/auth/me", { headers: H })).json(); }
+    try { lastMe = await (await fetch(API + "/api/auth/me", { headers: H })).json(); return lastMe; }
     catch (e) { return null; }
   }
   // How many scans to buy. The cap, the clamping and the total all live in js/qty.js,
@@ -72,8 +75,14 @@
     lockUploads(n <= 0);
     STEP.render();
   }
+  // One invoice per click. Without this a double-click (or an impatient second click
+  // while the checkout POST is in flight) minted TWO MyFatoorah invoices for one customer
+  // who wanted one scan -- the pricing page has had this latch since it was written.
+  let buying = false;
   $("tnBuy").onclick = async () => {
     if (!TOKEN) { if (window.b7PromptLogin) b7PromptLogin("Sign in to buy a scan."); return; }
+    if (buying) return;
+    buying = true; $("tnBuy").disabled = true;
     try {
       const d = await (await fetch(API + "/api/myfatoorah/checkout", {
         method: "POST",
@@ -85,9 +94,21 @@
         say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
         return;
       }
-      if (d && d.url) { location.href = d.url; return }
+      if (d && d.url) {
+        // See b7SetCheckoutBaseline in js/auth.js: the balance to beat is this one, not
+        // the one we would read after coming back.
+        if (window.b7SetCheckoutBaseline) {
+          window.b7SetCheckoutBaseline({
+            words: (lastMe && lastMe.b7 && lastMe.b7.words) || 0,
+            credits: (lastMe && lastMe.tn_credits) || 0,
+          });
+        }
+        location.href = d.url; return;
+      }
       say((d && d.error) || "Couldn't start checkout. Please try again.", true);
     } catch (e) { say("Couldn't reach the payment gateway. Please try again.", true); }
+    // Only reached when we did NOT navigate: every success path above returns.
+    buying = false; $("tnBuy").disabled = false;
   };
 
   // ---- submit ----
@@ -206,9 +227,15 @@
         return;
       }
       const blob = await r.blob(); const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
+      const href = URL.createObjectURL(blob);
+      a.href = href;
       a.download = kind === "ai" ? "Turnitin AI report.pdf" : "Turnitin similarity report.pdf";
-      a.click(); URL.revokeObjectURL(a.href);
+      a.click();
+      // Revoking in the same tick can beat the browser to the fetch it just started, and
+      // Firefox then saves nothing at all -- the customer clicks Download on a report they
+      // paid for and gets silence. A minute is far longer than any save needs and the blob
+      // is freed either way when the page goes.
+      setTimeout(() => URL.revokeObjectURL(href), 60000);
     } catch (e) {}
   }
 
@@ -261,8 +288,12 @@
     history.replaceState(null, "", location.pathname);       // don't re-toast on refresh
     if (paid === "0") { say("Payment didn't complete — you weren't charged.", true); return; }
     say("Payment received — activating…");
-    const m0 = await me();
-    const before = (m0 && m0.tn_credits) || 0;
+    // The count from before the redirect, when we have it. Falling back to a snapshot
+    // taken now is what made a credited customer see "still processing": the webhook had
+    // already landed, so the number could never rise above itself.
+    const saved = window.b7TakeCheckoutBaseline && window.b7TakeCheckoutBaseline();
+    const m0 = saved ? null : await me();
+    const before = saved ? (saved.credits || 0) : ((m0 && m0.tn_credits) || 0);
     let tries = 0;
     const t = setInterval(async () => {
       const m = await me();

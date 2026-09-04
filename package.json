@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "npx --yes serve@14 -l 8123 .",
-    "test": "node --test tests/match.test.mjs tests/device.test.mjs"
+    "test": "node --test tests/match.test.mjs tests/device.test.mjs tests/checkout-baseline.test.mjs"
   },
   "keywords": [
     "powerpoint",

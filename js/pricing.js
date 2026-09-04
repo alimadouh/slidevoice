@@ -22,9 +22,12 @@
   }
 
   // ---- what you have right now ----
+  // Kept from the last call so the checkout baseline costs no extra round trip and
+  // cannot delay the redirect -- it is the balance already drawn on this page.
+  let lastMe = null;
   async function me() {
     if (!TOKEN) return null;
-    try { return await (await fetch(API + "/api/auth/me", { headers: H })).json(); }
+    try { lastMe = await (await fetch(API + "/api/auth/me", { headers: H })).json(); return lastMe; }
     catch (e) { return null; }
   }
 
@@ -82,6 +85,14 @@
       if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
         say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
       } else if (d && d.url) {
+        // What the account holds right now, so the return page can prove the grant
+        // landed -- see b7SetCheckoutBaseline in js/auth.js.
+        if (window.b7SetCheckoutBaseline) {
+          window.b7SetCheckoutBaseline({
+            words: (lastMe && lastMe.b7 && lastMe.b7.words) || 0,
+            credits: (lastMe && lastMe.tn_credits) || 0,
+          });
+        }
         location.href = d.url; return;                  // stays disabled; we're leaving the page
       } else {
         say((d && d.error) || "Couldn't start checkout. Please try again.", true);

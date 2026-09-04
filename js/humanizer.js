@@ -112,7 +112,30 @@ function quotaMsg(text) {
   msgEl.appendChild(a);
   msgEl.classList.remove("ok");
 }
-const wordCount = (s) => (s.match(/\S+/g) || []).length;
+// This must agree with api._count_words, which is what the customer is CHARGED. A plain
+// \S+ count disagreed twice over: a dense-script character (CJK, Thai, Hangul, halfwidth
+// kana) is billed as HALF a word, and a run longer than 60 characters is billed by length
+// rather than as the single "word" it looks like -- 200,000 characters with no space in
+// them metered as 1 here and 33,334 there. Grade A's app.js carries the same rule; change
+// the three together.
+const DENSE_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0e00-\u0e7f\uac00-\ud7af]/g;
+const LONG_RUN_CHARS = 60, CHARS_PER_WORD = 6;
+const wordCount = (s) => {
+  const m = (s || "").trim();
+  if (!m) return 0;
+  const dense = (m.match(DENSE_RE) || []).length;
+  let words = 0;
+  for (const tok of (dense ? m.replace(DENSE_RE, " ") : m).split(/\s+/)) {
+    if (!tok) continue;
+    // .length counts UTF-16 units, Python counts characters, so an emoji reads as two
+    // here and one there. Only recount when the cheap measure says it might be long.
+    const len = tok.length <= LONG_RUN_CHARS ? tok.length : [...tok].length;
+    if (len <= LONG_RUN_CHARS) words += 1;
+    else if (tok.includes("://") || tok.startsWith("www.")) words += 1;
+    else words += Math.ceil(len / CHARS_PER_WORD);
+  }
+  return words + Math.floor((dense + 1) / 2);
+};
 const fmtNum = (v) => Number(v || 0).toLocaleString("en-US");
 
 // Which front-end created this account, straight from /api/auth/me.
@@ -431,7 +454,14 @@ function fileTool(cfg) {
   drop.onkeydown = (e) => {                     // it's role="button" — behave like one
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); drop.click(); }
   };
-  input.onchange = () => setFile(input.files[0]);
+  input.onchange = () => {
+    setFile(input.files[0]);
+    // Clear the control's value so choosing the SAME file again still fires `change`.
+    // Without this, removing a file and re-picking it did nothing whatsoever: the value
+    // had not changed, so the browser had no event to send, and the drop zone sat empty
+    // with no error to explain itself.
+    input.value = "";
+  };
   ["dragover", "dragenter"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
   ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
   drop.addEventListener("drop", (e) => {
@@ -666,8 +696,14 @@ fetchMe().then(renderMeter);
     // "You're all set!" on the very first poll even if the webhook hadn't landed yet
     // (or never would). Require a real INCREASE over this snapshot instead. If the
     // snapshot fetch fails, fall back to 0s — same behaviour as before this fix.
-    const before0 = await fetchMe();
-    const before = {
+    // The balance from before the redirect (js/auth.js), which is the only one a grant
+    // can be seen to exceed: the webhook is server-to-server and usually lands before the
+    // customer is back, so a snapshot taken HERE already contains it. Without a stored
+    // baseline -- expired, or a return in a fresh browser -- fall back to the old
+    // post-return snapshot rather than guessing.
+    const saved = window.b7TakeCheckoutBaseline && window.b7TakeCheckoutBaseline();
+    const before0 = saved ? null : await fetchMe();
+    const before = saved || {
       words: (before0 && before0.b7 && before0.b7.words) || 0,
       credits: (before0 && before0.tn_credits) || 0,
     };

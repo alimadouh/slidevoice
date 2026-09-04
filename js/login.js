@@ -188,6 +188,23 @@ $("resetBack").onclick = (e) => { e.preventDefault(); showPanel("main"); msg("")
 $("resetSubmit").onclick = () => (resetStep === 1 ? doForgot() : doReset());
 $("authPass").addEventListener("keydown", (e) => { if (e.key === "Enter") doAuth(); });
 $("authCode").addEventListener("keydown", (e) => { if (e.key === "Enter") doVerify(); });
+// The rest of the fields, which had no Enter at all. These inputs are deliberately not
+// wrapped in a <form>: the page forbids inline script, so a form would need its submit
+// handler bound from here anyway, and if that binding ever failed the browser would
+// native-submit a GET and put the password in the URL. Binding the key is the same
+// behaviour with none of that risk.
+// From the email box, Enter goes to the password rather than submitting a half-filled
+// form and being told off for it.
+$("authEmail").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  if ($("authPass").value) doAuth(); else $("authPass").focus();
+});
+// One handler for the reset panel: which of its three inputs is visible depends on the
+// step, and resetSubmit already routes to the right call for that step.
+["resetEmail", "resetCode", "resetPass"].forEach((id) =>
+  $(id).addEventListener("keydown", (e) => {
+    if (e.key === "Enter") (resetStep === 1 ? doForgot() : doReset());
+  }));
 
 // ---------------------------------------------------------------- AI engine demo
 // Cycles AI -> human sentence pairs: shows the AI input, then "types" the humanized

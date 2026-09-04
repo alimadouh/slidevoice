@@ -239,8 +239,21 @@ function reviewOrder(a, b) {
   return (a.confidence || 0) - (b.confidence || 0);
 }
 
+// Every URL.createObjectURL pins its Blob in memory until it is revoked or the document
+// goes away. renderReview runs again on every edit the reviewer makes, minting one URL per
+// audio row each time and never releasing the last set -- a 60-recording deck re-rendered a
+// dozen times held the audio a dozen times over. Same for the finished .pptx, which is
+// rebuilt whenever the user re-runs. Track them and free the previous batch.
+let reviewUrls = [];
+let downloadUrl = null;
+function releaseReviewUrls() {
+  reviewUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} });
+  reviewUrls = [];
+}
+
 function renderReview() {
   const tbody = $('#review-rows');
+  releaseReviewUrls();                 // the previous render's URLs are unreachable now
   tbody.innerHTML = '';
   const slideOpts = (sel) => {
     let html = `<option value="">— none —</option>`;
@@ -253,6 +266,7 @@ function renderReview() {
   for (const a of [...state.assignments].sort(reviewOrder)) {
     const proc = state.processed.get(a.id);
     const url = URL.createObjectURL(state.audioFiles.find(x => x.id === a.id).file);
+    reviewUrls.push(url);
     const tr = document.createElement('tr');
     if (needsAttention(a)) tr.className = 'row-check';
     // What the slide it landed on actually says. Without it the reviewer is asked to
@@ -340,7 +354,11 @@ $('#btn-generate').addEventListener('click', async () => {
     log.forEach(logLine);
     setBar(100); setStage('Done.');
     const base = state.pptxFile.name.replace(/\.pptx$/i, '');
+    // Free the previous build before pinning this one: re-running kept every earlier
+    // copy of the whole narrated deck alive.
+    if (downloadUrl) { try { URL.revokeObjectURL(downloadUrl); } catch (e) {} }
     const url = URL.createObjectURL(out);
+    downloadUrl = url;
     $('#download').href = url;
     $('#download').download = `${base} - with narration.pptx`;
     $('#result-text').textContent = `${assignments.length} recordings embedded into "${base}".`;

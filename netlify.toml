@@ -40,8 +40,27 @@
 # js/transcribe.js, the Slide Narrator's Whisper runtime. A CDN that serves any npm
 # package on request is barely an allowlist entry, so it comes off the day that module is
 # self-hosted; jszip already is (vendor/jszip), which is why esm.sh is gone. jsdelivr also
-# stays in connect-src for @ffmpeg/core's wasm, which audio.js fetches into a blob URL —
-# that path was never script-src to begin with.
+# stays in connect-src for @ffmpeg/core's wasm, which audio.js fetches into a blob URL.
+#
+# Three more entries exist only for the Slide Narrator, and were missing until the
+# 2026-09-04 audit showed the tool had never worked on the live site under this header:
+#   - script-src blob:  audio.js fetches @ffmpeg/core into a blob URL and the ffmpeg
+#     worker (vendor/ffmpeg/814.ffmpeg.js) then importScripts() that blob. A blob is a
+#     script load like any other, and the worker file is served with this very header,
+#     so without blob: the worker logs "Loading the script 'blob:...' violates ..." and
+#     the narrator dies at "Loading audio engine". This does NOT reopen inline script:
+#     a blob: URL can only be minted by script that is already running, and the only
+#     way script runs here is from 'self' or the two named hosts. An injected <script>
+#     or onclick="" is still refused exactly as before.
+#   - script-src 'wasm-unsafe-eval'  ffmpeg-core and onnxruntime-web (Whisper's
+#     backend) are WebAssembly, and browsers refuse WebAssembly.instantiate() under a
+#     script-src that names neither this nor 'unsafe-eval'. This keyword allows ONLY
+#     wasm compilation; eval(), new Function() and string timers stay blocked.
+#   - connect-src https://*.hf.co  huggingface.co no longer serves model files itself:
+#     every .onnx under onnx-community/whisper-base.en 302s to us.aws.cdn.hf.co (the
+#     xet bridge), and CSP checks the redirect target, so with only huggingface.co and
+#     the old cdn-lfs.huggingface.co every model fetch was blocked. Both old entries
+#     stay for the metadata requests that still come from them.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -54,4 +73,4 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Permissions-Policy = "geolocation=(), camera=(), payment=(), usb=()"
-    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://accounts.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob: https://api.gahumanizer.com https://accounts.google.com https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; frame-src https://accounts.google.com; upgrade-insecure-requests"
+    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' blob: 'wasm-unsafe-eval' https://accounts.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob: https://api.gahumanizer.com https://accounts.google.com https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co https://*.hf.co; frame-src https://accounts.google.com; upgrade-insecure-requests"

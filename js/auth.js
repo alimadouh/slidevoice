@@ -112,6 +112,35 @@
     }, true);
   };
 
+  // ---- what the account held BEFORE we walked to the gateway ----------------------
+  // A purchase is proved by a balance going UP, and the number to compare against is the
+  // one from before the redirect -- not the one the return page reads on its way back in.
+  // MyFatoorah calls the webhook server-to-server and it normally lands while the customer
+  // is still on the "returning you now" screen, so by the time the page reloaded the words
+  // or the credit were already on the account: every poll then compared the new balance
+  // against itself, never saw an increase, and told a customer who HAD been credited that
+  // their payment was still processing. localStorage, because a full-page redirect (and
+  // sometimes a return in another tab) sits in the middle. Stamped, so a baseline left
+  // behind by an abandoned checkout is ignored rather than believed.
+  var BASE_KEY = "b7_checkout_baseline";
+  var BASE_TTL_MS = 6 * 60 * 60 * 1000;
+  window.b7SetCheckoutBaseline = function (v) {
+    try { localStorage.setItem(BASE_KEY, JSON.stringify({ v: v || {}, at: Date.now() })); }
+    catch (e) {}
+  };
+  // Read once and drop it: a later return must never reuse this one.
+  window.b7TakeCheckoutBaseline = function () {
+    var raw = null;
+    try { raw = localStorage.getItem(BASE_KEY); localStorage.removeItem(BASE_KEY); }
+    catch (e) { return null; }
+    if (!raw) return null;
+    try {
+      var o = JSON.parse(raw);
+      if (!o || !o.at || (Date.now() - o.at) > BASE_TTL_MS) return null;
+      return o.v || null;
+    } catch (e) { return null; }
+  };
+
   // ---- account button in the top bar (#acctBtn): "Log out" when signed in, "Log in" as guest ----
   function initAcct() {
     var b = document.getElementById("acctBtn");
