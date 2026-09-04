@@ -48,6 +48,15 @@
                 navigator.hardwareConcurrency || 0, navigator.deviceMemory || 0].join("~");
 
   function store(id) {
+    // A stored id is kept, never recomputed over. Recomputing was harmless while this
+    // only picked a free-words pool, but the server now ends a session whose id stops
+    // matching the one it was opened with -- and two of the traits above move under the
+    // same person: devicePixelRatio changes when the browser is zoomed, and the WebGL
+    // renderer string changes when a graphics driver updates. Recomputing would have
+    // signed those people out of their own account. Clearing site data still recomputes,
+    // and lands on the same id if the machine is the same, which is what the free-words
+    // pool needs.
+    if (window.DEVICE_ID) return;
     window.DEVICE_ID = id;
     try { localStorage.setItem(KEY, id); } catch (e) {}
   }
