@@ -1,0 +1,37 @@
+/* Manage subscription -- Grade A's account table (static/style.css .prof-table / .prow /
+   .pval), on a page of its own. Tokens throughout, so the light theme just works. */
+
+.sub-lede{font-size:15px;line-height:1.55;color:var(--mut);margin:0 0 20px}
+.sub-wrap{width:100%;max-width:520px;margin:0 auto;padding-bottom:9vh}
+.sub-card{background:var(--panel);border:1px solid var(--line2);border-radius:16px;
+  padding:22px 22px 18px;box-shadow:0 14px 40px rgba(0,0,0,.28)}
+
+.sub-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sub-head b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-head small{color:var(--mut);font-size:12.5px}
+.sub-avatar{flex:none;width:40px;height:40px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;
+  background:linear-gradient(135deg,var(--acc),var(--acc2))}
+
+.sub-table{background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;margin:6px 0 2px}
+.sub-row{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.sub-row:last-child{border-bottom:none}
+.sub-row > span:first-child{color:var(--mut)}
+.sub-val{color:var(--ink);font-weight:600;text-align:right}
+
+.sub-note{margin:12px 2px 0;font-size:12.5px;line-height:1.5;color:var(--mut)}
+.sub-note:empty{display:none}
+.sub-actions{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.sub-actions:empty{display:none}
+.sub-actions .btn{width:100%;justify-content:center;text-decoration:none}
+/* The cancel is the page's one destructive control: outlined in the warning red, and
+   it only fills on hover, so a member reading the page is not shouted at. */
+.sub-cancel{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--bad) 42%,transparent)}
+.sub-cancel:hover:not(:disabled){background:var(--bad);color:#fff;border-color:var(--bad)}
+.sub-cancel:disabled{opacity:.6;cursor:default}
+.view .hz-msg{margin:12px 0 0;min-height:1.2em;text-align:center}
+.sub-fine{margin:14px 4px 0;font-size:12px;line-height:1.55;color:var(--faint)}
+.sub-fine a{color:var(--acc2);font-weight:700}

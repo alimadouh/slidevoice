@@ -57,6 +57,9 @@
   ];
   var ACCOUNT = [
     { v: "plans", href: "pricing.html", ic: "◆", label: "Pricing & Plans" },
+    // The membership's own page: renewal date, card, next charge, and the cancel.
+    // Grade A keeps the same thing behind "Manage subscription" in its account modal.
+    { v: "subscription", href: "subscription.html", ic: "⚙", label: "Manage subscription" },
     { v: "redeem", href: "redeem.html", ic: "🎟", label: "Redeem Code" },
     { v: "support", href: "support.html", ic: "💬", label: "Support & FAQ", badge: "supportBadge" },
     // The real WhatsApp glyph rather than a phone dingbat — it's the one mark here

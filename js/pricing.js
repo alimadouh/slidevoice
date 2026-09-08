@@ -81,19 +81,30 @@
         method: "POST", headers: JH,
         body: JSON.stringify({ plan, quantity: quantity || 1 }),
       })).json();
-      // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
-      if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
-        say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
-      } else if (d && d.url) {
-        // What the account holds right now, so the return page can prove the grant
-        // landed -- see b7SetCheckoutBaseline in js/auth.js.
+      // What the account holds right now, so the return page can prove the grant
+      // landed -- see b7SetCheckoutBaseline in js/auth.js. Stored before EITHER way
+      // of paying: the hosted page leaves this page, and the card form leaves it too
+      // once the payment completes.
+      const baseline = () => {
         if (window.b7SetCheckoutBaseline) {
           window.b7SetCheckoutBaseline({
             words: (lastMe && lastMe.b7 && lastMe.b7.words) || 0,
             credits: (lastMe && lastMe.tn_credits) || 0,
           });
         }
+      };
+      // Only ever walk to MyFatoorah — see b7PayUrlOk in js/auth.js.
+      if (d && d.url && window.b7PayUrlOk && !b7PayUrlOk(d.url)) {
+        say("That checkout link doesn't look right, so we didn't open it. Please try again.", true);
+      } else if (d && d.url) {
+        baseline();
         location.href = d.url; return;                  // stays disabled; we're leaving the page
+      } else if (d && d.session && window.b7CardCheckout) {
+        // The month: MyFatoorah's card form opens ON this page, and the same press of
+        // Pay saves the card, so the month renews itself. The same webhook grants it.
+        baseline();
+        say("");
+        await b7CardCheckout(d.session);
       } else {
         say((d && d.error) || "Couldn't start checkout. Please try again.", true);
       }
@@ -114,43 +125,15 @@
   $("buy-month").onclick = (e) => buyPlan("B7oothMonth", e.currentTarget);
   $("buy-scan").onclick = (e) => buyPlan("B7oothScan", e.currentTarget, SCAN_QTY.value());
 
-  // ---- stop it renewing ----
-  // Shown to anyone who HAS a membership, not only to accounts carrying a recurring id.
-  // Gating on b7.renewing alone hid this control from every real member: the id is only
-  // written once MyFatoorah's Recurring flag is on, so until then a member reads "renews
-  // every 30 days until you cancel" on this very card and is handed nothing to click.
-  // The endpoint answers both states honestly — it stops a live subscription, or it
-  // confirms nothing is scheduled — so one control is right today and after the flag
-  // flips.
-  function renderCancel(m) {
-    const btn = $("cancel-month");
-    if (!btn) return;
-    btn.hidden = !(m && m.b7 && (m.b7.renewing || m.b7.active));
+  // ---- members: where the renewal, the card and the cancel live ----
+  // Shown to anyone who HAS a membership, renewing or not: the page it points at says
+  // which, and a member who reads "renews every 30 days until you cancel" on this very
+  // card is owed something to click.
+  function renderManage(m) {
+    const a = $("manage-month");
+    if (!a) return;
+    a.hidden = !(m && m.b7 && (m.b7.renewing || m.b7.active));
   }
 
-  async function cancelMonth(e) {
-    const btn = e.currentTarget;
-    if (!confirm("Stop your membership renewing?\n\nYou keep the days and words you have "
-                 + "already paid for. Nothing is refunded.")) return;
-    const label = btn.textContent;
-    btn.disabled = true; btn.textContent = "Cancelling\u2026";
-    try {
-      const d = await (await fetch(API + "/api/myfatoorah/cancel",
-                                   { method: "POST", headers: JH })).json();
-      if (d && d.ok) {
-        say(d.message || "Your membership won't renew.");
-        btn.hidden = true;                       // nothing left to cancel
-        me().then(renderBalance);
-      } else {
-        say((d && d.error) || "Couldn't cancel it just now. Please try again.", true);
-      }
-    } catch (err) {
-      say("Couldn't reach the server. Please try again.", true);
-    }
-    btn.disabled = false; btn.textContent = label;
-  }
-
-  if ($("cancel-month")) $("cancel-month").onclick = cancelMonth;
-
-  me().then((m) => { renderBalance(m); renderCancel(m); });
+  me().then((m) => { renderBalance(m); renderManage(m); });
 })();
