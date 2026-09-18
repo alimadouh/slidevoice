@@ -98,6 +98,12 @@ const bar = $("hz-bar"), barFill = $("hz-bar-fill"), msgEl = $("hz-msg");
 
 let lastBlocks = null, lastText = "", busy = false;
 let humAbort = null, greenAbort = null;
+// Per-job nonce so a cancel targets THIS job and never the session token. Without one
+// the Stop button posted an empty body, humanize_cancel's `if (key and ...)` guard was
+// false, _request_cancel was never called -- so the GPU kept running to completion and
+// neither refund in /api/humanize ever fired. The words stayed spent and the pane said
+// "Stopped." Mirrors src/server/static/app.js on the Grade A side.
+let humCancelKey = null;
 
 // ---------------------------------------------------------------- helpers
 function msg(t, ok) { msgEl.textContent = t || ""; msgEl.classList.toggle("ok", !!ok); }
@@ -286,9 +292,13 @@ async function humanize() {
   btnHum.classList.add("loading"); btnStopHum.style.display = "";
   inPane.classList.add("fx-humanizing"); msg("");
   humAbort = new AbortController();
+  humCancelKey = (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : (Date.now().toString(36) + Math.random().toString(36).slice(2));
   try {
     const r = await fetch(API + "/api/humanize", {
-      method: "POST", headers: JH, signal: humAbort.signal,
+      method: "POST", headers: { ...JH, "X-Cancel-Key": humCancelKey },
+      signal: humAbort.signal,
       body: JSON.stringify({ text, level: LEVEL, model: 2, dialect: selectedDialect }),
     });
     const p = await r.json();
@@ -305,7 +315,10 @@ async function humanize() {
     if (e.name === "AbortError") msg("Stopped.");
     else msg("Couldn’t reach the humanizer. Please try again.");
   } finally {
-    busy = false; humAbort = null;
+    // The key dies with the job. Left set, a later pagehide would post a cancel for a
+    // job that had already finished -- harmless to the member, but it puts a key the
+    // server can never clear into its cancel registry.
+    busy = false; humAbort = null; humCancelKey = null;
     btnHum.classList.remove("loading"); btnStopHum.style.display = "none";
     inPane.classList.remove("fx-humanizing"); refreshButtons();
   }
@@ -399,11 +412,32 @@ btnHum.onclick = humanize;
 btnCheck.onclick = check;
 btnGreen.onclick = makeAllGreen;
 btnClear.onclick = clearAll;
+function cancelInflightHumanize() {
+  // Tell the server to stop + refund the words (the job keeps running otherwise).
+  // The key is what makes the server act: without it the request is accepted and
+  // ignored.
+  if (!humCancelKey) return;
+  const url = API + "/api/humanize/cancel";
+  const key = humCancelKey;
+  humCancelKey = null;                       // one cancel per job
+  try {
+    fetch(url, { method: "POST", headers: { ...JH, "X-Cancel-Key": key },
+                 keepalive: true, body: JSON.stringify({ cancel_key: key }) })
+      .catch(() => {});
+  } catch (e) {
+    try {
+      navigator.sendBeacon(url, new Blob([JSON.stringify({ cancel_key: key })],
+                                         { type: "application/json" }));
+    } catch (e2) {}
+  }
+}
 btnStopHum.onclick = () => {
   if (humAbort) humAbort.abort();
-  // Tell the server to stop + refund the words (the job keeps running otherwise).
-  try { fetch(API + "/api/humanize/cancel", { method: "POST", headers: JH, keepalive: true, body: "{}" }); } catch (e) {}
+  cancelInflightHumanize();
 };
+// A closed tab is a stopped job too, and it was the one nothing told the server about.
+window.addEventListener("pagehide", cancelInflightHumanize);
+window.addEventListener("beforeunload", cancelInflightHumanize);
 btnStopGreen.onclick = () => greenAbort && greenAbort.abort();
 btnCopy.onclick = async () => {
   if (!lastText) return;
