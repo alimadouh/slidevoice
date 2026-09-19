@@ -126,6 +126,9 @@ function quotaMsg(text) {
 // the three together.
 const DENSE_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u0e00-\u0e7f\uac00-\ud7af]/g;
 const LONG_RUN_CHARS = 60, CHARS_PER_WORD = 6;
+// Mirrors api._URL_MAX_CHARS -- see the note beside the same constant in Grade A's
+// app.js. Unbounded, the URL exemption made 200,000 characters read as one word.
+const URL_MAX_CHARS = 2000;
 const wordCount = (s) => {
   const m = (s || "").trim();
   if (!m) return 0;
@@ -137,7 +140,9 @@ const wordCount = (s) => {
     // here and one there. Only recount when the cheap measure says it might be long.
     const len = tok.length <= LONG_RUN_CHARS ? tok.length : [...tok].length;
     if (len <= LONG_RUN_CHARS) words += 1;
-    else if (tok.includes("://") || tok.startsWith("www.")) words += 1;
+    // Bounded: the URL test is a substring, so without a length limit a 200,000-character
+    // run with "://" in it counted as one word. See api._URL_MAX_CHARS.
+    else if (len <= URL_MAX_CHARS && (tok.includes("://") || tok.startsWith("www."))) words += 1;
     else words += Math.ceil(len / CHARS_PER_WORD);
   }
   return words + Math.floor((dense + 1) / 2);

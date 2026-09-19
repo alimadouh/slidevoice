@@ -13,13 +13,30 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
 
+  // Remembers the PROMISE, not the tag. The old test -- "is there already a <script> with
+  // this src?" -- treated a tag that had ALREADY FAILED as proof the script was loaded, so
+  // the second press of Pay resolved instantly and then died on `myfatoorah is not
+  // defined`. The message the customer was shown said "please try again", and trying again
+  // could never work for the rest of the page's life: one bad moment on the network and
+  // the month could not be bought at all until they thought to reload.
+  //
+  // A failed load now drops the tag AND the record, so the next press is a real retry. A
+  // successful one is remembered, so two presses never load the same script twice.
+  var _scripts = {};
   function loadScript(src) {
-    return new Promise(function (res, rej) {
-      if (document.querySelector('script[src="' + src + '"]')) return res();
+    if (_scripts[src]) return _scripts[src];
+    _scripts[src] = new Promise(function (res, rej) {
       var s = document.createElement("script");
-      s.src = src; s.async = true; s.defer = true; s.onload = res; s.onerror = rej;
+      s.src = src; s.async = true; s.defer = true;
+      s.onload = res;
+      s.onerror = function (e) {
+        delete _scripts[src];
+        if (s.parentNode) s.parentNode.removeChild(s);
+        rej(e);
+      };
       document.head.appendChild(s);
     });
+    return _scripts[src];
   }
 
   // Money the way the plan card prints it: "9.5 KWD".

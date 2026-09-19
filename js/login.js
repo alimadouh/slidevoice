@@ -30,13 +30,21 @@ function finishLogin(token) {
 // the existing /api/auth/google endpoint. The custom button loads Google's script
 // lazily on click, so an ad-blocker just shows an error instead of hiding it.
 let googleTokenClient = null;
+// Remembers the PROMISE, not the tag -- see the long note on the same function in
+// card-checkout.js. A tag left behind by a FAILED load used to read as "already loaded",
+// so a second click on Sign in with Google resolved instantly and then threw "Google
+// library unavailable" for ever, whatever the network did afterwards.
+const _scripts = {};
 function loadScript(src) {
-  return new Promise((res, rej) => {
-    if (document.querySelector(`script[src="${src}"]`)) return res();
+  if (_scripts[src]) return _scripts[src];
+  _scripts[src] = new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = src; s.async = true; s.defer = true; s.onload = res; s.onerror = rej;
+    s.src = src; s.async = true; s.defer = true;
+    s.onload = res;
+    s.onerror = (e) => { delete _scripts[src]; s.remove(); rej(e); };
     document.head.appendChild(s);
   });
+  return _scripts[src];
 }
 async function onGoogleToken(resp) {
   if (resp.error || !resp.access_token) { msg("Google sign-in was cancelled."); return; }

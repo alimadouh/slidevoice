@@ -147,22 +147,40 @@
       showFile();
     }
   });
+  // One id per SUBMISSION, kept across retries. An upload cut off on the way back looks
+  // identical to one that never arrived, so the page can only say "try again" -- and the
+  // server had already taken the file and spent the 3 KWD scan. Sending the same id again
+  // makes the server hand back the order it already made instead of selling a second scan
+  // of the same document. Cleared once a submission is known to have landed.
+  let submitId = "";
+  const newSubmitId = () => {
+    try { return crypto.randomUUID(); }
+    catch (e) { return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12); }
+  };
   $("tnSubmit").onclick = async () => {
     const f = $("tnFile").files[0];
     if (!TOKEN) { if (window.b7PromptLogin) b7PromptLogin("Sign in to submit a Turnitin scan."); return; }
     if (!f) { say("Choose a file first.", true); return; }
     const btn = $("tnSubmit"); btn.disabled = true; btn.textContent = "Uploading…";
+    if (!submitId) submitId = newSubmitId();
     try {
       const fd = new FormData(); fd.append("file", f, f.name); fd.append("note", $("tnNote").value || "");
+      fd.append("submit_id", submitId);
       const d = await (await fetch(API + "/api/turnitin/submit", { method: "POST", headers: H, body: fd })).json();
       if (d.error) { say(d.error, true); if (d.reason === "no_credits") refreshCredits(); }
       else {
         say("Submitted! Your Turnitin score appears below within 6 hours.");
+        submitId = "";
         $("tnFile").value = ""; showFile(); $("tnNote").value = "";
         refreshCredits();
         refresh();
       }
-    } catch (e) { say("Service is temporarily unavailable. Please try again shortly.", true); }
+    } catch (e) {
+      // Keep submitId: pressing Submit again is now safe, and saying so is the difference
+      // between a customer who retries and one who thinks they have lost 3 KWD.
+      say("We couldn't confirm your upload. Press Submit again — if it already went "
+          + "through, you won't be charged twice.", true);
+    }
     btn.disabled = false; btn.textContent = "Submit for Turnitin check";
   };
 
