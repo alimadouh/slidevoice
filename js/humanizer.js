@@ -113,6 +113,12 @@ let humCancelKey = null;
 
 // ---------------------------------------------------------------- helpers
 function msg(t, ok) { msgEl.textContent = t || ""; msgEl.classList.toggle("ok", !!ok); }
+// The server strips invisible characters and look-alike letters before a run and says
+// how many went -- a short note so the person knows their text was touched, and why.
+function hiddenNote(p) {
+  const n = p && p.hidden_removed;
+  return n ? ` Removed ${n} hidden character${n === 1 ? "" : "s"}.` : "";
+}
 // Out of words — either the free trial or a membership pool. The server already wrote
 // the sentence; all this adds is the way out, since neither pool refills on its own.
 const isQuota = (reason) => reason === "b7_trial" || reason === "b7_words";
@@ -321,7 +327,7 @@ async function humanize() {
     }
     if (p.cancelled) { msg("Stopped."); return; }
     applyData(p, true, true);
-    msg(hasFlagged(lastBlocks) ? "Done. Run “Go Green” to clean up the highlights." : "Done — all clear.", true);
+    msg((hasFlagged(lastBlocks) ? "Done. Run “Go Green” to clean up the highlights." : "Done — all clear.") + hiddenNote(p), true);
     if (p.b7_words_remaining != null || p.b7_trial_remaining != null) fetchMe().then(renderMeter);
   } catch (e) {
     if (e.name === "AbortError") msg("Stopped.");
@@ -350,7 +356,7 @@ async function check() {
     const p = await r.json();
     if (p.error) { msg(p.error); return; }
     applyData(p, true);
-    msg(p.truncated ? `Scanned the first ${p.max_words} words.` : "Scan complete.", true);
+    msg((p.truncated ? `Scanned the first ${p.max_words} words.` : "Scan complete.") + hiddenNote(p), true);
   } catch (e) {
     if (e.name === "AbortError") msg("Stopped.");
     else msg("Couldn’t reach the scanner. Please try again.");
