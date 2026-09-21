@@ -17,8 +17,16 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const n = (v) => Number(v || 0).toLocaleString("en-US");
+  // The server stamps codes in naive UTC ("2026-09-20T22:38:11.123", no offset), and
+  // new Date() reads a stamp with no offset as LOCAL time -- so a code made at 01:38
+  // in Kuwait said "made Sep 20". Pin the stamp to UTC first; the browser then shows
+  // the right local day. A stamp that already carries Z or an offset is left alone.
+  const utc = (iso) => {
+    const s = String(iso || "");
+    return (s.includes("T") && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(s)) ? s + "Z" : s;
+  };
   const when = (iso) => {
-    try { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+    try { return new Date(utc(iso)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
     catch (e) { return ""; }
   };
   const B7_PLAN = "B7oothWords";        // matches auth.B7_CODE_PLAN

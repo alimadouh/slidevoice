@@ -97,6 +97,12 @@ const btnClear = $("btn-clear"), btnGreen = $("btn-green"), btnStopGreen = $("bt
 const bar = $("hz-bar"), barFill = $("hz-bar-fill"), msgEl = $("hz-msg");
 
 let lastBlocks = null, lastText = "", busy = false;
+// Did the output on screen come from a REWRITE (Humanize / Go Green), or merely from a
+// scan? Go Green is the finishing pass over OUR rewrite; run on text that was only
+// checked, it becomes a free second humanizer, which is what people were doing:
+// paste, Check for AI, Go Green. The button stays clickable after a scan so the
+// person is told why nothing happened, instead of seeing a dead button.
+let lastWasRewrite = false;
 let humAbort = null, greenAbort = null;
 // Per-job nonce so a cancel targets THIS job and never the session token. Without one
 // the Stop button posted an empty body, humanize_cancel's `if (key and ...)` guard was
@@ -261,9 +267,10 @@ function renderBlocks(blocks) {
   }
   out.innerHTML = html || '<div class="placeholder">No text returned.</div>';
 }
-function applyData(data, ripple) {
+function applyData(data, ripple, rewrote) {
   lastBlocks = data.blocks || [];
   lastText = data.text || "";
+  lastWasRewrite = !!rewrote;
   renderBlocks(lastBlocks);
   if (ripple && !reduceMotion) {
     out.classList.remove("fx-ripple", "fx-reveal"); void out.offsetWidth;
@@ -313,7 +320,7 @@ async function humanize() {
       return;
     }
     if (p.cancelled) { msg("Stopped."); return; }
-    applyData(p, true);
+    applyData(p, true, true);
     msg(hasFlagged(lastBlocks) ? "Done. Run “Go Green” to clean up the highlights." : "Done — all clear.", true);
     if (p.b7_words_remaining != null || p.b7_trial_remaining != null) fetchMe().then(renderMeter);
   } catch (e) {
@@ -355,6 +362,9 @@ async function check() {
 
 async function makeAllGreen() {
   if (needLogin("Log in to use Go Green.")) return;
+  // Before the all-green test, not after it: a scan that found nothing red must still
+  // get this message, not silence.
+  if (!lastWasRewrite) { msg("Please humanize your text first."); return; }
   if (!lastBlocks || !hasFlagged(lastBlocks)) return;
   busy = true; refreshButtons();
   btnGreen.style.display = "none"; btnStopGreen.style.display = "";
@@ -386,7 +396,7 @@ async function makeAllGreen() {
           else msg(o.error);
           finished = true; break;
         }
-        if (o.done) { applyData(o.payload, true); finished = true; }
+        if (o.done) { applyData(o.payload, true, true); finished = true; }
         else if (o.left != null && startRed > 0)
           barFill.style.width = Math.max(0, Math.min(100, Math.round(100 * (startRed - o.left) / startRed))) + "%";
       }
@@ -407,7 +417,7 @@ async function makeAllGreen() {
 
 function clearAll() {
   if (busy) return;
-  input.value = ""; lastBlocks = null; lastText = "";
+  input.value = ""; lastBlocks = null; lastText = ""; lastWasRewrite = false;
   out.innerHTML = '<div class="placeholder">Humanized / scanned text appears here.</div>';
   setInWords(); setOutWords(); resetRing(); msg(""); refreshButtons();
   btnClear.classList.add("cleared"); setTimeout(() => btnClear.classList.remove("cleared"), 560);
