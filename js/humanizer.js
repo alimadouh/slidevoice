@@ -1,5 +1,6 @@
 // B7oothKw Humanizer — "branch" client. Requires login; sends the user's token so
-// the server meters per-account. Always Model 2. Dark workspace like Grade A.
+// the server meters per-account. Same flow as Grade A: Model 1 humanizes, and Go Green
+// fixes the red sentences with Model 2 (the server decides both). Dark workspace like Grade A.
 
 const API  = (window.HUMANIZER_API || "").replace(/\/$/, "");
 const BKEY = window.BRANCH_KEY || "";
@@ -9,7 +10,7 @@ const TOKEN = (function () { try { var t = localStorage.getItem("b7_token"); ret
 const JH = { "Content-Type": "application/json", "X-Branch-Key": BKEY };
 const BH = { "X-Branch-Key": BKEY };                  // for multipart / GET (no JSON content-type)
 if (TOKEN) { JH["Authorization"] = "Bearer " + TOKEN; BH["Authorization"] = "Bearer " + TOKEN; }
-const LEVEL = 8;                          // Model 2 ignores level; fixed request shape
+const LEVEL = 8;                          // the models ignore level; fixed request shape
 const RED = 0.5, AMBER = 0.305;           // sentence colour thresholds
 
 const $ = (id) => document.getElementById(id);
@@ -317,7 +318,7 @@ async function humanize() {
     const r = await fetch(API + "/api/humanize", {
       method: "POST", headers: { ...JH, "X-Cancel-Key": humCancelKey },
       signal: humAbort.signal,
-      body: JSON.stringify({ text, level: LEVEL, model: 2, dialect: selectedDialect }),
+      body: JSON.stringify({ text, level: LEVEL, model: 1, dialect: selectedDialect }),
     });
     const p = await r.json();
     if (p.error) {
@@ -381,7 +382,7 @@ async function makeAllGreen() {
   try {
     const r = await fetch(API + "/api/makeallgreen", {
       method: "POST", headers: JH, signal: greenAbort.signal,
-      body: JSON.stringify({ blocks: lastBlocks, level: LEVEL, threshold: AMBER, model: 2,
+      body: JSON.stringify({ blocks: lastBlocks, level: LEVEL, threshold: AMBER, model: 1,
                              dialect: selectedDialect }),
     });
     if (!r.ok || !r.body) { msg("Go Green is unavailable right now."); return; }
