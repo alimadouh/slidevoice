@@ -161,57 +161,86 @@
   </section>
 
   <!-- ===================== WORD ===================== -->
+  <!-- Grade A's live Word Humanizer, ported 2026-10-13: the document is drawn on the
+       right, Humanize and Go Green colour its sentences, Download writes the result into
+       the original file. Same ids as Grade A's #view-word so the two stay easy to diff. -->
   <section class="hz-pane hidden" id="pane-word">
-    <h2 class="view-title"><img src="assets/word_icon.svg" class="title-tn-icon" alt=""> Word Humanizer<span class="b7-meter"></span></h2>
-    <div class="ft-grid">
-      <div class="tno-upcard">
-        <!-- Members only. The refusal used to arrive after the upload had finished,
-             which spent someone's time to tell them something the page knew all along. -->
-        <div class="feat-lock hidden" id="wd-lock">
-          <div class="feat-lock-box">
-            <div class="feat-lock-ic">🔒</div>
-            <div class="feat-lock-title">Members only</div>
-            <p class="feat-lock-sub">The Word humanizer rewrites a whole document in one go,
-              so it needs a B7oothKw month. Your free words still work on the text humanizer.</p>
-            <a class="btn btn-primary feat-lock-btn" href="pricing.html">See plans</a>
+    <div class="ft-title-row">
+      <h2 class="view-title"><img src="assets/word_icon.svg" class="title-tn-icon" alt=""> Word Humanizer<span class="b7-meter"></span></h2>
+      <button class="btn btn-ghost btn-sm ft-how-btn" type="button" data-how="wordHow">How it works</button>
+    </div>
+    <div class="wx-grid">
+      <div class="tno-upcard wx-side" id="wordCard">
+        <div class="tno-uparea" id="wordUparea">
+          <!-- Members only: the first Humanize on a file comes out of a membership's
+               10,000 words, so the page says so before the upload, not after it. -->
+          <div class="feat-lock hidden" id="wd-lock">
+            <div class="feat-lock-box">
+              <div class="feat-lock-ic">🔒</div>
+              <div class="feat-lock-title">Members only</div>
+              <p class="feat-lock-sub">The Word humanizer rewrites a whole document in one go,
+                so it needs a B7oothKw month. Your free words still work on the text humanizer.</p>
+              <a class="btn btn-primary feat-lock-btn" href="pricing.html">See plans</a>
+            </div>
           </div>
-        </div>
-        <div class="tno-uparea">
-          <div class="upload-zone upz-big" id="wd-drop" role="button" tabindex="0" aria-label="Choose a Word file to humanize">
-            <input type="file" id="wd-file" accept=".docx" hidden>
+          <div class="upload-zone upz-big" id="wordZone" role="button" tabindex="0" aria-label="Choose a Word file to humanize">
+            <input type="file" id="wordInput" accept=".docx" hidden>
             <div class="upz-aura"><img src="assets/word_icon.svg" width="44" height="44" alt=""></div>
-            <div class="upz-title">Drop your Word document here or <span>browse</span></div>
+            <div class="upz-title">Drop your Word file here or <span>browse</span></div>
           </div>
-          <div class="tno-selected hidden" id="wd-files"></div>
+          <div class="tno-selected hidden" id="wordSelected"></div>
           <div class="ft-dialect" id="wdDialect"></div>
-          <button class="btn btn-primary tno-submit" id="wd-go" disabled>Humanize Word</button>
-          <div class="hz-bar" id="wd-bar" hidden><div class="hz-bar-fill" id="wd-bar-fill"></div></div>
-          <p class="hz-msg" id="wd-msg"></p>
+          <div class="wx-protect hidden" id="wxProtect">
+            <div class="wx-protect-title">Protect these parts</div>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="cover"> Cover page</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="headings"> Headings &amp; titles</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="toc"> Table of contents</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="refs"> References</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="captions"> Captions</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="bullets"> Bullet points</label>
+            <label class="wx-chk"><input type="checkbox" data-wxgroup="tables"> Tables</label>
+            <div class="wx-protect-hint">Or click any paragraph in your document to lock 🔒 or unlock it.</div>
+          </div>
+          <div class="wx-actions">
+            <button id="wxHumanize" class="btn btn-primary" type="button" disabled>✦ Humanize</button>
+            <button id="wxGreen" class="btn btn-ghost btn-green hidden" type="button" disabled>✦ Go Green</button>
+            <button id="wxDownload" class="btn btn-ghost hidden" type="button">⬇ Download Word file</button>
+          </div>
+          <div class="pptx-status hidden" id="wordStatus" aria-live="polite"></div>
+          <div class="wx-score hidden" id="wxScore" aria-live="polite"></div>
+          <button id="wxNew" class="wx-new hidden" type="button">Upload another file</button>
         </div>
       </div>
-      <aside class="ft-rail">
-        <h3>How it works</h3>
-        <ol class="ft-tl">
-          <li><span class="ft-tl-n">1</span><b>Upload your document</b><small>.docx file, up to 25 MB</small></li>
-          <li><span class="ft-tl-n">2</span><b>We humanize every paragraph</b><small>Then a Go Green pass over the result</small></li>
-          <li><span class="ft-tl-n">3</span><b>Download your file</b><small>Same document, human wording</small></li>
-        </ol>
-        <h3>What you can expect</h3>
-        <ul class="ft-check">
-          <li>Body paragraphs with <b>more than 5 words</b> are humanized.</li>
-          <li><b>Table cells</b> are humanized too, from <b>8 words</b> up — shorter
-            ones are labels, not prose.</li>
-          <li><b>Headings</b> and references are left alone.</li>
-          <li>Fonts, spacing and numbering stay <b>exactly the same</b>.</li>
-          <li>The word count comes out of your <b>membership's 10,000</b>.</li>
-        </ul>
-        <div class="ft-chips">
-          <span class="ft-chip"><b>.docx</b></span>
-          <span class="ft-chip">up to <b>10,000</b> words a file</span>
-          <span class="ft-chip"><b>3</b> files a day</span>
-          <span class="ft-chip"><b>Membership</b></span>
-        </div>
-      </aside>
+      <div class="wx-doc" id="wxDoc"><div class="wx-empty">Your document will appear here.</div></div>
+    </div>
+
+    <div class="modal-overlay hidden ft-how" id="wordHow" role="dialog" aria-modal="true" aria-label="How it works">
+      <div class="modal-card ft-how-card">
+        <button class="modal-close" data-close type="button" aria-label="Close">&times;</button>
+        <aside class="ft-rail">
+          <h3>How it works</h3>
+          <ol class="ft-tl">
+            <li><span class="ft-tl-n">1</span><b>Upload your Word file</b><small>It appears on the right, just as it looks</small></li>
+            <li><span class="ft-tl-n">2</span><b>Humanize, then Go Green</b><small>Red, yellow and green show inside your document</small></li>
+            <li><span class="ft-tl-n">3</span><b>Download your file</b><small>Same document, same formatting</small></li>
+          </ol>
+          <h3>What you can expect</h3>
+          <ul class="ft-check">
+            <li><b>You choose what to protect</b>: tick parts like the cover page or headings, or click any paragraph to lock it. Locked text is never touched.</li>
+            <li><b>Humanize</b> and <b>Go Green</b> work exactly like the text humanizer.</li>
+            <li>Your chosen <b>spelling</b> is applied to the whole document.</li>
+            <li>Fonts, styles, tables and layout stay <b>exactly the same</b>.</li>
+            <li>The first Humanize uses one of today's files and the file's words from your <b>membership's 10,000</b>. Go Green is free.</li>
+            <li>Your file is kept for <b>2 days</b>, then deleted automatically.</li>
+          </ul>
+          <div class="ft-chips">
+            <span class="ft-chip"><b>.docx</b></span>
+            <span class="ft-chip">up to <b>10,000</b> words a file</span>
+            <span class="ft-chip"><b>3</b> files a day</span>
+            <span class="ft-chip"><b>Membership</b></span>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 

@@ -471,10 +471,9 @@ btnCopy.onclick = async () => {
   } catch { btnCopy.textContent = "Copy failed"; setTimeout(() => (btnCopy.textContent = "Copy"), 1500); }
 };
 
-// ------------------------------------------------- file tools (PowerPoint + Word)
-// Both are the same job: upload, poll a job id, download the result. The only
-// differences are the endpoint, the extension and the wording, so they share one
-// implementation rather than two copies that drift.
+// ------------------------------------------------- file tool (PowerPoint)
+// Upload, poll a job id, download the result. Word used to share this; it now has the
+// live preview below, as on Grade A.
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 function fileTool(cfg) {
@@ -599,17 +598,452 @@ fileTool({
   tooLong: "This is taking too long — please try a smaller deck.",
 });
 
-fileTool({
-  drop: "wd-drop", input: "wd-file", files: "wd-files",
-  go: "wd-go", bar: "wd-bar", fill: "wd-bar-fill", msg: "wd-msg",
-  api: "/api/docx", ext: /\.docx$/i,
-  wrongType: "Please choose a .docx file (not .doc).",
-  loginMsg: "Log in to humanize Word documents.",
-  working: "Humanizing your document…",
-  fallbackName: "document (humanized).docx",
-  unit: "paragraph", unitPlural: "paragraphs",
-  tooLong: "This is taking too long — please try a shorter document.",
-});
+// ---------------------------------------------------------------- Word Humanizer
+// Grade A's live Word Humanizer (src/server/static/app.js, "Word Humanizer: live
+// preview"), ported 2026-10-13 so the two sites work the same: upload -> the document is
+// drawn on the right -> Humanize / Go Green with the text pane's colours -> Download into
+// the original file. Same server routes (/api/word/*) and the same rules: the user picks
+// what to protect, Go Green follows a Humanize, and every visit starts at the upload box
+// -- the page never re-opens an earlier file (owner, 2026-10-08), so leaving with one
+// open asks first. The B7oothKw differences are the server's: members only, and the
+// first Humanize on a file takes its words from the month's 10,000.
+const wx = { id: null, doc: null, sents: {}, busy: false, imgs: [],
+             paras: {}, protect: { groups: [], lock: [], unlock: [] } };
+let wxMe = null;                       // last /api/auth/me, for the members-only gate
+
+function setWxStatus(html, cls) {
+  const s = $("wordStatus"); if (!s) return;
+  if (!html) { s.classList.add("hidden"); s.innerHTML = ""; return; }
+  s.className = "pptx-status " + (cls || ""); s.innerHTML = html; s.classList.remove("hidden");
+}
+// A server sentence, as text, plus the way out when it is about words or the membership.
+function wxSay(text, reason) {
+  setWxStatus("⚠️ " + esc(text), "err");
+  if (isQuota(reason) || reason === "b7_membership") {
+    const a = document.createElement("a");
+    a.href = "pricing.html"; a.textContent = "See plans";
+    $("wordStatus").append(" ", a);
+    fetchMe().then(renderMeter);
+  }
+}
+// The server said the session is gone: same "please log in" box as every other tool.
+function wxAuth(j) {
+  if (!j || j.reason !== "auth") return false;
+  if (window.b7PromptLogin) window.b7PromptLogin(j.error || "Please log in to use the Word Humanizer.");
+  return true;
+}
+
+function wxSentHtml(s) {
+  const cur = wx.sents[s.id];
+  if (!cur || cur.p == null) return `<span class="wx-plain">${esc(cur ? cur.t : s.t)}</span>`;
+  return `<span class="sent ${colorOf(cur.p)}" title="${esc("Before: " + cur.o)}">${esc(cur.t)}</span>`;
+}
+
+// Is this paragraph protected right now? The same rule as word_live.unlocked on the
+// server: can't-be-humanized is always locked; a click (lock/unlock) beats the groups.
+function wxIsLocked(pid) {
+  const p = wx.paras[pid];
+  if (!p || !p.can) return true;
+  const pr = wx.protect;
+  if (pr.lock.includes(pid)) return true;
+  if (pr.unlock.includes(pid)) return false;
+  return p.groups.some((g) => pr.groups.includes(g));
+}
+
+function wxRunsHtml(runs) {
+  return (runs || []).map((r) => {
+    let x = esc(r.t);
+    if (r.b) x = `<b>${x}</b>`;
+    if (r.i) x = `<i>${x}</i>`;
+    if (r.u) x = `<u>${x}</u>`;
+    return x;
+  }).join("");
+}
+
+function wxBlocksHtml(blocks) {
+  return (blocks || []).map((b) => {
+    if (b.k === "break") return '<div class="wx-break" aria-hidden="true"></div>';
+    if (b.k === "img") return `<div class="wx-img" data-wximg="${Number(b.n)}"></div>`;
+    if (b.k === "table") {
+      return `<table class="wx-table">${b.rows.map((r) =>
+        `<tr>${r.map((c) => `<td>${wxBlocksHtml(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+    }
+    const tag = b.h === "title" ? "h1" : (b.h ? `h${Math.min(6, b.h + 1)}` : "p");
+    const p = wx.paras[b.pid] || { can: false, why: "", groups: [] };
+    const locked = wxIsLocked(b.pid);
+    const text = (b.runs || []).map((r) => r.t).join("").trim();
+    const cls = ["wx-p", b.list != null ? "wx-li" : "", b.align ? "wx-" + b.align : "",
+                 b.h === "title" ? "wx-title" : "",
+                 !p.can ? "wx-keep wx-cant" : (locked ? "wx-keep wx-locked" : "wx-open")]
+      .filter(Boolean).join(" ");
+    let inner, tip;
+    if (locked) {
+      inner = (p.can ? '<span class="wx-lockic" aria-hidden="true">🔒</span>' : "") + wxRunsHtml(b.runs);
+      tip = p.can ? "Protected. Click to unlock." : (text ? `This part can't be humanized: ${p.why}.` : "");
+    } else {
+      inner = (b.label ? `<span class="wx-keep">${esc(b.label)}</span>` : "") +
+        (b.sents || []).map((s) => (s.id == null ? `<span class="wx-keep">${esc(s.t)}</span>`
+                                                 : wxSentHtml(s)) + esc(s.g || "")).join("");
+      tip = "Click to protect this paragraph.";
+    }
+    const lvl = b.list != null ? ` style="--lvl:${Number(b.list)}"` : "";
+    const title = tip ? ` title="${esc(tip)}"` : "";
+    return `<${tag} class="${cls}" data-pid="${Number(b.pid)}"${title}${lvl}>${inner || "&nbsp;"}</${tag}>`;
+  }).join("");
+}
+
+// The checkboxes follow the stored choice; shown once a document is open.
+function wxProtectSync() {
+  const box = $("wxProtect"); if (!box) return;
+  box.classList.toggle("hidden", !wx.doc);
+  box.querySelectorAll("[data-wxgroup]").forEach((c) => {
+    c.checked = wx.protect.groups.includes(c.getAttribute("data-wxgroup"));
+    c.disabled = wx.busy;
+  });
+}
+
+// Save a protection choice. Shown at once; the server answers with the sentences.
+async function wxSaveProtect(pr) {
+  if (!wx.id || wx.busy) return;
+  const before = wx.protect;
+  wx.protect = pr; wxRender();
+  try {
+    const r = await fetch(`${API}/api/word/${wx.id}/protect`, {
+      method: "POST", headers: JH, body: JSON.stringify(pr) });
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (wxAuth(j)) { wx.protect = before; wxRender(); return; }
+    if (!r.ok || j.error) {
+      wx.protect = before; wxRender();
+      wxSay(j.error || "Couldn't save that. Please try again.", j.reason); return;
+    }
+    (j.sentences || []).forEach((s) => { wx.sents[s.id] = s; });
+    wx.protect = j.protect; wx.doc.state = j.state; wxRender();
+  } catch (e) {
+    wx.protect = before; wxRender();
+    wxSay("Couldn't reach the server. Please try again.");
+  }
+}
+
+// Sentence ids in open paragraphs. A locked paragraph keeps its rewrite and score for
+// when it is unlocked again, but neither counts nor goes to Go Green.
+function wxActive() {
+  const act = new Set();
+  Object.values(wx.paras).forEach((p) => {
+    if (!wxIsLocked(p.pid)) (p.sids || []).forEach((i) => act.add(i));
+  });
+  return act;
+}
+
+function wxNonGreen() {
+  const act = wxActive();
+  return Object.values(wx.sents).some((s) => act.has(s.id) && s.p != null && s.p >= AMBER);
+}
+
+function wxScore() {
+  const el = $("wxScore"); if (!el) return;
+  if (!wx.doc || !wx.doc.state.humanized) { el.classList.add("hidden"); return; }
+  // The headline comes from the colours below it, like the text pane's flaggedPct: the
+  // share of words in sentences that are not green, so all green reads 0% (Grade A,
+  // 2026-10-08). The server's own number is a second detector and is not shown.
+  let r = 0, y = 0, g = 0, flagged = 0, total = 0;
+  const act = wxActive();
+  Object.values(wx.sents).forEach((s) => {
+    if (s.p == null || !act.has(s.id)) return;
+    const c = colorOf(s.p), w = (s.t || "").split(/\s+/).filter(Boolean).length;
+    if (c === "ai") r++; else if (c === "mid") y++; else g++;
+    total += w;
+    if (c !== "human") flagged += w;
+  });
+  const pct = total ? Math.round((100 * flagged) / total) : 0;
+  // The server's _verdict thresholds (human >= 70 / >= 40), on this same number.
+  const verdict = pct <= 30 ? "Looks Human" : pct <= 60 ? "Mixed signals" : "Looks AI";
+  el.innerHTML = `<div class="wx-score-top"><b>${pct}%</b> AI · ${verdict}</div>` +
+    `<div class="wx-score-row"><span class="lg"><i class="sw ai"></i>${r} AI</span>` +
+    `<span class="lg"><i class="sw mid"></i>${y} Uncertain</span>` +
+    `<span class="lg"><i class="sw human"></i>${g} Human</span></div>`;
+  el.classList.remove("hidden");
+}
+
+function wxButtons() {
+  const has = !!wx.doc, done = has && wx.doc.state.humanized;
+  const hb = $("wxHumanize"), gb = $("wxGreen"), db = $("wxDownload"), nb = $("wxNew");
+  if (!hb) return;
+  hb.disabled = !has || wx.busy || wx.doc.state.humanize_runs >= wx.doc.state.max_runs;
+  gb.classList.toggle("hidden", !done);
+  gb.disabled = !done || wx.busy || !wxNonGreen();
+  db.classList.toggle("hidden", !done);
+  db.disabled = wx.busy;
+  nb.classList.toggle("hidden", !has || wx.busy);
+  $("wordZone").classList.toggle("hidden", has);
+  wxProtectSync();
+}
+
+async function wxLoadImages(host) {
+  for (const el of host.querySelectorAll("[data-wximg]")) {
+    const n = Number(el.getAttribute("data-wximg"));
+    if (!wx.imgs[n]) {
+      try {
+        const r = await fetch(`${API}/api/word/${wx.id}/img/${n}`, { headers: BH });
+        if (!r.ok) {
+          let d = null; try { d = await r.json(); } catch (e) {}
+          if (wxAuth(d)) return;
+          continue;
+        }
+        const blob = await r.blob();
+        wx.imgs[n] = await new Promise((res) => {
+          const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob);
+        });
+      } catch (e) { continue; }
+    }
+    // A node, not innerHTML: the data: URL carries the server's media type verbatim.
+    const img = new Image(); img.alt = ""; img.src = wx.imgs[n];
+    el.replaceChildren(img);
+  }
+}
+
+function wxRender() {
+  const host = $("wxDoc"); if (!host) return;
+  if (!wx.doc) {
+    host.innerHTML = '<div class="wx-empty">Your document will appear here.</div>';
+  } else {
+    host.innerHTML = '<div class="wx-key"><span class="lg"><i class="sw human"></i>Human</span>' +
+      '<span class="lg"><i class="sw mid"></i>Uncertain</span><span class="lg"><i class="sw ai"></i>AI</span>' +
+      '<span class="lg"><i class="sw wx-sw-keep"></i>Grey = not humanized</span></div>' +
+      `<div class="wx-page">${wxBlocksHtml(wx.doc.blocks)}</div>`;
+    wxLoadImages(host);
+  }
+  wxScore(); wxButtons();
+}
+
+function wxLoad(j) {
+  wx.id = j.doc_id; wx.doc = j; wx.sents = {}; wx.imgs = [];
+  (j.sentences || []).forEach((s) => { wx.sents[s.id] = s; });
+  wx.paras = {}; (j.paras || []).forEach((p) => { wx.paras[p.pid] = p; });
+  const pr = j.protect || {};
+  wx.protect = { groups: pr.groups || [], lock: pr.lock || [], unlock: pr.unlock || [] };
+  const sel = $("wordSelected");
+  if (sel) {
+    sel.innerHTML = `<span aria-hidden="true">📎</span><span><b>${esc(j.name)}</b> · ${fmtNum(j.words)} words</span>`;
+    sel.classList.remove("hidden");
+  }
+  wxRender();
+}
+
+function wxReset() {
+  wx.id = null; wx.doc = null; wx.sents = {}; wx.imgs = [];
+  wx.paras = {}; wx.protect = { groups: [], lock: [], unlock: [] };
+  const sel = $("wordSelected"); if (sel) sel.classList.add("hidden");
+  const inp = $("wordInput"); if (inp) inp.value = "";
+  setWxStatus(""); wxRender();
+}
+
+async function wxOpen(f) {
+  if (!/\.docx$/i.test(f.name)) { wxSay("Please choose a Word .docx file (not .doc)."); return; }
+  if (f.size > 25 * 1024 * 1024) { wxSay("File is too large (max 25 MB)."); return; }
+  setWxStatus('<span class="pptx-spin"></span> Opening your document…', "busy");
+  const fd = new FormData(); fd.append("file", f, f.name);
+  try {
+    const res = await fetch(`${API}/api/word/open`, { method: "POST", headers: BH, body: fd });
+    let j = {}; try { j = await res.json(); } catch (e) {}
+    if (!res.ok || j.error || !j.doc_id) {
+      const m = j.error || "Couldn't read this file. Please save it as .docx and try again.";
+      if (wxAuth(j)) { setWxStatus(""); return; }
+      wxSay(m, j.reason); return;
+    }
+    setWxStatus(""); wxLoad(j);
+  } catch (e) { wxSay("Upload failed. Please check your connection and try again."); }
+}
+
+async function wxStream(path, body, onEvent) {
+  const res = await fetch(API + path, { method: "POST", headers: JH, body: JSON.stringify(body) });
+  if (!(res.headers.get("content-type") || "").includes("text/event-stream")) {
+    let j = {}; try { j = await res.json(); } catch (e) {}
+    return j.error ? j : { error: "Couldn't reach the server. Please try again." };
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "", last = null, done = false;
+  while (!done) {
+    const r = await reader.read(); done = r.done;
+    buf += dec.decode(r.value || new Uint8Array(), { stream: !done });
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const line = buf.slice(0, i).split("\n").find((l) => l.startsWith("data:"));
+      buf = buf.slice(i + 2);
+      if (!line) continue;
+      let o; try { o = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+      if (o.error || o.done) last = o; else onEvent(o);
+    }
+  }
+  return last || { error: "The connection dropped. Please try again." };
+}
+
+async function wxRun(kind) {
+  if (!wx.id || wx.busy) return;
+  wx.busy = true; wxButtons();
+  const btn = kind === "humanize" ? $("wxHumanize") : $("wxGreen");
+  btn.classList.add("loading");
+  const page = document.querySelector("#wxDoc .wx-page");
+  if (page && kind === "green") page.classList.add("fx-greening");
+  setWxStatus(`<span class="pptx-spin"></span> ${kind === "humanize" ? "Humanizing your document…" : "Going green…"}`, "busy");
+  try {
+    const r = await wxStream(`/api/word/${wx.id}/${kind === "humanize" ? "humanize" : "gogreen"}`,
+      { dialect: selectedDialect }, (o) => {
+        if (typeof o.left === "number") setWxStatus(`<span class="pptx-spin"></span> Going green… ${o.left} left (pass ${o.pass})`, "busy");
+        else if (o.total) setWxStatus(`<span class="pptx-spin"></span> Humanizing… ${o.n} of ${o.total} sentences`, "busy");
+      });
+    if (r.error) {
+      if (wxAuth(r)) { setWxStatus(""); return; }
+      if (r.reason === "gone") wxReset();
+      if (r.reason === "clean") { setWxStatus(esc(r.error), "busy"); return; }
+      wxSay(r.error, r.reason); return;
+    }
+    (r.sentences || []).forEach((s) => { wx.sents[s.id] = s; });
+    wx.doc.state = r.state;
+    setWxStatus(""); wxRender();
+    if (kind === "humanize") fetchMe().then(renderMeter);   // a member's words just moved
+    if (kind === "green" && !wxNonGreen()) celebrate();
+  } catch (e) {
+    wxSay("Couldn't reach the server. Please try again in a moment.");
+  } finally {
+    wx.busy = false; btn.classList.remove("loading");
+    if (page) page.classList.remove("fx-greening");
+    wxButtons();
+  }
+}
+
+async function wxDownload() {
+  if (!wx.id) return;
+  try {
+    const r = await fetch(`${API}/api/word/${wx.id}/download?dialect=${encodeURIComponent(selectedDialect)}`,
+                          { headers: BH });
+    if (!r.ok) {
+      let j = {}; try { j = await r.json(); } catch (e) {}
+      if (wxAuth(j)) return;
+      wxSay(j.error || "Couldn't download the file.", j.reason); return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await r.blob());
+    a.download = (wx.doc.name || "document.docx").replace(/\.docx$/i, "") + " (humanized).docx";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (e) { wxSay("Couldn't download the file."); }
+}
+
+// "All green" celebration: confetti burst + a checkmark draw (Grade A's, in red).
+function celebrate() {
+  if (reduceMotion) return;
+  const layer = document.createElement("div");
+  layer.className = "fx-celebrate";
+  layer.innerHTML = '<svg class="fx-check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-18"/></svg>';
+  const cols = ["#3fb950", "#ff3131", "#ff6a4d", "#f0c14b", "#46d987", "#4ea8ff"];
+  for (let i = 0; i < 36; i++) {
+    const ang = Math.random() * Math.PI * 2, dist = 90 + Math.random() * 190, c = document.createElement("i");
+    c.style.cssText = "--x:" + (Math.cos(ang) * dist).toFixed(0) + "px;--y:" + (Math.sin(ang) * dist - 40).toFixed(0)
+      + "px;--c:" + cols[i % cols.length] + ";--r:" + (Math.random() * 720 - 360).toFixed(0) + "deg;--d:"
+      + (0.7 + Math.random() * 0.6).toFixed(2) + "s";
+    layer.appendChild(c);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 1800);
+}
+
+// Nothing re-opens a file once the page goes, so a refresh or a closed tab while one is
+// open on the Word pane asks first (Grade A, owner 2026-10-08). Not from the text or
+// PowerPoint pane: the file is only "open" while the Word pane is the one showing. Not on
+// sign-out either: b7Logout clears the token before it leaves, so ask localStorage now
+// rather than the TOKEN read at load (Grade A tests its live authToken the same way).
+function wxLeaveCheck(e) {
+  const pane = $("pane-word");
+  const signedIn = !!(window.b7HasToken && window.b7HasToken());
+  if (!wx.id || !signedIn || !pane || pane.classList.contains("hidden")) return;
+  e.preventDefault();
+  e.returnValue = "";   // older Chrome asks only when this is set; the words are the browser's own
+}
+window.addEventListener("beforeunload", wxLeaveCheck);
+
+// Members only, as the server says: a B7oothKw account without a live month is stopped
+// here with the way to buy one. Only on a positive answer (see applyGate).
+function wxMemberGate() {
+  const me = wxMe, b7 = me && me.b7;
+  if (isB7Account(me) && b7 && !b7.active && !me.is_admin) {
+    wxSay("The Word Humanizer is part of the membership. Get a month to humanize whole documents.",
+          "b7_membership");
+    return false;
+  }
+  return true;
+}
+
+(function () {
+  const zone = $("wordZone"), input = $("wordInput"), doc = $("wxDoc");
+  if (!zone || !input || !doc) return;
+  const gate = () => !needLogin("Log in to humanize Word documents.") && wxMemberGate();
+  zone.addEventListener("click", () => { if (gate()) input.click(); });
+  zone.addEventListener("keydown", (e) => {          // it's role="button" — behave like one
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); zone.click(); }
+  });
+  zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault(); zone.classList.remove("drag");
+    if (!gate()) return;
+    const files = e.dataTransfer.files;
+    if (files.length > 1) { wxSay("Please upload only one Word file at a time."); return; }
+    if (files[0]) wxOpen(files[0]);
+  });
+  input.addEventListener("change", () => {
+    if (input.files.length > 1) { wxSay("Please upload only one Word file at a time."); input.value = ""; return; }
+    if (input.files[0]) wxOpen(input.files[0]);
+  });
+  $("wxHumanize").addEventListener("click", () => { if (gate()) wxRun("humanize"); });
+  $("wxGreen").addEventListener("click", () => { if (gate()) wxRun("green"); });
+  $("wxDownload").addEventListener("click", wxDownload);
+  $("wxNew").addEventListener("click", wxReset);
+
+  // Protect boxes: one change saves the whole choice.
+  $("wxProtect").addEventListener("change", (e) => {
+    if (!wx.doc || !e.target.matches("[data-wxgroup]")) return;
+    const groups = [...document.querySelectorAll("[data-wxgroup]")]
+      .filter((c) => c.checked).map((c) => c.getAttribute("data-wxgroup"));
+    wxSaveProtect({ groups, lock: [...wx.protect.lock], unlock: [...wx.protect.unlock] });
+  });
+  // Click a paragraph in the document to lock or unlock it.
+  doc.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-pid]");
+    if (!el || !doc.contains(el) || !wx.doc || wx.busy) return;
+    // Selecting text or double-clicking a word is not a request to lock the paragraph.
+    if (e.detail > 1) return;
+    const sel = window.getSelection ? String(window.getSelection()) : "";
+    if (sel.trim()) return;
+    const pid = Number(el.getAttribute("data-pid"));
+    const p = wx.paras[pid];
+    if (!p) return;
+    if (!p.can) {
+      const text = el.textContent.trim();
+      if (text) setWxStatus(esc(`This part can't be humanized: ${p.why}.`), "busy");
+      return;
+    }
+    const want = !wxIsLocked(pid);                        // the click flips it
+    const pr = { groups: [...wx.protect.groups],
+                 lock: wx.protect.lock.filter((x) => x !== pid),
+                 unlock: wx.protect.unlock.filter((x) => x !== pid) };
+    const byGroup = p.groups.some((g) => pr.groups.includes(g));
+    if (want !== byGroup) (want ? pr.lock : pr.unlock).push(pid);
+    wxSaveProtect(pr);
+  });
+
+  // "How it works": the guide lives in a dialog until asked for (Grade A's ft-how).
+  const how = $("wordHow");
+  document.querySelectorAll('[data-how="wordHow"]').forEach((b) =>
+    b.addEventListener("click", () => how.classList.remove("hidden")));
+  how.addEventListener("click", (e) => {
+    if (e.target === how || e.target.closest("[data-close]")) how.classList.add("hidden");
+  });
+  document.addEventListener("keydown", (e) => {
+    if ((e.key === "Escape" || e.key === "Esc") && !how.classList.contains("hidden")) how.classList.add("hidden");
+  });
+  wxRender();
+})();
+
 
 // ---------------------------------------------------------------- words meter
 // Prices live on pricing.html; this page only ever says how many words are left.
@@ -630,6 +1064,7 @@ function renderMeter(me) {
     return Number.isFinite(t)
       ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
   };
+  wxMe = me;                    // the Word pane's members-only gate reads it
   const b7 = me && me.b7;
   const brand = brandOf(me), mine = brand === "b7ooth";
   let html = "", cls = "", tip = "";
